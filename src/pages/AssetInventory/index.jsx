@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import FilterBar from "./components/FilterBar";
 import AddAssetForm from "./components/AddAssetForm";
 import PolicyViewer from "./components/PolicyViewer";
-import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
+import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import EditAssetForm from "./components/EditAssetForm";
 
 const categoryOptions = [

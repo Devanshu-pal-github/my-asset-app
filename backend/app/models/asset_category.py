@@ -8,6 +8,7 @@ class AssetCategoryBase(BaseModel):
     count: int = 0
     total_value: float = 0.0
     policies: Optional[List[str]] = []
+    is_active: int = 1
 
 class AssetCategoryCreate(AssetCategoryBase):
     pass
