@@ -18,10 +18,8 @@ const AssetDetail = ({
   const [activeTab, setActiveTab] = useState("specifications");
   const [showEditForm, setShowEditForm] = useState(false);
 
-  // Get the current asset using the prop method or sample data if needed
   const asset = getAssetById(id) || getSampleAssetData(id);
 
-  // Log asset details for debugging
   useEffect(() => {
     console.log("Asset Detail ID:", id);
     console.log("Asset Detail Data:", asset);
@@ -47,7 +45,6 @@ const AssetDetail = ({
     documents,
   ]);
 
-  // Sample data function for when the actual data is not available
   function getSampleAssetData(deviceId) {
     if (deviceId === "LAPTOP001") {
       return {
@@ -119,7 +116,6 @@ const AssetDetail = ({
     return null;
   }
 
-  // Get the asset category
   const assetCategory = asset?.itemId
     ? assetCategories.find((cat) => cat.id === asset.itemId) || {
         id: "laptops",
@@ -127,7 +123,6 @@ const AssetDetail = ({
       }
     : { id: "laptops", name: "Laptops" };
 
-  // Filter histories and documents based on current asset
   const currentAssignmentHistory = assignmentHistory.filter(
     (history) => history.deviceId === id
   );
@@ -136,17 +131,14 @@ const AssetDetail = ({
   );
   const currentDocuments = documents.filter((doc) => doc.deviceId === id);
 
-  // Handle tab click
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
   };
 
-  // Toggle edit form
   const toggleEditForm = () => {
     setShowEditForm(!showEditForm);
   };
 
-  // Breadcrumb component
   const Breadcrumb = () => (
     <div className="flex items-center text-sm mb-4">
       <Link
@@ -167,25 +159,19 @@ const AssetDetail = ({
     </div>
   );
 
-  // Status indicator component
   const StatusIndicator = ({ status }) => {
     let bgColor = "bg-gray-400";
-
     if (status === "Assigned") bgColor = "bg-blue-500";
     else if (status === "In Repair") bgColor = "bg-yellow-500";
     else if (status === "In Storage") bgColor = "bg-green-500";
-
     return (
       <div className="flex items-center">
-        <span
-          className={`inline-block w-2 h-2 rounded-full mr-2 ${bgColor}`}
-        ></span>
+        <span className={`inline-block w-2 h-2 rounded-full mr-2 ${bgColor}`}></span>
         <span>{status}</span>
       </div>
     );
   };
 
-  // Document item component
   const DocumentItem = ({ document }) => (
     <div className="flex items-center p-4 border border-gray-200 rounded-lg mb-2 hover:shadow-md hover:border-blue-200 transition-all duration-200">
       <i className="pi pi-file-pdf text-gray-500 mr-3"></i>
@@ -196,7 +182,6 @@ const AssetDetail = ({
     </div>
   );
 
-  // Filter documents based on active tab
   const getTabDocuments = () => {
     if (activeTab === "specifications") {
       return currentDocuments.filter(
@@ -236,7 +221,6 @@ const AssetDetail = ({
         </button>
       </div>
 
-      {/* Edit Asset Form Modal */}
       {showEditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
@@ -259,27 +243,21 @@ const AssetDetail = ({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Status Overview Card */}
         <div className="bg-white p-5 rounded-lg shadow-[0_6px_16px_rgba(0,0,0,0.06),_0_3px_6px_rgba(0,0,0,0.04)] border border-gray-200 hover:shadow-[0_8px_20px_rgba(0,0,0,0.1),_0_4px_8px_rgba(0,0,0,0.06)] hover:border-blue-100 transition-all duration-300">
           <h2 className="text-lg font-semibold mb-4">Status Overview</h2>
           <div className="space-y-4">
             <StatusIndicator status={asset.status} />
-
             <div className="flex justify-between">
               <span className="text-gray-600">Last Updated</span>
               <span className="font-medium">{asset.lastUpdated}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Condition</span>
-              <span className="font-medium text-green-600">
-                {asset.condition}
-              </span>
+              <span className="font-medium text-green-600">{asset.condition}</span>
             </div>
           </div>
         </div>
 
-        {/* Basic Information Card */}
         <div className="bg-white p-5 rounded-lg shadow-[0_6px_16px_rgba(0,0,0,0.06),_0_3px_6px_rgba(0,0,0,0.04)] border border-gray-200 hover:shadow-[0_8px_20px_rgba(0,0,0,0.1),_0_4px_8px_rgba(0,0,0,0.06)] hover:border-blue-100 transition-all duration-300">
           <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
           <div className="space-y-4">
@@ -287,17 +265,14 @@ const AssetDetail = ({
               <span className="text-gray-600">Asset Tag</span>
               <span className="font-medium">{asset.assetTag}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Serial Number</span>
               <span className="font-medium">{asset.serialNumber}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Model</span>
               <span className="font-medium">{asset.model}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Purchase Date</span>
               <span className="font-medium">{asset.purchaseDate}</span>
@@ -305,40 +280,29 @@ const AssetDetail = ({
           </div>
         </div>
 
-        {/* Current Assignment Card */}
         <div className="bg-white p-5 rounded-lg shadow-[0_6px_16px_rgba(0,0,0,0.06),_0_3px_6px_rgba(0,0,0,0.04)] border border-gray-200 hover:shadow-[0_8px_20px_rgba(0,0,0,0.1),_0_4px_8px_rgba(0,0,0,0.06)] hover:border-blue-100 transition-all duration-300">
           <h2 className="text-lg font-semibold mb-4">Current Assignment</h2>
           <div className="space-y-4">
             <div className="flex justify-between">
               <span className="text-gray-600">Assigned To</span>
-              <span className="font-medium">
-                {asset.assignedTo || "Unassigned"}
-              </span>
+              <span className="font-medium">{asset.assignedTo || "Unassigned"}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Department</span>
               <span className="font-medium">{asset.department || "N/A"}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Assignment Date</span>
-              <span className="font-medium">
-                {asset.assignmentDate || "N/A"}
-              </span>
+              <span className="font-medium">{asset.assignmentDate || "N/A"}</span>
             </div>
-
             <div className="flex justify-between">
               <span className="text-gray-600">Expected Return</span>
-              <span className="font-medium">
-                {asset.expectedReturn || "N/A"}
-              </span>
+              <span className="font-medium">{asset.expectedReturn || "N/A"}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-[0_6px_16px_rgba(0,0,0,0.06),_0_3px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1),_0_4px_8px_rgba(0,0,0,0.06)] transition-all duration-300 mb-6">
         <div className="flex border-b border-gray-200">
           <button
@@ -377,10 +341,7 @@ const AssetDetail = ({
           {activeTab === "specifications" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div>
-                <h3 className="text-lg font-semibold mb-4">
-                  Hardware Specifications
-                </h3>
-
+                <h3 className="text-lg font-semibold mb-4">Hardware Specifications</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                     <span className="text-gray-600">Specifications</span>
@@ -388,30 +349,21 @@ const AssetDetail = ({
                   </div>
                 </div>
               </div>
-
               <div>
-                <h3 className="text-lg font-semibold mb-4">
-                  Purchase Information
-                </h3>
-
+                <h3 className="text-lg font-semibold mb-4">Purchase Information</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                     <span className="text-gray-600">Vendor</span>
                     <span className="font-medium">{asset.vendor}</span>
                   </div>
-
                   <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                     <span className="text-gray-600">Purchase Cost</span>
                     <span className="font-medium">₹{asset.purchaseCost}</span>
                   </div>
-
                   <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                     <span className="text-gray-600">Warranty Until</span>
-                    <span className="font-medium">
-                      {asset.warrantyExpiration}
-                    </span>
+                    <span className="font-medium">{asset.warrantyExpiration}</span>
                   </div>
-
                   <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                     <span className="text-gray-600">Current Value</span>
                     <span className="font-medium">₹{asset.currentValue}</span>
@@ -431,11 +383,7 @@ const AssetDetail = ({
               >
                 <Column field="assignedTo" header="User" sortable />
                 <Column field="department" header="Department" sortable />
-                <Column
-                  field="assignmentDate"
-                  header="Assignment Date"
-                  sortable
-                />
+                <Column field="assignmentDate" header="Assignment Date" sortable />
                 <Column field="returnDate" header="Return Date" sortable />
                 <Column field="notes" header="Notes" />
               </DataTable>
@@ -450,18 +398,10 @@ const AssetDetail = ({
                 stripedRows
                 className="p-datatable-sm"
               >
-                <Column
-                  field="maintenanceType"
-                  header="Service Type"
-                  sortable
-                />
+                <Column field="maintenanceType" header="Service Type" sortable />
                 <Column field="technician" header="Service Provider" sortable />
                 <Column field="maintenanceDate" header="Date" sortable />
-                <Column
-                  field="completedDate"
-                  header="Completed Date"
-                  sortable
-                />
+                <Column field="completedDate" header="Completed Date" sortable />
                 <Column
                   field="cost"
                   header="Cost"
@@ -475,11 +415,8 @@ const AssetDetail = ({
         </div>
       </div>
 
-      {/* Documents Section */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-[0_6px_16px_rgba(0,0,0,0.06),_0_3px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1),_0_4px_8px_rgba(0,0,0,0.06)] transition-all duration-300 mt-6">
-        <h3 className="px-6 py-3 text-lg font-semibold border-b border-gray-200">
-          Documents
-        </h3>
+        <h3 className="px-6 py-3 text-lg font-semibold border-b border-gray-200">Documents</h3>
         <div className="p-6">
           {getTabDocuments().length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
