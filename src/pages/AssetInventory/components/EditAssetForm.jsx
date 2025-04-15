@@ -1,68 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from 'react';
 
 const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
   const [formData, setFormData] = useState({
-    id: asset.id || "",
-    name: asset.name || "",
-    category: asset.category || "",
+    id: asset.id,
+    name: asset.name || '',
+    icon: asset.icon || 'pi pi-desktop',
     count: asset.count || 0,
-    value: asset.value || 0,
-    icon: asset.icon || "pi pi-desktop",
-    policies: asset.policies || [], // Initialize policies from asset
+    total_value: asset.total_value || 0,
+    policies: asset.policies ? [...asset.policies] : [],
+    is_active: asset.is_active ?? true,
   });
+  const [newPolicy, setNewPolicy] = useState('');
   const [errors, setErrors] = useState({});
-  const [newPolicy, setNewPolicy] = useState({ name: "", description: "" }); // State for new policy input
-
-  useEffect(() => {
-    setFormData({
-      id: asset.id || "",
-      name: asset.name || "",
-      category: asset.category || "",
-      count: asset.count || 0,
-      value: asset.value || 0,
-      icon: asset.icon || "pi pi-desktop",
-      policies: asset.policies ? [...asset.policies] : [], // Deep copy to avoid mutation
-    });
-    setNewPolicy({ name: "", description: "" }); // Reset new policy input
-  }, [asset]);
-
-  // Prepopulate with sample data to match the image
-  useEffect(() => {
-    setFormData({
-      id: asset.id || "",
-      name: "Laptops",
-      category: "Electronics",
-      count: 50,
-      value: 75000,
-      icon: "pi pi-laptop",
-      policies: [
-        { id: 1, name: "Laptop Usage Policy", description: "Guidelines for using company laptops" },
-        { id: 2, name: "Maintenance Policy", description: "Regular maintenance and care instructions" },
-      ],
-    });
-  }, [asset]);
-
-  const categoryOptions = [
-    { label: "Electronics", value: "Electronics" },
-    { label: "Hardware", value: "Hardware" },
-    { label: "Stationery", value: "Stationery" },
-  ];
-
-  const iconOptions = [
-    { label: "Desktop", value: "pi pi-desktop" },
-    { label: "Laptop", value: "pi pi-laptop" },
-    { label: "Tablet", value: "pi pi-tablet" },
-    { label: "Box", value: "pi pi-box" },
-  ];
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.category) newErrors.category = "Category is required";
-    if (formData.count <= 0 || !Number.isInteger(formData.count))
-      newErrors.count = "Count must be a positive integer";
-    if (formData.value <= 0)
-      newErrors.value = "Value must be a positive number";
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (formData.count < 0) newErrors.count = 'Count cannot be negative';
+    if (formData.total_value < 0) newErrors.total_value = 'Total value cannot be negative';
     return newErrors;
   };
 
@@ -70,36 +25,29 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "count" || name === "value" ? Number(value) : value,
+      [name]: name === 'count' ? parseInt(value) || 0 : name === 'total_value' ? parseFloat(value) || 0 : value,
     }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  const handleNewPolicyChange = (e) => {
-    const { name, value } = e.target;
-    setNewPolicy((prev) => ({ ...prev, [name]: value }));
+  const handlePolicyChange = (e) => {
+    setNewPolicy(e.target.value);
   };
 
   const addPolicy = () => {
-    if (newPolicy.name.trim() && newPolicy.description.trim()) {
+    if (newPolicy.trim()) {
       setFormData((prev) => ({
         ...prev,
-        policies: [
-          ...prev.policies,
-          {
-            id: Date.now(),
-            name: newPolicy.name,
-            description: newPolicy.description,
-          },
-        ],
+        policies: [...prev.policies, newPolicy.trim()],
       }));
-      setNewPolicy({ name: "", description: "" }); // Reset input
+      setNewPolicy('');
     }
   };
 
-  const removePolicy = (id) => {
+  const removePolicy = (policy) => {
     setFormData((prev) => ({
       ...prev,
-      policies: prev.policies.filter((policy) => policy.id !== id),
+      policies: prev.policies.filter((p) => p !== policy),
     }));
   };
 
@@ -107,181 +55,124 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
     e.preventDefault();
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length === 0) {
+      console.log('Submitting updated asset category:', formData);
       onUpdateAsset(formData);
-      onClose();
     } else {
       setErrors(validationErrors);
+      console.error('Validation errors in EditAssetForm:', validationErrors);
     }
   };
 
-  const handleDelete = () => {
-    // Add delete logic here, e.g., call a delete function and close
-    onClose();
-  };
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 min-w-[400px] min-h-[500px] flex flex-col justify-between shadow-lg">
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-gray-900">Edit Asset: {formData.name}</h3>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-              <i className="pi pi-times"></i>
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              />
-              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Category</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              >
-                <option value="">Select a category</option>
-                {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
-            </div>
-
-            <div className="flex space-x-4">
-              <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700">Count</label>
-                <input
-                  type="number"
-                  name="count"
-                  value={formData.count}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  min="0"
-                />
-                {errors.count && <p className="text-red-500 text-sm">{errors.count}</p>}
-              </div>
-              <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700">Value (₹)</label>
-                <input
-                  type="number"
-                  name="value"
-                  value={formData.value}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  min="0"
-                  step="0.01"
-                />
-                {errors.value && <p className="text-red-500 text-sm">{errors.value}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Icon</label>
-              <select
-                name="icon"
-                value={formData.icon}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              >
-                {iconOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Policies</label>
-              {formData.policies.length > 0 && (
-                <div className="space-y-2 mt-2">
-                  {formData.policies.map((policy) => (
-                    <div
-                      key={policy.id}
-                      className="p-3 border border-gray-200 rounded-md flex justify-between items-center"
-                    >
-                      <div>
-                        <h4 className="font-medium text-gray-800">{policy.name}</h4>
-                        <p className="text-sm text-gray-600">{policy.description}</p>
-                      </div>
-                      <button
-                        onClick={() => removePolicy(policy.id)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        <i className="pi pi-trash"></i>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="mt-4 flex items-center space-x-2">
-                <input
-                  type="text"
-                  name="name"
-                  value={newPolicy.name}
-                  onChange={handleNewPolicyChange}
-                  placeholder="Policy Name"
-                  className="mt-1 block w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <input
-                  type="text"
-                  name="description"
-                  value={newPolicy.description}
-                  onChange={handleNewPolicyChange}
-                  placeholder="Policy Description"
-                  className="mt-1 block w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <button
-                  type="button"
-                  onClick={addPolicy}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
-                >
-                  + Add Policy
-                </button>
-              </div>
-            </div>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Name *</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+          }`}
+        />
+        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Icon</label>
+        <select
+          name="icon"
+          value={formData.icon}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="pi pi-desktop">Desktop</option>
+          <option value="pi pi-laptop">Laptop</option>
+          <option value="pi pi-tablet">Tablet</option>
+          <option value="pi pi-box">Box</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Count</label>
+        <input
+          type="number"
+          name="count"
+          value={formData.count}
+          onChange={handleChange}
+          min="0"
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            errors.count ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+          }`}
+        />
+        {errors.count && <p className="text-red-500 text-sm mt-1">{errors.count}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Total Value (₹)</label>
+        <input
+          type="number"
+          name="total_value"
+          value={formData.total_value}
+          onChange={handleChange}
+          min="0"
+          step="0.01"
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            errors.total_value ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+          }`}
+        />
+        {errors.total_value && <p className="text-red-500 text-sm mt-1">{errors.total_value}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Policies</label>
+        <div className="flex space-x-2 mt-1">
+          <input
+            type="text"
+            value={newPolicy}
+            onChange={handlePolicyChange}
+            placeholder="Add policy"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="button"
+            onClick={addPolicy}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+          >
+            Add
+          </button>
         </div>
-
-        <div className="flex justify-end space-x-2 mt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 flex items-center"
-          >
-            <i className="pi pi-trash mr-2"></i> Delete Asset
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-          >
-            Save Changes
-          </button>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {formData.policies.map((policy, index) => (
+            <span
+              key={index}
+              className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-sm flex items-center"
+            >
+              {policy}
+              <button
+                type="button"
+                onClick={() => removePolicy(policy)}
+                className="ml-1 text-red-500 hover:text-red-700"
+              >
+                ×
+              </button>
+            </span>
+          ))}
         </div>
       </div>
-    </div>
+      <div className="flex justify-end space-x-3 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
+          Save Changes
+        </button>
+      </div>
+    </form>
   );
 };
 
