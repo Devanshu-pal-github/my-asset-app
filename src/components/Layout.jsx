@@ -4,17 +4,17 @@ import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import logger from '../utils/logger.jsx';
 
-logger.debug('Rendering Layout component');
-
 const Layout = () => {
+  logger.debug('Rendering Layout component');
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen bg-background-offwhite">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col ml-[sidebar-width]">
         <TopBar />
-        <main className="p-4">
+        <div className="p-6">
           <Outlet />
-        </main>
+        </div>
       </div>
     </div>
   );
