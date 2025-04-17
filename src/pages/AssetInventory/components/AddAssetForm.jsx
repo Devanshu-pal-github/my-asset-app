@@ -83,20 +83,20 @@ const AddAssetForm = () => {
       total_value: formData.cost ? parseFloat(formData.cost) || 0.0 : 0.0,
       policies: [formData.description, formData.status].filter(Boolean),
       is_active: formData.enableAssetType ? 1 : 0,
-      description: formData.description || None,
-      status: formData.status || None,
-      specifications: formData.hasSpecifications ? Object.fromEntries(formData.specs.map(spec => [spec.key, spec.value])) : None,
+      description: formData.description || null,
+      status: formData.status || null,
+      specifications: formData.hasSpecifications ? Object.fromEntries(formData.specs.map(spec => [spec.key, spec.value])) : null,
       is_reassignable: formData.canReassign ? 1 : 0,
       is_consumable: formData.isConsumable ? 1 : 0,
       requires_maintenance: formData.requiresMaintenance ? 1 : 0,
-      maintenance_frequency: formData.isRecurring ? formData.frequency : None,
-      maintenance_alert_days: formData.alertBeforeDue ? parseInt(formData.alertBeforeDue) : None,
-      cost_per_unit: formData.cost ? parseFloat(formData.cost) : None,
-      expected_life: formData.life ? parseInt(formData.life) : None,
+      maintenance_frequency: formData.isRecurring ? formData.frequency : null,
+      maintenance_alert_days: formData.alertBeforeDue ? parseInt(formData.alertBeforeDue) : null,
+      cost_per_unit: formData.cost ? parseFloat(formData.cost) : null,
+      expected_life: formData.life ? parseInt(formData.life) : null,
       life_unit: formData.lifeUnit,
       depreciation_method: formData.depreciationMethod,
-      residual_value: formData.residualValue ? parseFloat(formData.residualValue) : None,
-      assignment_duration: formData.duration ? parseInt(formData.duration) : None,
+      residual_value: formData.residualValue ? parseFloat(formData.residualValue) : null,
+      assignment_duration: formData.duration ? parseInt(formData.duration) : null,
       duration_unit: formData.durationUnit,
       assignable_to: formData.assignTo,
       allow_multiple_assignments: formData.allowMultiple ? 1 : 0,
@@ -117,7 +117,7 @@ const AddAssetForm = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen p-8">
+    <div className="add-asset-page">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Create New Asset Type</h1>
         <button onClick={goBack} className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">

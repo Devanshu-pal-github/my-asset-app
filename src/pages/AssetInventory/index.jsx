@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAssetCategories } from '../../store/slices/assetCategorySlice.jsx';
+import { fetchAssetCategories } from '../../store/slices/assetCategorySlice';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
-import logger from '../../utils/logger.jsx';
+import logger from '../../utils/logger';
 import { Link } from 'react-router-dom';
 
 const AssetInventory = () => {
@@ -39,7 +39,7 @@ const AssetInventory = () => {
   ];
 
   return (
-    <div className="bg-background-offwhite min-h-screen p-6">
+    <div className="content-container">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white p-4 rounded-xl shadow-md">
@@ -67,63 +67,69 @@ const AssetInventory = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto pr-2">
-        {categories.map((category) => (
-          <Card
-            key={category._id || category.id}
-            className="bg-white rounded-xl shadow-md relative"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <i className={`${category.icon} text-primary-blue`}></i>
-                  <span className="text-text-dark font-semibold text-lg">{category.name}</span>
+        {categories.map((category) => {
+          const categoryId = category._id || category.id || 'default-id';
+          logger.debug('Category ID for View Details:', { categoryId });
+          return (
+            <Card
+              key={categoryId}
+              className="bg-white rounded-xl shadow-md relative"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <i className={`${category.icon} text-primary-blue`}></i>
+                    <span className="text-text-dark font-semibold text-lg">{category.name}</span>
+                  </div>
+                  <div className="text-xs text-text-light mt-1">{category.description || 'No description'}</div>
                 </div>
-                <div className="text-xs text-text-light mt-1">{category.description || 'No description'}</div>
+                <div className="flex space-x-2 text-text-light text-sm">
+                  <i className="pi pi-pencil cursor-pointer" />
+                  <i className="pi pi-copy cursor-pointer" />
+                  <i className="pi pi-trash cursor-pointer" />
+                </div>
               </div>
-              <div className="flex space-x-2 text-text-light text-sm">
-                <i className="pi pi-pencil cursor-pointer" />
-                <i className="pi pi-copy cursor-pointer" />
-                <i className="pi pi-trash cursor-pointer" />
+              <div className="grid grid-cols-2 text-sm text-text-dark mb-3">
+                <div>
+                  <div className="font-medium">Total Items</div>
+                  <div className="text-lg font-bold">{category.count || 0}</div>
+                </div>
+                <div>
+                  <div className="font-medium">Assigned</div>
+                  <div className="text-lg font-bold">0</div>
+                </div>
+                <div>
+                  <div className="font-medium text-secondary-green">Available</div>
+                  <div className="text-lg font-bold text-secondary-green">0</div>
+                </div>
+                <div>
+                  <div className="font-medium text-yellow-500">Maintenance</div>
+                  <div className="text-lg font-bold text-yellow-500">0</div>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 text-sm text-text-dark mb-3">
-              <div>
-                <div className="font-medium">Total Items</div>
-                <div className="text-lg font-bold">{category.count || 0}</div>
+              <div className="text-sm text-text-dark mb-1">Utilization Rate</div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div className="bg-primary-blue h-2 rounded-full" style={{ width: '0%' }}></div>
               </div>
-              <div>
-                <div className="font-medium">Assigned</div>
-                <div className="text-lg font-bold">0</div> {/* To be fetched from AssetItem */}
+              <div className="text-right text-sm text-dark font-semibold mb-2">0%</div>
+              <div className="flex space-x-2 mb-4">
+                <Button label="Assign Asset" className="p-button-sm w-1/2 bg-primary-blue text-white" />
+                <Button label="Unassign Asset" className="p-button-sm w-1/2 bg-error-red text-white" />
               </div>
-              <div>
-                <div className="font-medium text-secondary-green">Available</div>
-                <div className="text-lg font-bold text-secondary-green">0</div> {/* To be fetched from AssetItem */}
+              <div className="flex justify-between items-center">
+                <div className="bg-green-100 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">
+                  ${Number(category.total_value || 0).toLocaleString()}
+                </div>
+                <Link to={`/asset-inventory/${categoryId}`}>
+                  <Button
+                    label="View Details"
+                    className="p-button-text p-button-sm text-primary-blue font-semibold bg-transparent"
+                  />
+                </Link>
               </div>
-              <div>
-                <div className="font-medium text-yellow-500">Maintenance</div>
-                <div className="text-lg font-bold text-yellow-500">0</div> {/* To be fetched from MaintenanceHistory */}
-              </div>
-            </div>
-            <div className="text-sm text-text-dark mb-1">Utilization Rate</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-primary-blue h-2 rounded-full" style={{ width: '0%' }}></div> {/* To be calculated */}
-            </div>
-            <div className="text-right text-sm text-text-dark font-semibold mb-2">0%</div>
-            <div className="flex space-x-2 mb-4">
-              <Button label="Assign Asset" className="p-button-sm w-1/2 bg-primary-blue text-white" />
-              <Button label="Unassign Asset" className="p-button-sm w-1/2 bg-error-red text-white" />
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="bg-green-100 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">
-                ${Number(category.total_value || 0).toLocaleString()}
-              </div>
-              <Button
-                label="View Details"
-                className="p-0 text-primary-blue text-sm font-semibold bg-transparent shadow-none"
-              />
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

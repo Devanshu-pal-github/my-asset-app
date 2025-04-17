@@ -2,16 +2,214 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles for asset management portal */
+/* Global styles */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  @apply bg-background-offwhite text-text-dark overflow-y-auto; /* Enable site-wide scrolling */
 }
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-dark;
+}
+
+/* Layout */
+.flex.h-screen {
+  height: 100vh; /* Direct CSS instead of @apply to avoid circular dependency */
+}
+
+.w-[sidebar-width] {
+  @apply fixed top-0 left-0 h-screen bg-card-white shadow-lg rounded-tr-lg z-10 transition-all duration-200;
+}
+
+/* Main content container */
+div.flex-1.flex.flex-col {
+  @apply ml-[sidebar-width];
+}
+
+.content-container {
+  @apply mt-[64px] min-h-0; /* Removed fixed height, allow natural scrolling */
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .content-container {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-container {
+    padding: 32px;
+  }
+}
+
+/* Topbar */
+.topbar {
+  @apply fixed top-0 left-[sidebar-width] right-0 bg-card-white shadow-lg px-6 py-4 z-10 flex justify-between items-center;
+}
+
+/* Container */
 .asset-inventory-container {
-  @apply max-w-7xl mx-auto p-4;
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
+/* Cards */
 .card {
-  @apply bg-white shadow-md rounded-lg p-6;
+  @apply bg-card-white shadow-sm rounded-md p-6 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+}
+
+/* Inputs */
+input, select, textarea {
+  @apply border border-border-gray rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary transition-all duration-200 bg-card-white;
+}
+
+input[type="checkbox"] {
+  @apply h-4 w-4 text-primary focus:ring-primary-light border-border-gray rounded transition-all duration-200;
+}
+
+/* Buttons */
+button, .p-button {
+  @apply px-4 py-2 rounded-sm text-sm font-medium transition-all duration-200 transform hover:scale-105 focus:ring-2 focus:ring-primary-light;
+}
+
+button:not(.p-button-outlined):not(.p-button-text) {
+  @apply bg-primary text-white hover:bg-primary-dark;
+}
+
+.p-button-outlined {
+  @apply border border-border-gray text-text-dark bg-transparent hover:bg-gray-50;
+}
+
+.p-button-text {
+  @apply text-primary hover:text-primary-dark;
+}
+
+/* Search input */
+input[type="text"][placeholder="Search assets..."] {
+  @apply pl-10 border border-border-gray rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary transition-all duration-200 bg-card-white;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-5 w-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>');
+  background-repeat: no-repeat;
+  background-size: 20px;
+  background-position: 10px center;
+}
+
+/* Sidebar */
+.w-[sidebar-width] h2 {
+  @apply text-2xl font-semibold text-text-dark;
+}
+
+.w-[sidebar-width] nav a {
+  @apply flex items-center p-4 text-base text-text-dark hover:bg-primary-light/20 transition-all duration-200;
+}
+
+.w-[sidebar-width] nav a.active {
+  @apply bg-sidebar-selected font-medium;
+}
+
+@media (max-width: 640px) {
+  .w-[sidebar-width] {
+    @apply w-16;
+  }
+  .w-[sidebar-width] h2, .w-[sidebar-width] nav span {
+    @apply hidden;
+  }
+  div.flex-1.flex.flex-col {
+    @apply ml-16;
+  }
+  .topbar {
+    @apply left-16;
+  }
+}
+
+/* AssetInventory specific styles */
+.asset-inventory .grid.grid-cols-1.sm:grid-cols-2.md:grid-cols-4 {
+  @apply gap-4 mb-6;
+}
+
+.asset-inventory .flex.flex-col.md:flex-row {
+  @apply gap-3 mb-4;
+}
+
+.asset-inventory .grid.grid-cols-1.sm:grid-cols-2.md:grid-cols-3.lg:grid-cols-4 {
+  @apply gap-4 max-h-[70vh] overflow-y-auto pr-2 pb-12;
+}
+
+.asset-inventory .bg-white.p-4 {
+  @apply rounded-xl shadow-md;
+}
+
+/* Add Asset page container */
+.add-asset-page {
+  @apply bg-white mt-[64px] mb-12 min-h-0;
+  padding: 32px; /* Matches p-8 (32px) for consistency */
+}
+
+@media (min-width: 640px) {
+  .add-asset-page {
+    padding: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .add-asset-page {
+    padding: 32px;
+  }
+}
+
+/* Card animations */
+.grid > .card {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tooltip for icons */
+.pi-pencil, .pi-copy, .pi-trash {
+  @apply relative transition-all duration-200 hover:scale-110;
+}
+
+.pi-pencil:hover::after, .pi-copy:hover::after, .pi-trash:hover::after {
+  @apply absolute z-10 bg-primary-dark text-white text-xs rounded px-2 py-1 -top-8 left-1/2 transform -translate-x-1/2 opacity-0 transition-opacity duration-200;
+  content: attr(data-tooltip);
+}
+
+.pi-pencil:hover::after, .pi-copy:hover::after, .pi-trash:hover::after {
+  @apply opacity-100;
+}
+
+.pi-pencil:hover::after { content: "Edit"; }
+.pi-copy:hover::after { content: "Copy"; }
+.pi-trash:hover::after { content: "Delete"; }
+
+/* Loading spinner */
+.p-6:empty::after {
+  content: '';
+  @apply block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mt-8;
+}
+
+/* Form sections */
+.space-y-10 {
+  @apply space-y-8;
 }
