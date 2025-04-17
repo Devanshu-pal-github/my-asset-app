@@ -8,18 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_asset_categories(db: Collection) -> List[AssetCategory]:
-    """
-    Retrieves all asset categories from the database.
-    
-    Args:
-        db: MongoDB collection object
-    
-    Returns:
-        List of AssetCategory objects
-    
-    Raises:
-        Exception: If database query fails
-    """
     logger.debug("Executing get_asset_categories")
     try:
         categories = list(db.asset_categories.find())
@@ -38,19 +26,9 @@ def get_asset_categories(db: Collection) -> List[AssetCategory]:
         raise
 
 def create_asset_category(db: Collection, category: AssetCategoryCreate) -> AssetCategory:
-    """
-    Creates a new asset category in the database.
-    
-    Args:
-        db: MongoDB collection object
-        category: AssetCategoryCreate object with category data
-    
-    Returns:
-        Created AssetCategory object
-    """
     logger.debug(f"Creating category: {category.name}")
     try:
-        category_dict = category.dict()
+        category_dict = category.dict(exclude_unset=True)  # Only include provided fields
         category_dict["created_at"] = datetime.utcnow()
         category_dict["updated_at"] = datetime.utcnow()
         result = db.asset_categories.insert_one(category_dict)
@@ -61,17 +39,6 @@ def create_asset_category(db: Collection, category: AssetCategoryCreate) -> Asse
         raise
 
 def update_asset_category(db: Collection, id: str, category: AssetCategoryBase) -> Optional[AssetCategory]:
-    """
-    Updates an existing asset category.
-    
-    Args:
-        db: MongoDB collection object
-        id: Category ID
-        category: AssetCategoryBase object with updated data
-    
-    Returns:
-        Updated AssetCategory object or None if not found
-    """
     logger.debug(f"Updating category with ID: {id}")
     try:
         update_data = category.dict(exclude_unset=True)
@@ -91,19 +58,6 @@ def update_asset_category(db: Collection, id: str, category: AssetCategoryBase) 
         return None
 
 def delete_asset_category(db: Collection, id: str) -> bool:
-    """
-    Deletes an asset category if no associated items exist.
-    
-    Args:
-        db: MongoDB collection object
-        id: Category ID
-    
-    Returns:
-        True if deleted, False if not found
-    
-    Raises:
-        ValueError: If category has associated items
-    """
     logger.debug(f"Deleting category with ID: {id}")
     try:
         item_count = db.asset_items.count_documents({"category_id": id})

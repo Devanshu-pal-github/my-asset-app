@@ -1,49 +1,41 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchAssetCategories } from "../../store/slices/assetCategorySlice.jsx";
-import { Card } from "primereact/card";
-import { Button } from "primereact/button";
-import logger from "../../utils/logger.jsx";
-import { Link } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAssetCategories } from '../../store/slices/assetCategorySlice.jsx';
+import { Card } from 'primereact/card';
+import { Button } from 'primereact/button';
+import logger from '../../utils/logger.jsx';
+import { Link } from 'react-router-dom';
 
 const AssetInventory = () => {
   const dispatch = useDispatch();
-  const { categories, loading, error } = useSelector(
-    (state) => state.assetCategories
-  );
+  const { categories, loading, error } = useSelector((state) => state.assetCategories);
 
   useEffect(() => {
-    logger.debug("AssetInventory useEffect triggered");
+    logger.debug('AssetInventory useEffect triggered');
     dispatch(fetchAssetCategories());
   }, [dispatch]);
 
-  logger.debug("Rendering AssetInventory", { categories, loading, error });
+  logger.debug('Rendering AssetInventory', { categories, loading, error });
 
   if (loading && !categories.length) {
     return <div className="p-6">Loading...</div>;
   }
 
   if (error) {
-    logger.error("AssetInventory error", { error });
+    logger.error('AssetInventory error', { error });
     return <div className="p-6 text-error-red">Error: {error.toString()}</div>;
   }
 
   if (!categories.length) {
-    logger.info("No categories found");
+    logger.info('No categories found');
     return <div className="p-6">No categories found</div>;
   }
 
   const stats = [
-    { title: "Total Assets", value: "1,234", trend: "+12%" },
-    { title: "Active Assets", value: "892", trend: "+5%" },
-    { title: "Total Value", value: "$2.4M", trend: "+8%" },
-    {
-      title: "Depreciated Assets",
-      value: categories
-        .reduce((sum, cat) => sum + (cat.total_value || 0) * 0.2, 0)
-        .toLocaleString("en-US", { style: "currency", currency: "USD" }),
-      trend: "-3%",
-    },
+    { title: 'Total Assets', value: categories.reduce((sum, cat) => sum + cat.count, 0).toString(), trend: '+0%' },
+    { title: 'Active Assets', value: categories.filter(cat => cat.is_active).reduce((sum, cat) => sum + cat.count, 0).toString(), trend: '+0%' },
+    { title: 'Total Value', value: categories.reduce((sum, cat) => sum + (cat.total_value || 0), 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }), trend: '+0%' },
+    { title: 'Depreciated Assets', value: categories.reduce((sum, cat) => sum + (cat.total_value || 0) * 0.2, 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }), trend: '-0%' },
   ];
 
   return (
@@ -53,14 +45,8 @@ const AssetInventory = () => {
           <div key={index} className="bg-white p-4 rounded-xl shadow-md">
             <div className="text-text-dark font-semibold">{stat.title}</div>
             <div className="text-2xl font-bold text-text-dark mt-2">
-              {stat.value}{" "}
-              <span
-                className={
-                  stat.trend.startsWith("+")
-                    ? "text-secondary-green"
-                    : "text-error-red"
-                }
-              >
+              {stat.value}{' '}
+              <span className={stat.trend.startsWith('+') ? 'text-secondary-green' : 'text-error-red'}>
                 {stat.trend}
               </span>
             </div>
@@ -74,13 +60,9 @@ const AssetInventory = () => {
           className="p-2 border border-border-gray rounded-xl w-full md:w-1/3 text-text-light"
         />
         <div className="flex gap-2 justify-end">
-          <button className="p-2 bg-primary-blue text-white rounded-xl">
-            Filter
-          </button>
+          <button className="p-2 bg-primary-blue text-white rounded-xl">Filter</button>
           <Link to="/asset-inventory/add-category">
-            <button className="p-2 bg-primary-blue text-white rounded-xl">
-              Add New Asset
-            </button>
+            <button className="p-2 bg-primary-blue text-white rounded-xl">Add New Asset</button>
           </Link>
         </div>
       </div>
@@ -94,13 +76,9 @@ const AssetInventory = () => {
               <div>
                 <div className="flex items-center space-x-2">
                   <i className={`${category.icon} text-primary-blue`}></i>
-                  <span className="text-text-dark font-semibold text-lg">
-                    {category.name}
-                  </span>
+                  <span className="text-text-dark font-semibold text-lg">{category.name}</span>
                 </div>
-                <div className="text-xs text-text-light mt-1">
-                  {category.policies[0] || "Hardware"}
-                </div>
+                <div className="text-xs text-text-light mt-1">{category.description || 'No description'}</div>
               </div>
               <div className="flex space-x-2 text-text-light text-sm">
                 <i className="pi pi-pencil cursor-pointer" />
@@ -115,42 +93,29 @@ const AssetInventory = () => {
               </div>
               <div>
                 <div className="font-medium">Assigned</div>
-                <div className="text-lg font-bold">198</div>
+                <div className="text-lg font-bold">0</div> {/* To be fetched from AssetItem */}
               </div>
               <div>
-                <div className="font-medium text-secondary-green">
-                  Available
-                </div>
-                <div className="text-lg font-bold text-secondary-green">36</div>
+                <div className="font-medium text-secondary-green">Available</div>
+                <div className="text-lg font-bold text-secondary-green">0</div> {/* To be fetched from AssetItem */}
               </div>
               <div>
                 <div className="font-medium text-yellow-500">Maintenance</div>
-                <div className="text-lg font-bold text-yellow-500">12</div>
+                <div className="text-lg font-bold text-yellow-500">0</div> {/* To be fetched from MaintenanceHistory */}
               </div>
             </div>
             <div className="text-sm text-text-dark mb-1">Utilization Rate</div>
             <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-              <div
-                className="bg-primary-blue h-2 rounded-full"
-                style={{ width: "78%" }}
-              ></div>
+              <div className="bg-primary-blue h-2 rounded-full" style={{ width: '0%' }}></div> {/* To be calculated */}
             </div>
-            <div className="text-right text-sm text-text-dark font-semibold mb-2">
-              78%
-            </div>
+            <div className="text-right text-sm text-text-dark font-semibold mb-2">0%</div>
             <div className="flex space-x-2 mb-4">
-              <Button
-                label="Assign Asset"
-                className="p-button-sm w-1/2 bg-primary-blue text-white"
-              />
-              <Button
-                label="Unassign Asset"
-                className="p-button-sm w-1/2 bg-error-red text-white"
-              />
+              <Button label="Assign Asset" className="p-button-sm w-1/2 bg-primary-blue text-white" />
+              <Button label="Unassign Asset" className="p-button-sm w-1/2 bg-error-red text-white" />
             </div>
             <div className="flex justify-between items-center">
               <div className="bg-green-100 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">
-                ${Number(category.total_value || 156000).toLocaleString()}
+                ${Number(category.total_value || 0).toLocaleString()}
               </div>
               <Button
                 label="View Details"
