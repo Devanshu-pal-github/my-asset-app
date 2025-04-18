@@ -114,7 +114,12 @@ const assetCategorySlice = createSlice({
       .addCase(fetchAssetCategories.fulfilled, (state, action) => {
         logger.info('Fetch asset categories fulfilled:', { count: action.payload ? action.payload.length : 0 });
         state.loading = false;
-        state.categories = Array.isArray(action.payload) ? action.payload : [];
+        state.categories = Array.isArray(action.payload)
+          ? action.payload.map(cat => ({
+              ...cat,
+              _id: String(cat._id || cat.id), // Normalize _id to string
+            }))
+          : [];
       })
       .addCase(fetchAssetCategories.rejected, (state, action) => {
         logger.error('Fetch asset categories rejected:', { error: action.payload });
@@ -130,7 +135,7 @@ const assetCategorySlice = createSlice({
       .addCase(addAssetCategory.fulfilled, (state, action) => {
         logger.info('Add asset category fulfilled:', { data: action.payload });
         state.loading = false;
-        state.categories.push(action.payload);
+        state.categories.push({ ...action.payload, _id: String(action.payload._id || action.payload.id) });
       })
       .addCase(addAssetCategory.rejected, (state, action) => {
         logger.error('Add asset category rejected:', { error: action.payload });
@@ -145,9 +150,9 @@ const assetCategorySlice = createSlice({
       .addCase(updateAssetCategory.fulfilled, (state, action) => {
         logger.info('Update asset category fulfilled:', { data: action.payload });
         state.loading = false;
-        const index = state.categories.findIndex((cat) => cat.id === action.payload.id);
+        const index = state.categories.findIndex((cat) => cat._id === String(action.payload._id || action.payload.id));
         if (index !== -1) {
-          state.categories[index] = action.payload;
+          state.categories[index] = { ...action.payload, _id: String(action.payload._id || action.payload.id) };
         }
       })
       .addCase(updateAssetCategory.rejected, (state, action) => {
@@ -163,7 +168,7 @@ const assetCategorySlice = createSlice({
       .addCase(deleteAssetCategory.fulfilled, (state, action) => {
         logger.info('Delete asset category fulfilled:', { id: action.payload });
         state.loading = false;
-        state.categories = state.categories.filter((cat) => cat.id !== action.payload);
+        state.categories = state.categories.filter((cat) => cat._id !== String(action.payload));
       })
       .addCase(deleteAssetCategory.rejected, (state, action) => {
         logger.error('Delete asset category rejected:', { error: action.payload });

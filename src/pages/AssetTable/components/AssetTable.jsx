@@ -9,8 +9,12 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
   );
 
   const renderSpecifications = (item) => {
-    const specs = item.specifications || item.specs || "N/A";
-    return specs;
+    const specs = item.specifications || item.specs;
+    if (!specs) return "N/A";
+    // Convert object to a comma-separated string of key-value pairs
+    return Object.entries(specs)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(", ");
   };
 
   return (
@@ -35,14 +39,14 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {filteredData.map((item) => (
-            <tr key={item.deviceId || item.id}>
+            <tr key={item.id}>
               {columns.map((col) => (
                 <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {col === "specifications" ? (
                     renderSpecifications(item)
                   ) : col === "viewMore" ? (
                     <Link
-                      to={`/asset-inventory/${item.deviceId || item.id}`}
+                      to={`/asset-inventory/${item.id}`}
                       className="text-blue-500 hover:text-blue-700"
                     >
                       View More

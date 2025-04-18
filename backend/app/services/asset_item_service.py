@@ -12,7 +12,9 @@ def get_asset_items(db: Collection, category_id: Optional[str] = None, status: O
         query["category_id"] = category_id
     if status:
         query["status"] = status
+    print(f"MongoDB query: {query}")  # Added for debugging
     items = list(db.asset_items.find(query))
+    print(f"Found {len(items)} items")  # Added for debugging
     return [AssetItem(**{**item, "id": str(item["_id"])}) for item in items]
 
 def get_asset_item_by_id(db: Collection, id: str) -> Optional[AssetItem]:

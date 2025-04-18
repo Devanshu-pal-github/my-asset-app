@@ -17,6 +17,7 @@ export const fetchAssetItemsByCategory = createAsyncThunk(
     try {
       const response = await axiosInstance.get(`${API_URL}/asset-items/?category_id=${categoryId}`);
       logger.info('Successfully fetched asset items', { count: response.data.length });
+      console.log('API Response for asset items:', response.data); // Added for debugging
       return response.data;
     } catch (error) {
       logger.error('Failed to fetch asset items', { error: error.message });

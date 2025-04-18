@@ -16,6 +16,7 @@ const AssetInventory = () => {
   }, [dispatch]);
 
   logger.debug('Rendering AssetInventory', { categories, loading, error });
+  logger.debug('Categories in state:', { categories });
 
   if (loading && !categories.length) {
     return <div className="p-6">Loading...</div>;
@@ -68,7 +69,7 @@ const AssetInventory = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto pr-2">
         {categories.map((category) => {
-          const categoryId = category._id || category.id || 'default-id';
+          const categoryId = String(category._id || category.id || 'default-id');
           logger.debug('Category ID for View Details:', { categoryId });
           return (
             <Card
@@ -120,7 +121,10 @@ const AssetInventory = () => {
                 <div className="bg-green-100 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">
                   ${Number(category.total_value || 0).toLocaleString()}
                 </div>
-                <Link to={`/asset-inventory/${categoryId}`}>
+                <Link
+                  to={`/asset-inventory/${categoryId}`}
+                  onClick={() => logger.info('Navigating to AssetTablePage', { categoryId, url: `/asset-inventory/${categoryId}` })}
+                >
                   <Button
                     label="View Details"
                     className="p-button-text p-button-sm text-primary-blue font-semibold bg-transparent"

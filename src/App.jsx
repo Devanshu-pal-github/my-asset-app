@@ -16,7 +16,7 @@ function App() {
           <Route path="asset-inventory">
             <Route index element={<AssetInventory />} />
             <Route path="add-category" element={<AddAssetForm />} />
-            <Route path=":id" element={<AssetTablePage />} />
+            <Route path=":categoryId" element={<AssetTablePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/asset-inventory" replace />} />
         </Route>

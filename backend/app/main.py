@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.dependencies import db
-from app.routers import asset_categories
+from app.routers import asset_categories, asset_items  # Add asset_items
 import logging
 import logging.handlers
 
 # Configure logging with StreamHandler for terminal output
-logging.basicConfig(level=logging.DEBUG)  # Changed to DEBUG for more visibility
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 if not logger.handlers:
     handler = logging.StreamHandler()
@@ -28,9 +28,13 @@ app.add_middleware(
 )
 logger.info("CORS middleware configured with origins: http://localhost:5173")
 
-# Include router with debug logging
+# Include routers with debug logging
 logger.debug("Registering asset_categories router with prefix /api/v1")
 app.include_router(asset_categories.router, prefix="/api/v1")
+logger.debug("Registering asset_items router with prefix /api/v1")
+app.include_router(asset_items.router, prefix="/api/v1")  # Add this line
+
+# ... rest of the code remains unchanged ...
 
 @app.on_event("startup")
 async def startup_event():
