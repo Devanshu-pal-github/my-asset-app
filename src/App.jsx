@@ -3,6 +3,7 @@ import Layout from './components/Layout.jsx';
 import AssetInventory from './pages/AssetInventory/index.jsx';
 import AddAssetForm from './pages/AssetInventory/components/AddAssetForm.jsx';
 import AssetTablePage from './pages/AssetTable/index.jsx';
+import AssetDetail from './pages/AssetDetail/index.jsx'; // Import AssetDetail
 import logger from './utils/logger.jsx';
 
 logger.debug('Rendering App component');
@@ -17,6 +18,7 @@ function App() {
             <Route index element={<AssetInventory />} />
             <Route path="add-category" element={<AddAssetForm />} />
             <Route path=":categoryId" element={<AssetTablePage />} />
+            <Route path="asset/:assetId" element={<AssetDetail />} /> {/* New route for AssetDetail */}
           </Route>
           <Route path="*" element={<Navigate to="/asset-inventory" replace />} />
         </Route>

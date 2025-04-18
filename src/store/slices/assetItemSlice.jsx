@@ -27,6 +27,27 @@ export const fetchAssetItemsByCategory = createAsyncThunk(
 );
 
 /**
+ * Fetches a single asset item by ID.
+ * @param {string} assetId - ID of the asset item
+ * @returns {Promise<Object>} Asset item
+ */
+export const fetchAssetItemById = createAsyncThunk(
+  'assetItems/fetchById',
+  async (assetId, { rejectWithValue }) => {
+    logger.debug('Initiating fetch of asset item by ID', { assetId });
+    try {
+      const response = await axiosInstance.get(`${API_URL}/asset-items/${assetId}`);
+      logger.info('Successfully fetched asset item', { assetId });
+      console.log('API Response for asset item:', response.data); // Added for debugging
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to fetch asset item', { error: error.message });
+      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch asset item');
+    }
+  }
+);
+
+/**
  * Creates a new asset item and updates the associated category.
  * @param {Object} itemData - Asset item data to create
  * @returns {Promise<Object>} Created asset item
@@ -90,6 +111,7 @@ const assetItemSlice = createSlice({
   name: 'assetItems',
   initialState: {
     items: [],
+    currentItem: null, // Store single asset item
     loading: false,
     error: null,
   },
@@ -97,6 +119,10 @@ const assetItemSlice = createSlice({
     clearError: (state) => {
       logger.debug('Clearing asset items error state');
       state.error = null;
+    },
+    clearCurrentItem: (state) => {
+      logger.debug('Clearing current asset item');
+      state.currentItem = null;
     },
   },
   extraReducers: (builder) => {
@@ -113,6 +139,21 @@ const assetItemSlice = createSlice({
       })
       .addCase(fetchAssetItemsByCategory.rejected, (state, action) => {
         logger.error('Fetch asset items rejected', { error: action.payload });
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAssetItemById.pending, (state) => {
+        logger.debug('Fetch asset item by ID pending');
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAssetItemById.fulfilled, (state, action) => {
+        logger.info('Fetch asset item by ID fulfilled', { assetId: action.payload.id });
+        state.loading = false;
+        state.currentItem = action.payload;
+      })
+      .addCase(fetchAssetItemById.rejected, (state, action) => {
+        logger.error('Fetch asset item by ID rejected', { error: action.payload });
         state.loading = false;
         state.error = action.payload;
       })
@@ -141,6 +182,9 @@ const assetItemSlice = createSlice({
         state.loading = false;
         const index = state.items.findIndex((item) => item.id === action.payload.id);
         if (index !== -1) state.items[index] = action.payload;
+        if (state.currentItem && state.currentItem.id === action.payload.id) {
+          state.currentItem = action.payload;
+        }
       })
       .addCase(updateAssetItem.rejected, (state, action) => {
         logger.error('Update asset item rejected', { error: action.payload });
@@ -156,6 +200,9 @@ const assetItemSlice = createSlice({
         logger.info('Delete asset item fulfilled', { id: action.payload });
         state.loading = false;
         state.items = state.items.filter((item) => item.id !== action.payload);
+        if (state.currentItem && state.currentItem.id === action.payload) {
+          state.currentItem = null;
+        }
       })
       .addCase(deleteAssetItem.rejected, (state, action) => {
         logger.error('Delete asset item rejected', { error: action.payload });
@@ -165,5 +212,5 @@ const assetItemSlice = createSlice({
   },
 });
 
-export const { clearError } = assetItemSlice.actions;
+export const { clearError, clearCurrentItem } = assetItemSlice.actions;
 export default assetItemSlice.reducer;

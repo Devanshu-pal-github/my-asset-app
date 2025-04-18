@@ -1,7 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import logger from '../../../utils/logger';
 
 const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId }) => {
+  logger.debug('Rendering AssetTable', { dataCount: data.length, categoryId });
+
   const filteredData = data.filter((item) =>
     Object.values(item).some((value) =>
       value?.toString().toLowerCase().includes(globalFilter.toLowerCase())
@@ -10,11 +13,16 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
 
   const renderSpecifications = (item) => {
     const specs = item.specifications || item.specs;
-    if (!specs) return "N/A";
+    if (!specs) {
+      logger.debug('No specifications found for item', { itemId: item.id });
+      return "N/A";
+    }
     // Convert object to a comma-separated string of key-value pairs
-    return Object.entries(specs)
+    const specsString = Object.entries(specs)
       .map(([key, value]) => `${key}: ${value}`)
       .join(", ");
+    logger.debug('Rendered specifications', { itemId: item.id, specs: specsString });
+    return specsString;
   };
 
   return (
@@ -46,8 +54,9 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
                     renderSpecifications(item)
                   ) : col === "viewMore" ? (
                     <Link
-                      to={`/asset-inventory/${item.id}`}
+                      to={`/asset-inventory/asset/${item.id}`}
                       className="text-blue-500 hover:text-blue-700"
+                      onClick={() => logger.info('Navigating to asset detail', { assetId: item.id })}
                     >
                       View More
                     </Link>
