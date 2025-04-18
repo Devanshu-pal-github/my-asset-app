@@ -12,9 +12,9 @@ def get_asset_items(db: Collection, category_id: Optional[str] = None, status: O
         query["category_id"] = category_id
     if status:
         query["status"] = status
-    print(f"MongoDB query: {query}")  # Added for debugging
+    print(f"MongoDB query: {query}")
     items = list(db.asset_items.find(query))
-    print(f"Found {len(items)} items")  # Added for debugging
+    print(f"Found {len(items)} items")
     return [AssetItem(**{**item, "id": str(item["_id"])}) for item in items]
 
 def get_asset_item_by_id(db: Collection, id: str) -> Optional[AssetItem]:
@@ -33,24 +33,22 @@ def create_asset_item(db: Collection, item: AssetItemCreate) -> AssetItem:
     # Validate references
     if not db.asset_categories.find_one({"_id": ObjectId(item.category_id)}):
         raise ValueError("Invalid category_id")
-    if item.assigned_to:
-        employee = db.employees.find_one({"_id": ObjectId(item.assigned_to)})
+    if item.current_assignee_id:
+        employee = db.employees.find_one({"_id": ObjectId(item.current_assignee_id)})
         if not employee:
-            raise ValueError("Invalid assigned_to")
-    # Set is_assigned and status
-    item_dict["is_assigned"] = 1 if item_dict.get("assigned_to") else 0
-    if item_dict["is_assigned"]:
+            raise ValueError("Invalid current_assignee_id")
+    # Set has_active_assignment and status
+    item_dict["has_active_assignment"] = 1 if item_dict.get("current_assignee_id") else 0
+    if item_dict["has_active_assignment"]:
         item_dict["status"] = AssetStatus.IN_USE
-    item_dict["is_active"] = 0 if item_dict.get("status") in [AssetStatus.RETIRED, AssetStatus.LOST] else 1
+    item_dict["is_operational"] = 0 if item_dict.get("status") in [AssetStatus.RETIRED, AssetStatus.LOST] else 1
     try:
         result = db.asset_items.insert_one(item_dict)
-        # Update employee.assigned_assets after insertion
-        if item_dict.get("assigned_to"):
+        if item_dict.get("current_assignee_id"):
             db.employees.update_one(
-                {"_id": ObjectId(item.assigned_to)},
+                {"_id": ObjectId(item.current_assignee_id)},
                 {"$addToSet": {"assigned_assets": str(result.inserted_id)}, "$set": {"updated_at": datetime.utcnow()}}
             )
-        # Update category count and total_value
         value = item_dict.get("current_value", item_dict["purchase_cost"])
         db.asset_categories.update_one(
             {"_id": ObjectId(item.category_id)},
@@ -70,35 +68,31 @@ def update_asset_item(db: Collection, id: str, item: AssetItemBase) -> Optional[
             return None
         update_data = item.dict(exclude_unset=True)
         update_data["updated_at"] = datetime.utcnow()
-        # Validate references
         if "category_id" in update_data:
             if not db.asset_categories.find_one({"_id": ObjectId(update_data["category_id"])}):
                 raise ValueError("Invalid category_id")
-        if "assigned_to" in update_data and update_data["assigned_to"]:
-            employee = db.employees.find_one({"_id": ObjectId(update_data["assigned_to"])})
+        if "current_assignee_id" in update_data and update_data["current_assignee_id"]:
+            employee = db.employees.find_one({"_id": ObjectId(update_data["current_assignee_id"])})
             if not employee:
-                raise ValueError("Invalid assigned_to")
-        # Handle assignment changes
-        if "assigned_to" in update_data:
-            old_assigned_to = existing_item.get("assigned_to")
-            new_assigned_to = update_data.get("assigned_to")
-            if old_assigned_to and old_assigned_to != new_assigned_to:
+                raise ValueError("Invalid current_assignee_id")
+        if "current_assignee_id" in update_data:
+            old_assignee_id = existing_item.get("current_assignee_id")
+            new_assignee_id = update_data.get("current_assignee_id")
+            if old_assignee_id and old_assignee_id != new_assignee_id:
                 db.employees.update_one(
-                    {"_id": ObjectId(old_assigned_to)},
+                    {"_id": ObjectId(old_assignee_id)},
                     {"$pull": {"assigned_assets": id}, "$set": {"updated_at": datetime.utcnow()}}
                 )
-            if new_assigned_to:
+            if new_assignee_id:
                 db.employees.update_one(
-                    {"_id": ObjectId(new_assigned_to)},
+                    {"_id": ObjectId(new_assignee_id)},
                     {"$addToSet": {"assigned_assets": id}, "$set": {"updated_at": datetime.utcnow()}}
                 )
-        # Update is_assigned and status
-        update_data["is_assigned"] = 1 if update_data.get("assigned_to") else 0
+        update_data["has_active_assignment"] = 1 if update_data.get("current_assignee_id") else 0
         if "status" in update_data:
-            update_data["is_active"] = 0 if update_data["status"] in [AssetStatus.RETIRED, AssetStatus.LOST] else 1
-            if update_data["is_assigned"] and update_data["status"] != AssetStatus.IN_USE:
+            update_data["is_operational"] = 0 if update_data["status"] in [AssetStatus.RETIRED, AssetStatus.LOST] else 1
+            if update_data["has_active_assignment"] and update_data["status"] != AssetStatus.IN_USE:
                 update_data["status"] = AssetStatus.IN_USE
-        # Update category counts and total_value
         old_value = existing_item.get("current_value", existing_item["purchase_cost"])
         new_value = update_data.get("current_value", update_data.get("purchase_cost", old_value))
         if "category_id" in update_data and update_data["category_id"] != existing_item["category_id"]:
@@ -143,7 +137,7 @@ def delete_asset_item(db: Collection, id: str) -> bool:
         item = db.asset_items.find_one({"_id": ObjectId(id)})
         if not item:
             return False
-        if item.get("is_assigned"):
+        if item.get("has_active_assignment"):
             raise ValueError("Cannot delete assigned asset")
         value = item.get("current_value", item["purchase_cost"])
         db.asset_categories.update_one(
@@ -153,9 +147,9 @@ def delete_asset_item(db: Collection, id: str) -> bool:
                 "$set": {"updated_at": datetime.utcnow()}
             }
         )
-        if item.get("assigned_to"):
+        if item.get("current_assignee_id"):
             db.employees.update_one(
-                {"_id": ObjectId(item["assigned_to"])},
+                {"_id": ObjectId(item["current_assignee_id"])},
                 {"$pull": {"assigned_assets": id}, "$set": {"updated_at": datetime.utcnow()}}
             )
         result = db.asset_items.delete_one({"_id": ObjectId(id)})

@@ -24,9 +24,9 @@ class AssetItemBase(BaseModel):
     serial_number: Optional[str] = None
     status: AssetStatus = AssetStatus.AVAILABLE
     condition: AssetCondition = AssetCondition.GOOD
-    assigned_to: Optional[str] = None
-    is_assigned: int = 0
-    is_active: int = 1
+    current_assignee_id: Optional[str] = None  # Renamed from assigned_to
+    has_active_assignment: int = 0  # Renamed from is_assigned
+    is_operational: int = 1  # Renamed from is_active
     department: Optional[str] = None
     location: Optional[str] = None
     specifications: Optional[Dict[str, str]] = {}
@@ -38,6 +38,7 @@ class AssetItemBase(BaseModel):
     insurance_policy: Optional[str] = None
     disposal_date: Optional[datetime] = None
     notes: Optional[str] = None
+    current_assignment_date: Optional[datetime] = None  # New field
 
 class AssetItemCreate(AssetItemBase):
     pass

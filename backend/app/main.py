@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.dependencies import db
-from app.routers import asset_categories, asset_items  # Add asset_items
+from app.routers import (
+    asset_categories,
+    asset_items,
+    assignment_history,
+    maintenance_history,
+    documents,
+    employees,
+)
 import logging
 import logging.handlers
 
@@ -19,9 +26,7 @@ app = FastAPI(title="Asset Management API")
 # CORS Middleware Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-    ],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -32,9 +37,15 @@ logger.info("CORS middleware configured with origins: http://localhost:5173")
 logger.debug("Registering asset_categories router with prefix /api/v1")
 app.include_router(asset_categories.router, prefix="/api/v1")
 logger.debug("Registering asset_items router with prefix /api/v1")
-app.include_router(asset_items.router, prefix="/api/v1")  # Add this line
-
-# ... rest of the code remains unchanged ...
+app.include_router(asset_items.router, prefix="/api/v1")
+logger.debug("Registering assignment_history router with prefix /api/v1")
+app.include_router(assignment_history.router, prefix="/api/v1")
+logger.debug("Registering maintenance_history router with prefix /api/v1")
+app.include_router(maintenance_history.router, prefix="/api/v1")
+logger.debug("Registering documents router with prefix /api/v1")
+app.include_router(documents.router, prefix="/api/v1")
+logger.debug("Registering employees router with prefix /api/v1")
+app.include_router(employees.router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
