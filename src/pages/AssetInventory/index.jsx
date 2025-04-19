@@ -220,7 +220,12 @@ const AssetInventory = () => {
               </div>
               <div className="text-right text-sm text-dark font-semibold mb-2">0%</div>
               <div className="flex space-x-2 mb-4">
-                <Button label="Assign Asset" className="p-button-sm w-1/2 bg-primary-blue text-white" />
+                <Link
+                  to={`/asset-inventory/${categoryId}/assign`}
+                  onClick={() => logger.info('Navigating to AssetAssignmentTable', { categoryId, url: `/asset-inventory/${categoryId}/assign` })}
+                >
+                  <Button label="Assign Asset" className="p-button-sm w-1/2 bg-primary-blue text-white" />
+                </Link>
                 <Button label="Unassign Asset" className="p-button-sm w-1/2 bg-error-red text-white" />
               </div>
               <div className="flex justify-between items-center">
