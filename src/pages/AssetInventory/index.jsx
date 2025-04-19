@@ -1,14 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAssetCategories } from '../../store/slices/assetCategorySlice';
+import { fetchAssetCategories, deleteAssetCategory } from '../../store/slices/assetCategorySlice';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
+import DeleteConfirmationModal from '../AssetInventory/components/DeleteConfirmationModal';
 import logger from '../../utils/logger';
 import { Link } from 'react-router-dom';
 
 const AssetInventory = () => {
   const dispatch = useDispatch();
   const { categories, loading, error } = useSelector((state) => state.assetCategories);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     logger.debug('AssetInventory useEffect triggered');
@@ -17,6 +21,40 @@ const AssetInventory = () => {
 
   logger.debug('Rendering AssetInventory', { categories, loading, error });
   logger.debug('Categories in state:', { categories });
+
+  const handleDeleteClick = (category) => {
+    logger.debug('Delete icon clicked for category', { categoryId: category._id, categoryName: category.name });
+    setSelectedCategory(category);
+    setIsDeleteModalOpen(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedCategory) {
+      logger.error('No category selected for deletion');
+      return;
+    }
+
+    logger.debug('Confirming deletion for category', { categoryId: selectedCategory._id });
+    dispatch(deleteAssetCategory(selectedCategory._id))
+      .unwrap()
+      .then(() => {
+        logger.info('Successfully deleted category', { categoryId: selectedCategory._id });
+        setIsDeleteModalOpen(false);
+        setSelectedCategory(null);
+      })
+      .catch((err) => {
+        logger.error('Failed to delete category', { categoryId: selectedCategory._id, error: err });
+        setDeleteError(err || 'Failed to delete category');
+      });
+  };
+
+  const handleDeleteCancel = () => {
+    logger.debug('Delete cancelled for category', { categoryId: selectedCategory?._id });
+    setIsDeleteModalOpen(false);
+    setSelectedCategory(null);
+    setDeleteError(null);
+  };
 
   if (loading && !categories.length) {
     return <div className="p-6">Loading...</div>;
@@ -67,6 +105,14 @@ const AssetInventory = () => {
           </Link>
         </div>
       </div>
+      {deleteError && (
+        <div className="p-4 mb-4 text-red-600 bg-red-50 rounded-md">
+          <span className="flex items-center">
+            <i className="pi pi-exclamation-triangle mr-2"></i>
+            {deleteError}
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto pr-2">
         {categories.map((category) => {
           const categoryId = String(category._id || category.id || 'default-id');
@@ -87,7 +133,10 @@ const AssetInventory = () => {
                 <div className="flex space-x-2 text-text-light text-sm">
                   <i className="pi pi-pencil cursor-pointer" />
                   <i className="pi pi-copy cursor-pointer" />
-                  <i className="pi pi-trash cursor-pointer" />
+                  <i
+                    className="pi pi-trash cursor-pointer"
+                    onClick={() => handleDeleteClick(category)}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 text-sm text-text-dark mb-3">
@@ -135,6 +184,12 @@ const AssetInventory = () => {
           );
         })}
       </div>
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        selectedAssets={selectedCategory ? [selectedCategory] : []}
+      />
     </div>
   );
 };
