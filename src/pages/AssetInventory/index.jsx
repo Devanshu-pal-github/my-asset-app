@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAssetCategories, deleteAssetCategory } from '../../store/slices/assetCategorySlice';
+import { fetchAssetCategories, deleteAssetCategory, updateAssetCategory } from '../../store/slices/assetCategorySlice';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import DeleteConfirmationModal from '../AssetInventory/components/DeleteConfirmationModal';
+import EditAssetForm from '../AssetInventory/components/EditAssetForm';
 import logger from '../../utils/logger';
 import { Link } from 'react-router-dom';
 
@@ -13,6 +14,9 @@ const AssetInventory = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editCategory, setEditCategory] = useState(null);
+  const [editError, setEditError] = useState(null);
 
   useEffect(() => {
     logger.debug('AssetInventory useEffect triggered');
@@ -54,6 +58,48 @@ const AssetInventory = () => {
     setIsDeleteModalOpen(false);
     setSelectedCategory(null);
     setDeleteError(null);
+  };
+
+  const handleEditClick = (category) => {
+    logger.debug('Edit icon clicked for category', { categoryId: category._id, categoryName: category.name });
+    setEditCategory({
+      id: category._id,
+      name: category.name,
+      icon: category.icon || 'pi pi-desktop',
+      count: category.count || 0,
+      total_value: category.total_value || 0,
+      policies: category.policies || [],
+      is_active: category.is_active !== undefined ? category.is_active : true,
+    });
+    setIsEditModalOpen(true);
+    setEditError(null);
+  };
+
+  const handleEditSubmit = (updatedData) => {
+    if (!editCategory) {
+      logger.error('No category selected for editing');
+      return;
+    }
+
+    logger.debug('Submitting updated category', { categoryId: editCategory.id, updatedData });
+    dispatch(updateAssetCategory({ id: editCategory.id, category: updatedData }))
+      .unwrap()
+      .then(() => {
+        logger.info('Successfully updated category', { categoryId: editCategory.id });
+        setIsEditModalOpen(false);
+        setEditCategory(null);
+      })
+      .catch((err) => {
+        logger.error('Failed to update category', { categoryId: editCategory.id, error: err });
+        setEditError(err || 'Failed to update category');
+      });
+  };
+
+  const handleEditCancel = () => {
+    logger.debug('Edit cancelled for category', { categoryId: editCategory?.id });
+    setIsEditModalOpen(false);
+    setEditCategory(null);
+    setEditError(null);
   };
 
   if (loading && !categories.length) {
@@ -113,6 +159,14 @@ const AssetInventory = () => {
           </span>
         </div>
       )}
+      {editError && (
+        <div className="p-4 mb-4 text-red-600 bg-red-50 rounded-md">
+          <span className="flex items-center">
+            <i className="pi pi-exclamation-triangle mr-2"></i>
+            {editError}
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto pr-2">
         {categories.map((category) => {
           const categoryId = String(category._id || category.id || 'default-id');
@@ -131,7 +185,10 @@ const AssetInventory = () => {
                   <div className="text-xs text-text-light mt-1">{category.description || 'No description'}</div>
                 </div>
                 <div className="flex space-x-2 text-text-light text-sm">
-                  <i className="pi pi-pencil cursor-pointer" />
+                  <i
+                    className="pi pi-pencil cursor-pointer"
+                    onClick={() => handleEditClick(category)}
+                  />
                   <i className="pi pi-copy cursor-pointer" />
                   <i
                     className="pi pi-trash cursor-pointer"
@@ -190,6 +247,23 @@ const AssetInventory = () => {
         onConfirm={handleDeleteConfirm}
         selectedAssets={selectedCategory ? [selectedCategory] : []}
       />
+      {isEditModalOpen && editCategory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Edit Category</h3>
+              <button onClick={handleEditCancel} className="text-gray-500 hover:text-gray-700">
+                <i className="pi pi-times"></i>
+              </button>
+            </div>
+            <EditAssetForm
+              asset={editCategory}
+              onClose={handleEditCancel}
+              onUpdateAsset={handleEditSubmit}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
