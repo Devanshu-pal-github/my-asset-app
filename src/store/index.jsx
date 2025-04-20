@@ -4,6 +4,7 @@ import assetItemReducer from './slices/assetItemSlice';
 import assignmentHistoryReducer from './slices/assignmentHistorySlice';
 import maintenanceHistoryReducer from './slices/maintenanceHistorySlice';
 import documentReducer from './slices/documentSlice';
+import employeeReducer from './slices/employeeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     assignmentHistory: assignmentHistoryReducer,
     maintenanceHistory: maintenanceHistoryReducer,
     documents: documentReducer,
+    employees: employeeReducer,
   },
 });
 

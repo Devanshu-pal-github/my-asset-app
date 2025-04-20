@@ -5,6 +5,7 @@ import AddAssetForm from './pages/AssetInventory/components/AddAssetForm.jsx';
 import AssetTablePage from './pages/AssetTable/index.jsx';
 import AssetDetail from './pages/AssetDetail/index.jsx';
 import AssetAssignmentTable from './pages/AssetInventory/components/AssetAssignmentTable.jsx';
+import EmployeeAssignment from './pages/AssetInventory/components/EmployeeAssignment.jsx';
 import logger from './utils/logger.jsx';
 
 logger.debug('Rendering App component');
@@ -20,6 +21,7 @@ function App() {
             <Route path="add-category" element={<AddAssetForm />} />
             <Route path=":categoryId" element={<AssetTablePage />} />
             <Route path=":categoryId/assign" element={<AssetAssignmentTable />} />
+            <Route path=":categoryId/assign/:assetId" element={<EmployeeAssignment />} />
             <Route path="asset/:assetId" element={<AssetDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/asset-inventory" replace />} />

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.dependencies import db
 from app.routers import (
@@ -11,6 +11,8 @@ from app.routers import (
 )
 import logging
 import logging.handlers
+from starlette.responses import JSONResponse
+from starlette.requests import Request
 
 # Configure logging with StreamHandler for terminal output
 logging.basicConfig(level=logging.DEBUG)
@@ -96,8 +98,18 @@ async def test_endpoint():
     return {"message": "Server is responding"}
 
 @app.middleware("http")
-async def log_requests(request, call_next):
+async def log_requests(request: Request, call_next):
     logger.debug(f"Received request: {request.method} {request.url}")
-    response = await call_next(request)
-    logger.debug(f"Completed request: {request.method} {request.url} - Status: {response.status_code}")
-    return response
+    try:
+        response = await call_next(request)
+        if response.status_code == 422:
+            body = b""
+            async for chunk in response.body_iterator:
+                body += chunk
+            logger.error(f"422 Validation Error: {body.decode()}")
+            return JSONResponse(content={"detail": body.decode()}, status_code=422)
+        logger.debug(f"Completed request: {request.method} {request.url} - Status: {response.status_code}")
+        return response
+    except Exception as e:
+        logger.error(f"Request failed: {request.method} {request.url} - Error: {str(e)}")
+        raise

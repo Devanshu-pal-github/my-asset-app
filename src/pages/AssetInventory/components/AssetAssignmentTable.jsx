@@ -23,7 +23,7 @@ const AssetAssignmentTable = () => {
 
   const handleAssignClick = (asset) => {
     logger.info('Assign button clicked', { assetId: asset.id, assetName: asset.name });
-    // Placeholder for assignment logic
+    // Navigation is handled by the Link in assignButton
   };
 
   const handleAddAssetClick = () => {
@@ -51,12 +51,14 @@ const AssetAssignmentTable = () => {
 
   const assignButton = (rowData) => {
     return (
-      <button
-        className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-blue-700"
-        onClick={() => handleAssignClick(rowData)}
-      >
-        Assign
-      </button>
+      <Link to={`/asset-inventory/${categoryId}/assign/${rowData.id}`}>
+        <button
+          className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-blue-700"
+          onClick={() => logger.info('Navigating to EmployeeAssignment', { assetId: rowData.id, assetName: rowData.name })}
+        >
+          Assign
+        </button>
+      </Link>
     );
   };
 
