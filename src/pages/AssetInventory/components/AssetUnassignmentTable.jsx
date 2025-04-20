@@ -6,6 +6,8 @@ import { Button } from 'primereact/button';
 import logger from '../../../utils/logger';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+
 const AssetUnassignmentTable = () => {
   const { categoryId } = useParams();
   const [assets, setAssets] = useState([]);
@@ -19,7 +21,7 @@ const AssetUnassignmentTable = () => {
       try {
         setLoading(true);
         logger.info('Fetching assigned assets for category', { categoryId });
-        const response = await axios.get(`http://localhost:8000/api/v1/asset-items/?category_id=${categoryId}&status=In Use`);
+        const response = await axios.get(`${API_URL}/asset-items/?category_id=${categoryId}&has_active_assignment=1`);
         logger.info('Asset items response:', { data: response.data });
         setAssets(response.data);
       } catch (err) {
@@ -50,12 +52,27 @@ const AssetUnassignmentTable = () => {
   }
 
   if (error) {
-    return <div className="p-6 text-error-red">{error}</div>;
+    logger.error('AssetUnassignmentTable error', { error });
+    return (
+      <div className="p-6 text-error-red">
+        {error}{' '}
+        <Link to="/asset-inventory" className="text-primary-blue underline">
+          Back to Inventory
+        </Link>
+      </div>
+    );
   }
 
   if (!assets.length) {
     logger.info('No assigned assets found for category', { categoryId });
-    return <div className="p-6">No assigned assets found</div>;
+    return (
+      <div className="p-6">
+        No assigned assets found.{' '}
+        <Link to="/asset-inventory" className="text-primary-blue underline">
+          Back to Inventory
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -76,6 +93,12 @@ const AssetUnassignmentTable = () => {
         <Column field="location" header="Location" sortable />
         <Column header="Action" body={actionBodyTemplate} />
       </DataTable>
+      <Link to="/asset-inventory">
+        <Button
+          label="Back to Inventory"
+          className="p-button-sm p-button-secondary mt-4"
+        />
+      </Link>
     </div>
   );
 };

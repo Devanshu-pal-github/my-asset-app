@@ -13,9 +13,9 @@ from typing import List, Optional
 router = APIRouter(prefix="/asset-items", tags=["Asset Items"])
 
 @router.get("/", response_model=List[AssetItem])
-def read_asset_items(category_id: str = None, status: Optional[str] = None):
-    print(f"Fetching asset items - category_id: {category_id}, status: {status}")
-    items = get_asset_items(db, category_id, status)
+def read_asset_items(category_id: str = None, status: Optional[str] = None, has_active_assignment: Optional[int] = None):
+    print(f"Fetching asset items - category_id: {category_id}, status: {status}, has_active_assignment: {has_active_assignment}")
+    items = get_asset_items(db, category_id, status, has_active_assignment)
     return items
 
 @router.get("/{id}", response_model=AssetItem)

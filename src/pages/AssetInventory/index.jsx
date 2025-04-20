@@ -20,11 +20,12 @@ const AssetInventory = () => {
 
   useEffect(() => {
     logger.debug('AssetInventory useEffect triggered');
-    dispatch(fetchAssetCategories());
+    dispatch(fetchAssetCategories()).catch((err) => {
+      logger.error('Failed to fetch categories', { error: err.message });
+    });
   }, [dispatch]);
 
   logger.debug('Rendering AssetInventory', { categories, loading, error });
-  logger.debug('Categories in state:', { categories });
 
   const handleDeleteClick = (category) => {
     logger.debug('Delete icon clicked for category', { categoryId: category._id, categoryName: category.name });
@@ -103,17 +104,35 @@ const AssetInventory = () => {
   };
 
   if (loading && !categories.length) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="p-6">Loading categories...</div>;
   }
 
   if (error) {
     logger.error('AssetInventory error', { error });
-    return <div className="p-6 text-error-red">Error: {error.toString()}</div>;
+    return (
+      <div className="p-6 text-error-red">
+        Error: {error}.{' '}
+        {error.includes('Network error') ? (
+          <span>
+            Please ensure the backend server is running at http://localhost:8000 and try again.
+          </span>
+        ) : (
+          <span>Contact support for assistance.</span>
+        )}
+      </div>
+    );
   }
 
   if (!categories.length) {
     logger.info('No categories found');
-    return <div className="p-6">No categories found</div>;
+    return (
+      <div className="p-6">
+        No categories found.{' '}
+        <Link to="/asset-inventory/add-category" className="text-primary-blue underline">
+          Add a new category
+        </Link>
+      </div>
+    );
   }
 
   const stats = [
@@ -222,13 +241,13 @@ const AssetInventory = () => {
               <div className="flex space-x-2 mb-4">
                 <Link
                   to={`/asset-inventory/${categoryId}/assign`}
-                  onClick={() => logger.info('Navigating to AssetAssignmentTable', { categoryId, url: `/asset-inventory/${categoryId}/assign` })}
+                  onClick={() => logger.info('Navigating to AssetAssignmentTable', { categoryId })}
                 >
                   <Button label="Assign Asset" className="p-button-sm w-1/2 bg-primary-blue text-white" />
                 </Link>
                 <Link
                   to={`/asset-inventory/${categoryId}/unassign`}
-                  onClick={() => logger.info('Navigating to AssetUnassignmentTable', { categoryId, url: `/asset-inventory/${categoryId}/unassign` })}
+                  onClick={() => logger.info('Navigating to AssetUnassignmentTable', { categoryId })}
                 >
                   <Button label="Unassign Asset" className="p-button-sm w-1/2 bg-error-red text-white" />
                 </Link>
@@ -239,7 +258,7 @@ const AssetInventory = () => {
                 </div>
                 <Link
                   to={`/asset-inventory/${categoryId}`}
-                  onClick={() => logger.info('Navigating to AssetTablePage', { categoryId, url: `/asset-inventory/${categoryId}` })}
+                  onClick={() => logger.info('Navigating to AssetTablePage', { categoryId })}
                 >
                   <Button
                     label="View Details"

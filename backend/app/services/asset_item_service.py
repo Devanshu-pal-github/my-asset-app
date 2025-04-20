@@ -6,12 +6,14 @@ from bson import ObjectId
 from typing import List, Optional
 from fastapi import HTTPException
 
-def get_asset_items(db: Collection, category_id: Optional[str] = None, status: Optional[str] = None) -> List[AssetItem]:
+def get_asset_items(db: Collection, category_id: Optional[str] = None, status: Optional[str] = None, has_active_assignment: Optional[int] = None) -> List[AssetItem]:
     query = {}
     if category_id:
         query["category_id"] = category_id
     if status:
         query["status"] = status
+    if has_active_assignment is not None:
+        query["has_active_assignment"] = has_active_assignment
     print(f"MongoDB query: {query}")
     items = list(db.asset_items.find(query))
     print(f"Found {len(items)} items")

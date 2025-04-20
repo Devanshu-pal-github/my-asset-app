@@ -1,61 +1,58 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from app.dependencies import db
 from app.models.asset_category import AssetCategory, AssetCategoryCreate, AssetCategoryBase
-from app.services.asset_category_service import create_asset_category, get_asset_categories, update_asset_category, delete_asset_category
 from typing import List
-import logging
+from bson import ObjectId
+from datetime import datetime
 
-logger = logging.getLogger(__name__)
-
-router = APIRouter(prefix="/asset-categories", tags=["Asset Categories"], redirect_slashes=False)
+router = APIRouter(prefix="/asset-categories", tags=["Asset Categories"])
 
 @router.get("/", response_model=List[AssetCategory])
 def read_asset_categories():
-    logger.debug("Fetching all asset categories")
-    try:
-        categories = get_asset_categories(db)
-        logger.debug(f"Fetched {len(categories)} asset categories: {categories}")
-        return categories if categories is not None else []
-    except Exception as e:
-        logger.error(f"Error fetching asset categories: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch asset categories")
+    print("Fetching all asset categories")
+    categories = list(db.asset_categories.find())
+    return [AssetCategory(**{**cat, "id": str(cat["_id"])}) for cat in categories]
+
+@router.get("/{id}", response_model=AssetCategory)
+def read_asset_category(id: str):
+    print(f"Fetching asset category with ID: {id}")
+    category = db.asset_categories.find_one({"_id": ObjectId(id)})
+    if not category:
+        raise HTTPException(status_code=404, detail="Asset category not found")
+    return AssetCategory(**{**category, "id": str(category["_id"])})
 
 @router.post("/", response_model=AssetCategory)
-def create_new_asset_category(category: AssetCategoryCreate):
-    logger.debug(f"Creating asset category: {category.name}")
-    try:
-        return create_asset_category(db, category)
-    except Exception as e:
-        logger.error(f"Error creating asset category: {str(e)}")
-        raise HTTPException(status_code=400, detail="Failed to create asset category")
+def create_asset_category(category: AssetCategoryCreate):
+    print(f"Creating asset category: {category.name}")
+    category_dict = category.dict()
+    category_dict["created_at"] = datetime.utcnow()
+    category_dict["updated_at"] = datetime.utcnow()
+    result = db.asset_categories.insert_one(category_dict)
+    return AssetCategory(**{**category_dict, "id": str(result.inserted_id)})
 
 @router.put("/{id}", response_model=AssetCategory)
-def update_asset_category_route(id: str, category: AssetCategoryBase):
-    logger.debug(f"Updating asset category with ID: {id}")
-    try:
-        updated_category = update_asset_category(db, id, category)
-        if not updated_category:
-            logger.warning(f"Asset category with ID {id} not found")
-            raise HTTPException(status_code=404, detail="Asset category not found")
-        logger.debug(f"Asset category {id} updated successfully")
-        return updated_category
-    except Exception as e:
-        logger.error(f"Error updating asset category {id}: {str(e)}")
-        raise HTTPException(status_code=400, detail="Failed to update asset category")
+def update_asset_category(id: str, category: AssetCategoryBase):
+    print(f"Updating asset category with ID: {id}")
+    update_data = category.dict(exclude_unset=True)
+    update_data["updated_at"] = datetime.utcnow()
+    result = db.asset_categories.update_one(
+        {"_id": ObjectId(id)},
+        {"$set": update_data}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Asset category not found")
+    updated_category = db.asset_categories.find_one({"_id": ObjectId(id)})
+    return AssetCategory(**{**updated_category, "id": str(updated_category["_id"])})
 
 @router.delete("/{id}", response_model=dict)
-def delete_asset_category_route(id: str):
-    logger.debug(f"Deleting asset category with ID: {id}")
-    try:
-        deleted = delete_asset_category(db, id)
-        if not deleted:
-            logger.warning(f"Asset category with ID {id} not found or has associated items")
-            raise HTTPException(status_code=404, detail="Asset category not found")
-        logger.debug(f"Asset category {id} deleted successfully")
-        return {"message": "Asset category deleted successfully"}
-    except ValueError as e:
-        logger.error(f"Error deleting asset category {id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error deleting asset category {id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to delete asset category")
+def delete_asset_category(id: str):
+    print(f"Deleting asset category with ID: {id}")
+    category = db.asset_categories.find_one({"_id": ObjectId(id)})
+    if not category:
+        raise HTTPException(status_code=404, detail="Asset category not found")
+    if db.asset_items.find_one({"category_id": id}):
+        raise HTTPException(status_code=400, detail="Cannot delete category with assigned assets")
+    result = db.asset_categories.delete_one({"_id": ObjectId(id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Asset category not found")
+    return {"message": "Asset category deleted successfully"}

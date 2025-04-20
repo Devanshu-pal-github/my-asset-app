@@ -3,12 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
+import { Toast } from 'primereact/toast';
 import logger from '../../../utils/logger';
 import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const EmployeeUnassignment = () => {
   const { categoryId, assetId } = useParams();
   const navigate = useNavigate();
+  const toast = useRef(null);
   const [asset, setAsset] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,17 +24,16 @@ const EmployeeUnassignment = () => {
     const fetchAssetAndEmployees = async () => {
       try {
         setLoading(true);
-        // Fetch asset details
         logger.info('Fetching asset details', { assetId });
-        const assetResponse = await axios.get(`http://localhost:8000/api/v1/asset-items/${assetId}`);
+        const assetResponse = await axios.get(`${API_URL}/asset-items/${assetId}`);
         const assetData = assetResponse.data;
         setAsset(assetData);
 
-        // Fetch employees (filter by current_assignee_id)
-        const employeePromises = assetData.current_assignee_id.map(async (empId) => {
-          const empResponse = await axios.get(`http://localhost:8000/api/v1/employees/${empId}`);
+        // Fetch employees assigned to the asset
+        const employeePromises = assetData.current_assignee_id?.map(async (empId) => {
+          const empResponse = await axios.get(`${API_URL}/employees/${empId}`);
           return empResponse.data;
-        });
+        }) || [];
         const employeeData = await Promise.all(employeePromises);
         logger.info('Fetched employees', { employeeData });
         setEmployees(employeeData);
@@ -48,19 +51,34 @@ const EmployeeUnassignment = () => {
   const handleUnassign = async (employeeId) => {
     try {
       logger.info('Unassigning employee', { assetId, employeeId });
-      await axios.post(`http://localhost:8000/api/v1/assignment-history/unassign`, null, {
-        params: { asset_id: assetId, employee_id: employeeId }
+      await axios.post(`${API_URL}/assignment-history/unassign`, null, {
+        params: { asset_id: assetId, employee_id: employeeId },
       });
       logger.info('Successfully unassigned employee', { assetId, employeeId });
+      toast.current.show({
+        severity: 'success',
+        summary: 'Unassignment Successful',
+        detail: `Employee unassigned from ${asset.name}`,
+        life: 3000,
+      });
+
       // Refresh employees list
-      const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
+      const updatedEmployees = employees.filter((emp) => emp.id !== employeeId);
       setEmployees(updatedEmployees);
+
+      // Navigate back if no employees remain
       if (updatedEmployees.length === 0) {
         navigate(`/asset-inventory/${categoryId}/unassign`);
       }
     } catch (err) {
       logger.error('Failed to unassign employee', { assetId, employeeId, error: err.message });
       setError('Failed to unassign employee. Please try again.');
+      toast.current.show({
+        severity: 'error',
+        summary: 'Unassignment Failed',
+        detail: err.response?.data?.detail || 'Failed to unassign employee',
+        life: 3000,
+      });
     }
   };
 
@@ -79,18 +97,40 @@ const EmployeeUnassignment = () => {
   }
 
   if (error) {
-    return <div className="p-6 text-error-red">{error}</div>;
+    logger.error('EmployeeUnassignment error', { error });
+    return (
+      <div className="p-6 text-error-red">
+        {error}{' '}
+        <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-primary-blue underline">
+          Back to Unassignment
+        </Link>
+      </div>
+    );
   }
 
   if (!asset) {
-    return <div className="p-6">Asset not found</div>;
+    logger.warn('Asset not found', { assetId });
+    return (
+      <div className="p-6">
+        Asset not found.{' '}
+        <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-primary-blue underline">
+          Back to Unassignment
+        </Link>
+      </div>
+    );
   }
 
   return (
     <div className="content-container p-6">
+      <Toast ref={toast} />
       <h2 className="text-2xl font-bold mb-4">Unassign Employees from {asset.name}</h2>
       {employees.length === 0 ? (
-        <div>No employees assigned to this asset</div>
+        <div>
+          No employees assigned to this asset.{' '}
+          <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-primary-blue underline">
+            Back to Unassignment
+          </Link>
+        </div>
       ) : (
         <DataTable
           value={employees}
@@ -110,11 +150,12 @@ const EmployeeUnassignment = () => {
           <Column header="Action" body={actionBodyTemplate} />
         </DataTable>
       )}
-      <Button
-        label="Back"
-        className="p-button-sm p-button-secondary mt-4"
-        onClick={() => navigate(`/asset-inventory/${categoryId}/unassign`)}
-      />
+      <Link to={`/asset-inventory/${categoryId}/unassign`}>
+        <Button
+          label="Back"
+          className="p-button-sm p-button-secondary mt-4"
+        />
+      </Link>
     </div>
   );
 };

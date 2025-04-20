@@ -28,11 +28,10 @@ export const fetchAssetCategories = createAsyncThunk(
           data: error.response.data,
         } : null,
       });
-      return rejectWithValue(
-        error.response?.data?.detail ||
-        error.message ||
-        'Failed to fetch asset categories'
-      );
+      const errorMessage = error.code === 'ERR_NETWORK'
+        ? 'Network error: Unable to connect to the backend. Please check if the server is running.'
+        : error.response?.data?.detail || error.message || 'Failed to fetch asset categories';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -48,8 +47,7 @@ export const addAssetCategory = createAsyncThunk(
     } catch (error) {
       logger.error('Add asset category failed:', { error: error.message });
       return rejectWithValue(
-        error.response?.data?.detail ||
-        'Failed to add asset category'
+        error.response?.data?.detail || 'Failed to add asset category'
       );
     }
   }
@@ -66,8 +64,7 @@ export const updateAssetCategory = createAsyncThunk(
     } catch (error) {
       logger.error('Update asset category failed:', { error: error.message });
       return rejectWithValue(
-        error.response?.data?.detail ||
-        'Failed to update asset category'
+        error.response?.data?.detail || 'Failed to update asset category'
       );
     }
   }
@@ -84,8 +81,7 @@ export const deleteAssetCategory = createAsyncThunk(
     } catch (error) {
       logger.error('Delete asset category failed:', { error: error.message });
       return rejectWithValue(
-        error.response?.data?.detail ||
-        'Failed to delete asset category'
+        error.response?.data?.detail || 'Failed to delete asset category'
       );
     }
   }
@@ -148,7 +144,7 @@ const assetCategorySlice = createSlice({
         state.error = null;
       })
       .addCase(updateAssetCategory.fulfilled, (state, action) => {
-        logger.info('Update asset category fulfilled:', { data: action.payload });
+        logger.info(' Angst category fulfilled:', { data: action.payload });
         state.loading = false;
         const index = state.categories.findIndex((cat) => cat._id === String(action.payload._id || action.payload.id));
         if (index !== -1) {

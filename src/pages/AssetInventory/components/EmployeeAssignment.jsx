@@ -20,21 +20,34 @@ const EmployeeAssignment = () => {
   const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
   const [categoryDetails, setCategoryDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId });
-    dispatch(fetchEmployees());
-    dispatch(fetchAssetItemsByCategory(categoryId));
-    dispatch(fetchAssetCategories());
-    const fetchCategoryDetails = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${API_URL}/asset-categories/${categoryId}`);
-        setCategoryDetails(response.data);
+        setIsLoading(true);
+        await Promise.all([
+          dispatch(fetchEmployees()),
+          dispatch(fetchAssetItemsByCategory(categoryId)),
+          dispatch(fetchAssetCategories()),
+          axios.get(`${API_URL}/asset-categories/${categoryId}`).then((response) => {
+            setCategoryDetails(response.data);
+          }),
+        ]);
       } catch (error) {
-        logger.error('Failed to fetch category details', { error: error.message });
+        logger.error('Failed to fetch initial data', { error: error.message });
+        toast.current.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load data',
+          life: 3000,
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchCategoryDetails();
+    fetchData();
   }, [dispatch, categoryId, assetId]);
 
   logger.debug('Rendering EmployeeAssignment', {
@@ -107,6 +120,7 @@ const EmployeeAssignment = () => {
     const isAssetAssigned = currentAsset.current_assignee_id?.length > 0;
     const allowMultipleAssignments = categoryDetails?.allow_multiple_assignments === 1;
     const canAssign = !isAlreadyAssignedToEmployee && (!isAssetAssigned || allowMultipleAssignments);
+
     return (
       <button
         className={`px-4 py-2 rounded text-white ${
@@ -120,7 +134,7 @@ const EmployeeAssignment = () => {
     );
   };
 
-  if (employeesLoading || assetsLoading || categoriesLoading || !categoryDetails) {
+  if (isLoading || employeesLoading || assetsLoading || categoriesLoading || !categoryDetails) {
     return <div className="p-6">Loading...</div>;
   }
 
@@ -139,17 +153,38 @@ const EmployeeAssignment = () => {
 
   if (!currentCategory.name) {
     logger.warn('Category not found', { categoryId });
-    return <div className="p-6">Category not found</div>;
+    return (
+      <div className="p-6">
+        Category not found.{' '}
+        <Link to="/asset-inventory" className="text-primary-blue underline">
+          Back to Inventory
+        </Link>
+      </div>
+    );
   }
 
   if (!currentAsset.name) {
     logger.warn('Asset not found', { assetId });
-    return <div className="p-6">Asset not found</div>;
+    return (
+      <div className="p-6">
+        Asset not found.{' '}
+        <Link to={`/asset-inventory/${categoryId}/assign`} className="text-primary-blue underline">
+          Back to Asset Assignment
+        </Link>
+      </div>
+    );
   }
 
   if (!employees.length) {
     logger.info('No employees found');
-    return <div className="p-6">No employees found</div>;
+    return (
+      <div className="p-6">
+        No employees found.{' '}
+        <Link to={`/asset-inventory/${categoryId}/assign`} className="text-primary-blue underline">
+          Back to Asset Assignment
+        </Link>
+      </div>
+    );
   }
 
   return (

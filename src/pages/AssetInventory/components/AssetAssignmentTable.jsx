@@ -23,30 +23,20 @@ const AssetAssignmentTable = () => {
 
   const handleAssignClick = (asset) => {
     logger.info('Assign button clicked', { assetId: asset.id, assetName: asset.name });
-    // Navigation is handled by the Link in assignButton
   };
 
   const handleAddAssetClick = () => {
     logger.info('Add New Asset button clicked');
-    // Placeholder for add asset logic
   };
 
-  // Find the category for the current categoryId
-  const currentCategory = categories.find((cat) => cat._id === categoryId);
+  const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId);
 
-  // Filter assets based on category and assignment criteria
+  // Filter assets: Show unassigned assets or those allowing multiple assignments
   const filteredAssets = assets.filter((asset) => {
     if (!currentCategory) return false;
-    const isConsumable = currentCategory.is_consumable === 1;
-    const isReassignable = currentCategory.is_reassignable === 1;
     const allowMultipleAssignments = currentCategory.allow_multiple_assignments === 1;
     const isNotAssigned = asset.has_active_assignment === 0;
-
-    return (
-      !isConsumable && // Exclude consumable assets
-      (isReassignable || allowMultipleAssignments) && // Include reassignable or shareable assets
-      isNotAssigned // Include only unassigned assets
-    );
+    return isNotAssigned || allowMultipleAssignments;
   });
 
   const assignButton = (rowData) => {
@@ -54,7 +44,7 @@ const AssetAssignmentTable = () => {
       <Link to={`/asset-inventory/${categoryId}/assign/${rowData.id}`}>
         <button
           className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={() => logger.info('Navigating to EmployeeAssignment', { assetId: rowData.id, assetName: rowData.name })}
+          onClick={() => handleAssignClick(rowData)}
         >
           Assign
         </button>
@@ -81,14 +71,24 @@ const AssetAssignmentTable = () => {
 
   if (!currentCategory) {
     logger.warn('Category not found', { categoryId });
-    return <div className="p-6">Category not found</div>;
+    return (
+      <div className="p-6">
+        Category not found.{' '}
+        <Link to="/asset-inventory" className="text-primary-blue underline">
+          Back to Inventory
+        </Link>
+      </div>
+    );
   }
 
   if (!filteredAssets.length) {
     logger.info('No assignable assets found for category', { categoryId, categoryName: currentCategory.name });
     return (
       <div className="p-6">
-        No assignable assets found for category {currentCategory.name}. Assets may be consumable, assigned, or not reassignable.
+        No assignable assets found for category {currentCategory.name}.{' '}
+        <Link to="/asset-inventory" className="text-primary-blue underline">
+          Back to Inventory
+        </Link>
       </div>
     );
   }
