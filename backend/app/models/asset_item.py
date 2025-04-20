@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from datetime import datetime
 from enum import Enum
 
@@ -24,7 +24,7 @@ class AssetItemBase(BaseModel):
     serial_number: Optional[str] = None
     status: Optional[AssetStatus] = AssetStatus.AVAILABLE
     condition: Optional[AssetCondition] = AssetCondition.GOOD
-    current_assignee_id: Optional[str] = None
+    current_assignee_id: List[str] = []
     has_active_assignment: Optional[int] = 0
     is_operational: Optional[int] = 1
     department: Optional[str] = None

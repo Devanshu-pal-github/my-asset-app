@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, Link } from 'react-router-dom';
 import { DataTable } from 'primereact/datatable';
@@ -19,12 +19,22 @@ const EmployeeAssignment = () => {
   const { employees, loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
   const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
+  const [categoryDetails, setCategoryDetails] = useState(null);
 
   useEffect(() => {
     logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId });
     dispatch(fetchEmployees());
     dispatch(fetchAssetItemsByCategory(categoryId));
     dispatch(fetchAssetCategories());
+    const fetchCategoryDetails = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/asset-categories/${categoryId}`);
+        setCategoryDetails(response.data);
+      } catch (error) {
+        logger.error('Failed to fetch category details', { error: error.message });
+      }
+    };
+    fetchCategoryDetails();
   }, [dispatch, categoryId, assetId]);
 
   logger.debug('Rendering EmployeeAssignment', {
@@ -37,6 +47,7 @@ const EmployeeAssignment = () => {
     categories,
     categoriesLoading,
     categoriesError,
+    categoryDetails,
   });
 
   const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId) || {};
@@ -50,10 +61,9 @@ const EmployeeAssignment = () => {
     });
 
     try {
-      // Create assignment history record (this also updates employee and asset)
       const assignmentResponse = await axios.post(`${API_URL}/assignment-history/`, {
         asset_id: assetId,
-        assigned_to: employee.id,
+        assigned_to: [employee.id],
         department: employee.department,
         condition: currentAsset.condition || 'Excellent',
         assignment_date: new Date().toISOString(),
@@ -62,7 +72,6 @@ const EmployeeAssignment = () => {
       });
       logger.info('Assignment history created', { assignmentId: assignmentResponse.data.id });
 
-      // Show success toast
       toast.current.show({
         severity: 'success',
         summary: 'Assignment Successful',
@@ -70,7 +79,6 @@ const EmployeeAssignment = () => {
         life: 3000,
       });
 
-      // Refresh data
       dispatch(fetchAssetItemsByCategory(categoryId));
       dispatch(fetchEmployees());
     } catch (error) {
@@ -95,21 +103,24 @@ const EmployeeAssignment = () => {
   };
 
   const assignButton = (rowData) => {
-    const isAlreadyAssigned = rowData.assigned_assets?.includes(assetId);
+    const isAlreadyAssignedToEmployee = rowData.assigned_assets?.includes(assetId);
+    const isAssetAssigned = currentAsset.current_assignee_id?.length > 0;
+    const allowMultipleAssignments = categoryDetails?.allow_multiple_assignments === 1;
+    const canAssign = !isAlreadyAssignedToEmployee && (!isAssetAssigned || allowMultipleAssignments);
     return (
       <button
         className={`px-4 py-2 rounded text-white ${
-          isAlreadyAssigned ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-blue hover:bg-blue-700'
+          canAssign ? 'bg-primary-blue hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
         }`}
-        onClick={() => !isAlreadyAssigned && handleAssignClick(rowData)}
-        disabled={isAlreadyAssigned}
+        onClick={() => canAssign && handleAssignClick(rowData)}
+        disabled={!canAssign}
       >
         Assign
       </button>
     );
   };
 
-  if (employeesLoading || assetsLoading || categoriesLoading) {
+  if (employeesLoading || assetsLoading || categoriesLoading || !categoryDetails) {
     return <div className="p-6">Loading...</div>;
   }
 
