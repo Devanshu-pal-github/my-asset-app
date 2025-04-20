@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react'; // Added useRef import
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
@@ -58,7 +58,7 @@ const EmployeeUnassignment = () => {
       toast.current.show({
         severity: 'success',
         summary: 'Unassignment Successful',
-        detail: `Employee unassigned from ${asset.name}`,
+        detail: `Employee unassigned from ${asset?.name || 'asset'}`,
         life: 3000,
       });
 
@@ -72,11 +72,12 @@ const EmployeeUnassignment = () => {
       }
     } catch (err) {
       logger.error('Failed to unassign employee', { assetId, employeeId, error: err.message });
-      setError('Failed to unassign employee. Please try again.');
+      const errorMessage = err.response?.data?.detail || 'Failed to unassign employee';
+      setError(errorMessage);
       toast.current.show({
         severity: 'error',
         summary: 'Unassignment Failed',
-        detail: err.response?.data?.detail || 'Failed to unassign employee',
+        detail: errorMessage,
         life: 3000,
       });
     }
