@@ -353,7 +353,9 @@ const DocumentList = ({ assetId }) => {
   const { documents, loading, error } = useSelector((state) => state.documents);
 
   useEffect(() => {
-    logger.debug("DocumentList useEffect", { assetId, documents });
+    logger
+
+.debug("DocumentList useEffect", { assetId, documents });
   }, [assetId, documents]);
 
   if (loading) return <p>Loading documents...</p>;
@@ -549,6 +551,21 @@ const AssetDetail = () => {
       );
   };
 
+  const handleAssign = () => {
+    logger.info("Assign button clicked", { assetId });
+    // Placeholder for assign logic
+  };
+
+  const handleUnassign = () => {
+    logger.info("Unassign button clicked", { assetId });
+    // Placeholder for unassign logic
+  };
+
+  const handleLogMaintenance = () => {
+    logger.info("Log maintenance button clicked", { assetId });
+    // Placeholder for maintenance log logic
+  };
+
   if (!categoryId || !assetId) {
     logger.error("Missing URL parameters", {
       categoryId,
@@ -711,7 +728,7 @@ const AssetDetail = () => {
               value: assetData.currentAssignmentDate,
             },
           ]}
-        />{" "}
+        />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 mb-6">
@@ -719,23 +736,59 @@ const AssetDetail = () => {
         <ErrorBoundary>
           <div className="p-6">
             {activeTab === TABS.SPECIFICATIONS && (
-              <SpecificationsTab assetData={assetData} />
+              <>
+                <div className="flex justify-end mb-4">
+                  <Button
+                    label="Edit"
+                    icon="pi pi-pencil"
+                    className="p-button-sm p-button-indigo"
+                    onClick={toggleEditForm}
+                  />
+                </div>
+                <SpecificationsTab assetData={assetData} />
+              </>
             )}
             {activeTab === TABS.ASSIGNMENT_HISTORY && (
-              <AssignmentHistoryTab
-                history={assignmentHistory}
-                loading={assignmentLoading}
-                error={assignmentError}
-                currentAssigneeName={assetData.currentAssigneeName}
-                currentAssigneeId={assetData.currentAssigneeId}
-              />
+              <>
+                <div className="flex justify-end mb-4 space-x-2">
+                  <Button
+                    label="Assign"
+                    icon="pi pi-user-plus"
+                    className="p-button-sm p-button-success"
+                    onClick={handleAssign}
+                  />
+                  <Button
+                    label="Unassign"
+                    icon="pi pi-user-minus"
+                    className="p-button-sm p-button-warning"
+                    onClick={handleUnassign}
+                  />
+                </div>
+                <AssignmentHistoryTab
+                  history={assignmentHistory}
+                  loading={assignmentLoading}
+                  error={assignmentError}
+                  currentAssigneeName={assetData.currentAssigneeName}
+                  currentAssigneeId={assetData.currentAssigneeId}
+                />
+              </>
             )}
             {activeTab === TABS.MAINTENANCE_HISTORY && (
-              <MaintenanceHistoryTab
-                history={maintenanceHistory}
-                loading={maintenanceLoading}
-                error={maintenanceError}
-              />
+              <>
+                <div className="flex justify-end mb-4">
+                  <Button
+                    label="Log"
+                    icon="pi pi-file-edit"
+                    className="p-button-sm p-button-info"
+                    onClick={handleLogMaintenance}
+                  />
+                </div>
+                <MaintenanceHistoryTab
+                  history={maintenanceHistory}
+                  loading={maintenanceLoading}
+                  error={maintenanceError}
+                />
+              </>
             )}
           </div>
         </ErrorBoundary>
