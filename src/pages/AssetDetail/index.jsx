@@ -4,8 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
 import axios from "axios";
 import EditAssetForm from "../AssetInventory/components/EditAssetForm";
+import EmployeeAssignment from "./components/EmployeeAssignment";
+import EmployeeUnassignment from "./components/EmployeeUnassignment";
 import {
   fetchAssetItemById,
   updateAssetItem,
@@ -353,9 +356,7 @@ const DocumentList = ({ assetId }) => {
   const { documents, loading, error } = useSelector((state) => state.documents);
 
   useEffect(() => {
-    logger
-
-.debug("DocumentList useEffect", { assetId, documents });
+    logger.debug("DocumentList useEffect", { assetId, documents });
   }, [assetId, documents]);
 
   if (loading) return <p>Loading documents...</p>;
@@ -425,6 +426,8 @@ const AssetDetail = () => {
   } = useSelector((state) => state.maintenanceHistory);
   const [activeTab, setActiveTab] = useState(TABS.SPECIFICATIONS);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showUnassignModal, setShowUnassignModal] = useState(false);
   const [currentAssigneeName, setCurrentAssigneeName] = useState("Unassigned");
 
   useEffect(() => {
@@ -552,18 +555,30 @@ const AssetDetail = () => {
   };
 
   const handleAssign = () => {
-    logger.info("Assign button clicked", { assetId });
-    // Placeholder for assign logic
+    logger.info("Assign button clicked, opening modal", { assetId });
+    setShowAssignModal(true);
   };
 
   const handleUnassign = () => {
-    logger.info("Unassign button clicked", { assetId });
-    // Placeholder for unassign logic
+    logger.info("Unassign button clicked, opening modal", { assetId });
+    setShowUnassignModal(true);
   };
 
   const handleLogMaintenance = () => {
     logger.info("Log maintenance button clicked", { assetId });
     // Placeholder for maintenance log logic
+  };
+
+  const handleAssignmentSuccess = () => {
+    logger.info("Assignment successful, refreshing data", { assetId });
+    dispatch(fetchAssetItemById(assetId));
+    dispatch(fetchAssignmentHistory(assetId));
+  };
+
+  const handleUnassignmentSuccess = () => {
+    logger.info("Unassignment successful, refreshing data", { assetId });
+    dispatch(fetchAssetItemById(assetId));
+    dispatch(fetchAssignmentHistory(assetId));
   };
 
   if (!categoryId || !assetId) {
@@ -771,6 +786,35 @@ const AssetDetail = () => {
                   currentAssigneeName={assetData.currentAssigneeName}
                   currentAssigneeId={assetData.currentAssigneeId}
                 />
+                <Dialog
+                  header="Assign Employee"
+                  visible={showAssignModal}
+                  onHide={() => setShowAssignModal(false)}
+                  style={{ width: '80vw', maxWidth: '1200px' }}
+                  className="p-6"
+                >
+                  <EmployeeAssignment
+                    visible={showAssignModal}
+                    onHide={() => setShowAssignModal(false)}
+                    categoryId={categoryId}
+                    assetId={assetId}
+                    onAssignmentSuccess={handleAssignmentSuccess}
+                  />
+                </Dialog>
+                <Dialog
+                  header="Unassign Employee"
+                  visible={showUnassignModal}
+                  onHide={() => setShowUnassignModal(false)}
+                  style={{ width: '80vw', maxWidth: '1200px' }}
+                  className="p-6"
+                >
+                  <EmployeeUnassignment
+                    visible={showUnassignModal}
+                    onHide={() => setShowUnassignModal(false)}
+                    assetId={assetId}
+                    onUnassignmentSuccess={handleUnassignmentSuccess}
+                  />
+                </Dialog>
               </>
             )}
             {activeTab === TABS.MAINTENANCE_HISTORY && (
