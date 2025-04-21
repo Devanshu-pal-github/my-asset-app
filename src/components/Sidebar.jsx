@@ -16,9 +16,11 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-[sidebar-width] bg-background-offwhite mt-4 rounded-tr-[sidebar-top] shadow-md">
+    <div className="w-[18rem] bg-card-white fixed top-0 left-0 h-screen mt-28 ml-6 rounded-tr-[30px] shadow-md z-10">
       <div className="p-4">
-        <h2 className="text-2xl font-bold text-primary-blue">AssetHR</h2>
+        <h2 className="text-2xl font-bold text-primary-blue flex items-center">
+          <span className="mr-2">☰</span> AssetHR
+        </h2>
       </div>
       <nav className="mt-4">
         {menuItems.map((item) => (

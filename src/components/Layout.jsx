@@ -10,7 +10,7 @@ const Layout = () => {
   return (
     <div className="flex h-screen bg-background-offwhite">
       <Sidebar />
-      <div className="flex-1 flex flex-col ml-[sidebar-width]">
+      <div className="flex-1 flex flex-col ml-[18rem]">
         <TopBar />
         <div className="p-6">
           <Outlet />

@@ -60,6 +60,11 @@ const formatFileSize = (bytes) => {
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 };
 
+// Utility to validate MongoDB ObjectId
+const isValidObjectId = (id) => {
+  return /^[0-9a-fA-F]{24}$/.test(id);
+};
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
@@ -406,7 +411,7 @@ const DocumentList = ({ assetId }) => {
 
 // Main Component
 const AssetDetail = () => {
-  const { categoryId, assetId } = useParams();
+  const { categoryId: urlCategoryId, assetId } = useParams();
   const dispatch = useDispatch();
   const {
     currentItem: asset,
@@ -432,11 +437,11 @@ const AssetDetail = () => {
 
   useEffect(() => {
     logger.debug("AssetDetail useEffect triggered", {
-      categoryId,
+      urlCategoryId,
       assetId,
       asset,
     });
-    if (assetId && categoryId) {
+    if (assetId && urlCategoryId) {
       logger.info("Dispatching fetchAssetItemById", { assetId });
       dispatch(fetchAssetItemById(assetId))
         .unwrap()
@@ -463,7 +468,7 @@ const AssetDetail = () => {
       dispatch(clearDocuments());
       logger.debug("Cleared all state on unmount");
     };
-  }, [dispatch, assetId, categoryId]);
+  }, [dispatch, assetId, urlCategoryId]);
 
   useEffect(() => {
     logger.debug("AssetLoading state", { assetLoading, assetId, asset });
@@ -507,6 +512,31 @@ const AssetDetail = () => {
       );
     }
   }, [asset?.current_assignee_id]);
+
+  // Validate categoryId for EmployeeAssignment
+  const assignmentCategoryId = asset?.category_id;
+  if (assignmentCategoryId && !isValidObjectId(assignmentCategoryId)) {
+    logger.error("Invalid categoryId for EmployeeAssignment", {
+      assignmentCategoryId,
+      assetId,
+    });
+  } else if (assignmentCategoryId) {
+    logger.debug("Valid categoryId for EmployeeAssignment", {
+      assignmentCategoryId,
+      assetId,
+    });
+  }
+
+  // Log EmployeeAssignment props for debugging
+  useEffect(() => {
+    if (showAssignModal) {
+      logger.debug("EmployeeAssignment props", {
+        visible: showAssignModal,
+        categoryId: assignmentCategoryId,
+        assetId,
+      });
+    }
+  }, [showAssignModal, assignmentCategoryId, assetId]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -581,9 +611,9 @@ const AssetDetail = () => {
     dispatch(fetchAssignmentHistory(assetId));
   };
 
-  if (!categoryId || !assetId) {
+  if (!urlCategoryId || !assetId) {
     logger.error("Missing URL parameters", {
-      categoryId,
+      urlCategoryId,
       assetId,
       url: window.location.href,
     });
@@ -790,13 +820,13 @@ const AssetDetail = () => {
                   header="Assign Employee"
                   visible={showAssignModal}
                   onHide={() => setShowAssignModal(false)}
-                  style={{ width: '80vw', maxWidth: '1200px' }}
+                  style={{ width: "80vw", maxWidth: "1200px" }}
                   className="p-6"
                 >
                   <EmployeeAssignment
                     visible={showAssignModal}
                     onHide={() => setShowAssignModal(false)}
-                    categoryId={categoryId}
+                    categoryId={assignmentCategoryId}
                     assetId={assetId}
                     onAssignmentSuccess={handleAssignmentSuccess}
                   />
@@ -805,7 +835,7 @@ const AssetDetail = () => {
                   header="Unassign Employee"
                   visible={showUnassignModal}
                   onHide={() => setShowUnassignModal(false)}
-                  style={{ width: '80vw', maxWidth: '1200px' }}
+                  style={{ width: "80vw", maxWidth: "1200px" }}
                   className="p-6"
                 >
                   <EmployeeUnassignment

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
+from bson import ObjectId
 from app.dependencies import db
 from app.models.asset_category import AssetCategory, AssetCategoryCreate, AssetCategoryBase
 from typing import List
-from bson import ObjectId
 from datetime import datetime
 
 router = APIRouter(prefix="/asset-categories", tags=["Asset Categories"])
@@ -16,6 +16,8 @@ def read_asset_categories():
 @router.get("/{id}", response_model=AssetCategory)
 def read_asset_category(id: str):
     print(f"Fetching asset category with ID: {id}")
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid category ID")
     category = db.asset_categories.find_one({"_id": ObjectId(id)})
     if not category:
         raise HTTPException(status_code=404, detail="Asset category not found")

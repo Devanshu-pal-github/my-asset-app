@@ -144,7 +144,7 @@ const AssetInventory = () => {
 
   return (
     <div className="content-container">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-20">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white p-4 rounded-xl shadow-md">
             <div className="text-text-dark font-semibold">{stat.title}</div>
