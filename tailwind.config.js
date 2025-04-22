@@ -14,10 +14,10 @@ module.exports = {
         'secondary-green': '#10B981', // Success states
         'background-offwhite': '#F5F2EE', // Main background
         'card-white': '#FFFFFF', // Card background
-        'sidebar-selected': '#D1D5DB', // More noticeable selection
+        'sidebar-selected': '#E8E4DD', // More noticeable selection
         'text-dark': '#1F2A44', // High-contrast text
         'text-light': '#6B7280', // Secondary text
-        'border-gray': '#D1D5DB', // Borders
+        'border-gray': '#F5F2EE', // Borders
       },
       borderRadius: {
         'sm': '6px', // Inputs, buttons

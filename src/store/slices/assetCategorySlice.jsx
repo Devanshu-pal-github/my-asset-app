@@ -144,7 +144,7 @@ const assetCategorySlice = createSlice({
         state.error = null;
       })
       .addCase(updateAssetCategory.fulfilled, (state, action) => {
-        logger.info(' Angst category fulfilled:', { data: action.payload });
+        logger.info('Asset category fulfilled:', { data: action.payload });
         state.loading = false;
         const index = state.categories.findIndex((cat) => cat._id === String(action.payload._id || action.payload.id));
         if (index !== -1) {

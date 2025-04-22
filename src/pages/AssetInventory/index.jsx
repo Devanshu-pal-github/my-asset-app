@@ -90,6 +90,7 @@ const AssetInventory = () => {
       total_value: category.total_value || 0,
       policies: category.policies || [],
       is_active: category.is_active !== undefined ? category.is_active : true,
+      category_type: category.category_type, // Include new field
     });
     setIsEditModalOpen(true);
     setEditError(null);
@@ -202,7 +203,7 @@ const AssetInventory = () => {
 
   return (
     <div className="p-8">
-      <div className=" mt-[80px]">
+      <div className="mt-[80px]">
         <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
         <p className="text-sm text-gray-600">Overview of your asset management system</p>
       </div>
@@ -230,11 +231,11 @@ const AssetInventory = () => {
           className="p-2 border border-gray-300 rounded-xl w-full md:w-1/3 text-gray-500"
         />
         <div className="flex gap-2 justify-end">
-          <button className="px-4 py-2 bg-[#2563EB] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200">
+          <button className="px-4 py-2 bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200">
             Filter
           </button>
           <Link to="/asset-inventory/add-category">
-            <button className="px-4 py-2 bg-[#2563EB] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200">
+            <button className="px-4 py-2 bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200">
               Add New Asset
             </button>
           </Link>
@@ -267,28 +268,27 @@ const AssetInventory = () => {
               key={categoryId}
               className="bg-white rounded-xl shadow-md p-4 relative"
             >
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-4">
                 <div>
-                  <span className="text-gray-900 font-semibold text-lg">
+                  <span className="text-gray-900 font-semibold text-xl">
                     {category.name}
                   </span>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {category.description || "No description"}
+                  <div className="text-sm text-gray-500 mt-1">
+                    {category.category_type || "Unknown Category"}
                   </div>
                 </div>
-                <div className="flex space-x-2 text-gray-500 text-sm">
+                <div className="flex space-x-2 text-gray-500 text-lg">
                   <i
                     className="pi pi-pencil cursor-pointer"
                     onClick={() => handleEditClick(category)}
                   />
-                  <i className="pi pi-copy cursor-pointer" />
                   <i
                     className="pi pi-trash cursor-pointer"
                     onClick={() => handleDeleteClick(category)}
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 text-sm text-gray-900 mb-3">
+              <div className="grid grid-cols-2 text-base text-gray-900 mb-6">
                 <div>
                   <div className="font-medium">Total Items</div>
                   <div className="text-lg font-bold">{category.count || 0}</div>
@@ -312,17 +312,17 @@ const AssetInventory = () => {
                   </div>
                 </div>
               </div>
-              <div className="text-sm text-gray-900 mb-1">Utilization Rate</div>
+              <div className="text-sm text-gray-900 mb-3">Utilization Rate</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                 <div
                   className="bg-[#2563EB] h-2 rounded-full"
                   style={{ width: category.utilizationRate || "0%" }}
                 ></div>
               </div>
-              <div className="text-right text-sm text-gray-900 font-semibold mb-2">
+              <div className="text-right text-sm text-gray-900 font-semibold mb-3">
                 {category.utilizationRate || "0%"}
               </div>
-              <div className="flex space-x-2 gap-[84px] mb-4">
+              <div className="flex space-x-2 gap-[84px] mb-6">
                 <Link
                   to={`/asset-inventory/${categoryId}/assign`}
                   onClick={() =>
@@ -331,7 +331,7 @@ const AssetInventory = () => {
                     })
                   }
                 >
-                  <button className="px-3 py-2  bg-[#2563EB] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200 text-sm font-medium">
+                  <button className="px-3 py-2  bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200 text-sm font-medium">
                     Assign Asset
                   </button>
                 </Link>

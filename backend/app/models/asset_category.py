@@ -9,24 +9,25 @@ class AssetCategoryBase(BaseModel):
     total_value: float = 0.0
     policies: Optional[List[str]] = []  # Retain for existing logic
     is_active: int = 1
-    description: Optional[str] = None   # New field for description
-    status: Optional[str] = None        # New field for default status
-    specifications: Optional[Dict[str, str]] = None  # New field for specs
-    is_reassignable: Optional[int] = None  # New field for canReassign
-    is_consumable: Optional[int] = None  # New field for isConsumable
-    requires_maintenance: Optional[int] = None  # New field
-    maintenance_frequency: Optional[str] = None  # New field
-    maintenance_alert_days: Optional[int] = None  # New field
-    cost_per_unit: Optional[float] = None  # New field
-    expected_life: Optional[int] = None  # New field
-    life_unit: Optional[str] = None  # New field
-    depreciation_method: Optional[str] = None  # New field
-    residual_value: Optional[float] = None  # New field
-    assignment_duration: Optional[int] = None  # New field
-    duration_unit: Optional[str] = None  # New field
-    assignable_to: Optional[str] = None  # New field
-    allow_multiple_assignments: Optional[int] = None  # New field
-    save_as_template: Optional[int] = None  # New field
+    description: Optional[str] = None   # Existing field, will be replaced by category_type in UI
+    category_type: Optional[str] = None  # New field for category type (e.g., "Hardware", "Software")
+    status: Optional[str] = None        # Existing field
+    specifications: Optional[Dict[str, str]] = None  # Existing field
+    is_reassignable: Optional[int] = None  # Existing field
+    is_consumable: Optional[int] = None  # Existing field
+    requires_maintenance: Optional[int] = None  # Existing field
+    maintenance_frequency: Optional[str] = None  # Existing field
+    maintenance_alert_days: Optional[int] = None  # Existing field
+    cost_per_unit: Optional[float] = None  # Existing field
+    expected_life: Optional[int] = None  # Existing field
+    life_unit: Optional[str] = None  # Existing field
+    depreciation_method: Optional[str] = None  # Existing field
+    residual_value: Optional[float] = None  # Existing field
+    assignment_duration: Optional[int] = None  # Existing field
+    duration_unit: Optional[str] = None  # Existing field
+    assignable_to: Optional[str] = None  # Existing field
+    allow_multiple_assignments: Optional[int] = None  # Existing field
+    save_as_template: Optional[int] = None  # Existing field
 
 class AssetCategoryCreate(AssetCategoryBase):
     pass
