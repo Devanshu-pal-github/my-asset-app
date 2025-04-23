@@ -4,6 +4,8 @@ import { useParams, Link } from 'react-router-dom';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
+import { Dialog } from 'primereact/dialog';
+import { Button } from 'primereact/button';
 import { fetchEmployees } from '../../../store/slices/employeeSlice';
 import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
 import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
@@ -16,11 +18,13 @@ const EmployeeAssignment = () => {
   const dispatch = useDispatch();
   const { categoryId, assetId } = useParams();
   const toast = useRef(null);
-  const { employees, loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
-  const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
-  const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
+  const { employees = [], loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
+  const { items: assets = [], loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
+  const { categories = [], loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
   const [categoryDetails, setCategoryDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
     logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId });
@@ -28,11 +32,14 @@ const EmployeeAssignment = () => {
       try {
         setIsLoading(true);
         await Promise.all([
-          dispatch(fetchEmployees()),
+          dispatch(fetchEmployees()).unwrap().catch(() => dispatch(fetchEmployees())), // Retry on failure
           dispatch(fetchAssetItemsByCategory(categoryId)),
           dispatch(fetchAssetCategories()),
           axios.get(`${API_URL}/asset-categories/${categoryId}`).then((response) => {
             setCategoryDetails(response.data);
+          }).catch((error) => {
+            logger.warn('Failed to fetch category details, continuing without', { error: error.message });
+            setCategoryDetails({});
           }),
         ]);
       } catch (error) {
@@ -40,7 +47,7 @@ const EmployeeAssignment = () => {
         toast.current.show({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to load data',
+          detail: 'Failed to load data. Please refresh the page.',
           life: 3000,
         });
       } finally {
@@ -64,31 +71,40 @@ const EmployeeAssignment = () => {
   });
 
   const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId) || {};
-  const currentAsset = assets.find((asset) => asset.id === assetId) || {};
+  const currentAsset = assets.find((asset) => asset.id === assetId || asset._id === assetId) || {};
 
-  const handleAssignClick = async (employee) => {
+  const handleAssignClick = (employee) => {
     logger.info('Assign button clicked', {
       employeeId: employee.id,
       employeeName: `${employee.first_name} ${employee.last_name}`,
       assetId,
     });
+    setSelectedEmployee(employee);
+    setShowConfirmDialog(true);
+  };
+
+  const confirmAssignment = async () => {
+    if (!selectedEmployee) {
+      setShowConfirmDialog(false);
+      return;
+    }
 
     try {
       const assignmentResponse = await axios.post(`${API_URL}/assignment-history/`, {
         asset_id: assetId,
-        assigned_to: [employee.id],
-        department: employee.department,
+        assigned_to: [selectedEmployee.id],
+        department: selectedEmployee.department,
         condition: currentAsset.condition || 'Excellent',
         assignment_date: new Date().toISOString(),
         is_active: 1,
-        notes: `Assigned to ${employee.first_name} ${employee.last_name} for ${currentCategory.name}`,
+        notes: `Assigned to ${selectedEmployee.first_name} ${selectedEmployee.last_name} for ${currentCategory.name || 'asset'}`,
       });
       logger.info('Assignment history created', { assignmentId: assignmentResponse.data.id });
 
       toast.current.show({
         severity: 'success',
         summary: 'Assignment Successful',
-        detail: `Asset ${currentAsset.name} assigned to ${employee.first_name} ${employee.last_name}`,
+        detail: `Asset ${currentAsset.name || 'asset'} assigned to ${selectedEmployee.first_name} ${selectedEmployee.last_name}`,
         life: 3000,
       });
 
@@ -97,7 +113,7 @@ const EmployeeAssignment = () => {
     } catch (error) {
       logger.error('Failed to assign asset', {
         error: error.response?.data?.detail || error.message,
-        employeeId: employee.id,
+        employeeId: selectedEmployee.id,
         assetId,
       });
       let errorMessage = 'Failed to assign asset';
@@ -112,6 +128,9 @@ const EmployeeAssignment = () => {
         detail: errorMessage,
         life: 3000,
       });
+    } finally {
+      setShowConfirmDialog(false);
+      setSelectedEmployee(null);
     }
   };
 
@@ -134,7 +153,25 @@ const EmployeeAssignment = () => {
     );
   };
 
-  if (isLoading || employeesLoading || assetsLoading || categoriesLoading || !categoryDetails) {
+  const dialogFooter = (
+    <div className="flex justify-end gap-2">
+      <Button
+        label="Cancel"
+        className="p-button-sm bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-1 px-3 rounded-lg transition-colors"
+        onClick={() => {
+          setShowConfirmDialog(false);
+          setSelectedEmployee(null);
+        }}
+      />
+      <Button
+        label="Confirm"
+        className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+        onClick={confirmAssignment}
+      />
+    </div>
+  );
+
+  if (isLoading || employeesLoading || assetsLoading || categoriesLoading) {
     return <div className="p-6">Loading...</div>;
   }
 
@@ -147,11 +184,14 @@ const EmployeeAssignment = () => {
           <i className="pi pi-exclamation-triangle mr-2"></i>
           Error: {errorMessage}
         </span>
+        <Link to="/asset-inventory" className="text-primary-blue underline ml-2">
+          Back to Inventory
+        </Link>
       </div>
     );
   }
 
-  if (!currentCategory.name) {
+  if (!currentCategory.name && categoryDetails) {
     logger.warn('Category not found', { categoryId });
     return (
       <div className="p-6">
@@ -179,7 +219,7 @@ const EmployeeAssignment = () => {
     logger.info('No employees found');
     return (
       <div className="p-6">
-        No employees found.{' '}
+        No employees available for assignment. Please ensure employees are registered in the system.{' '}
         <Link to={`/asset-inventory/${categoryId}/assign`} className="text-primary-blue underline">
           Back to Asset Assignment
         </Link>
@@ -190,11 +230,55 @@ const EmployeeAssignment = () => {
   return (
     <div className="mt-24 p-5">
       <Toast ref={toast} />
+      <Dialog
+        header="Confirm Assignment"
+        visible={showConfirmDialog}
+        style={{ width: '30rem' }}
+        footer={dialogFooter}
+        onHide={() => {
+          setShowConfirmDialog(false);
+          setSelectedEmployee(null);
+        }}
+        className="rounded-lg"
+      >
+        <div className="p-4">
+          <p className="text-gray-800 mb-4">
+            Are you sure you want to assign the following asset to this employee?
+          </p>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Employee Details</h3>
+            <p className="text-gray-600">
+              <strong>Name:</strong> {selectedEmployee?.first_name} {selectedEmployee?.last_name}
+            </p>
+            <p className="text-gray-600">
+              <strong>Employee ID:</strong> {selectedEmployee?.employee_id}
+            </p>
+            <p className="text-gray-600">
+              <strong>Department:</strong> {selectedEmployee?.department || 'N/A'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Designation:</strong> {selectedEmployee?.job_title || 'N/A'}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Asset Details</h3>
+            <p className="text-gray-600">
+              <strong>Name:</strong> {currentAsset.name || 'N/A'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Category:</strong> {currentCategory.name || 'N/A'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Condition:</strong> {currentAsset.condition || 'Excellent'}
+            </p>
+          </div>
+        </div>
+      </Dialog>
       <div className="flex justify-between items-center mb-5">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Assign Employee to Asset</h2>
           <span className="text-gray-600 text-sm">
-            Assign an employee to {currentAsset.name} ({currentCategory.name})
+            Assign an employee to {currentAsset.name || 'asset'} ({currentCategory.name || 'category'})
           </span>
         </div>
         <div className="flex gap-3">

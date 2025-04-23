@@ -4,6 +4,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
+import { Dialog } from 'primereact/dialog';
 import logger from '../../../utils/logger';
 import axios from 'axios';
 
@@ -17,6 +18,8 @@ const EmployeeUnassignment = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
     logger.debug('EmployeeUnassignment useEffect triggered', { categoryId, assetId });
@@ -47,13 +50,28 @@ const EmployeeUnassignment = () => {
     fetchAssetAndEmployees();
   }, [assetId]);
 
-  const handleUnassign = async (employeeId) => {
+  const handleUnassign = (employee) => {
+    logger.info('Unassign button clicked', {
+      employeeId: employee.id,
+      employeeName: `${employee.first_name} ${employee.last_name}`,
+      assetId,
+    });
+    setSelectedEmployee(employee);
+    setShowConfirmDialog(true);
+  };
+
+  const confirmUnassignment = async () => {
+    if (!selectedEmployee) {
+      setShowConfirmDialog(false);
+      return;
+    }
+
     try {
-      logger.info('Unassigning employee', { assetId, employeeId });
+      logger.info('Unassigning employee', { assetId, employeeId: selectedEmployee.id });
       await axios.post(`${API_URL}/assignment-history/unassign`, null, {
-        params: { asset_id: assetId, employee_id: employeeId },
+        params: { asset_id: assetId, employee_id: selectedEmployee.id },
       });
-      logger.info('Successfully unassigned employee', { assetId, employeeId });
+      logger.info('Successfully unassigned employee', { assetId, employeeId: selectedEmployee.id });
       toast.current.show({
         severity: 'success',
         summary: 'Unassignment Successful',
@@ -61,14 +79,14 @@ const EmployeeUnassignment = () => {
         life: 3000,
       });
 
-      const updatedEmployees = employees.filter((emp) => emp.id !== employeeId);
+      const updatedEmployees = employees.filter((emp) => emp.id !== selectedEmployee.id);
       setEmployees(updatedEmployees);
 
       if (updatedEmployees.length === 0) {
         navigate(`/asset-inventory/${categoryId}/unassign`);
       }
     } catch (err) {
-      logger.error('Failed to unassign employee', { assetId, employeeId, error: err.message });
+      logger.error('Failed to unassign employee', { assetId, employeeId: selectedEmployee.id, error: err.message });
       const errorMessage = err.response?.data?.detail || 'Failed to unassign employee';
       setError(errorMessage);
       toast.current.show({
@@ -77,6 +95,9 @@ const EmployeeUnassignment = () => {
         detail: errorMessage,
         life: 3000,
       });
+    } finally {
+      setShowConfirmDialog(false);
+      setSelectedEmployee(null);
     }
   };
 
@@ -85,10 +106,28 @@ const EmployeeUnassignment = () => {
       <Button
         label="Unassign"
         className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-        onClick={() => handleUnassign(rowData.id)}
+        onClick={() => handleUnassign(rowData)}
       />
     );
   };
+
+  const dialogFooter = (
+    <div className="flex justify-end gap-2">
+      <Button
+        label="Cancel"
+        className="p-button-sm bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-1 px-3 rounded-lg transition-colors"
+        onClick={() => {
+          setShowConfirmDialog(false);
+          setSelectedEmployee(null);
+        }}
+      />
+      <Button
+        label="Confirm"
+        className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+        onClick={confirmUnassignment}
+      />
+    </div>
+  );
 
   if (loading) {
     return <div className="p-6">Loading...</div>;
@@ -121,7 +160,51 @@ const EmployeeUnassignment = () => {
   return (
     <div className="content-container mt-24 p-6">
       <Toast ref={toast} />
-      <h2 className="text-2xl font-bold mb-4">Unassign Employees from {asset.name}</h2>
+      <Dialog
+        header="Confirm Unassignment"
+        visible={showConfirmDialog}
+        style={{ width: '30rem' }}
+        footer={dialogFooter}
+        onHide={() => {
+          setShowConfirmDialog(false);
+          setSelectedEmployee(null);
+        }}
+        className="rounded-lg"
+      >
+        <div className="p-4">
+          <p className="text-gray-800 mb-4">
+            Are you sure you want to unassign the following employee from this asset?
+          </p>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Employee Details</h3>
+            <p className="text-gray-600">
+              <strong>Name:</strong> {selectedEmployee?.first_name} {selectedEmployee?.last_name}
+            </p>
+            <p className="text-gray-600">
+              <strong>Employee ID:</strong> {selectedEmployee?.employee_id}
+            </p>
+            <p className="text-gray-600">
+              <strong>Department:</strong> {selectedEmployee?.department || 'N/A'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Email:</strong> {selectedEmployee?.email || 'N/A'}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Asset Details</h3>
+            <p className="text-gray-600">
+              <strong>Name:</strong> {asset?.name || 'N/A'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Category ID:</strong> {categoryId}
+            </p>
+            <p className="text-gray-600">
+              <strong>Condition:</strong> {asset?.condition || 'Unknown'}
+            </p>
+          </div>
+        </div>
+      </Dialog>
+      <h2 className="text-2xl font-bold mb-4">Unassign Employees from {asset.name || 'asset'}</h2>
       {employees.length === 0 ? (
         <div>
           No employees assigned to this asset.{' '}

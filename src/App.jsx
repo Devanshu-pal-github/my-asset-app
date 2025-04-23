@@ -8,6 +8,7 @@ import AssetAssignmentTable from "./pages/AssetInventory/components/AssetAssignm
 import EmployeeAssignment from "./pages/AssetInventory/components/EmployeeAssignment.jsx";
 import AssetUnassignmentTable from "./pages/AssetInventory/components/AssetUnassignmentTable.jsx";
 import EmployeeUnassignment from "./pages/AssetInventory/components/EmployeeUnassignment.jsx";
+import AddItemPage from "./pages/AssetTable/components/AddItemPage.jsx";
 import logger from "./utils/logger.jsx";
 
 logger.debug("Rendering App component");
@@ -24,6 +25,7 @@ function App() {
             <Route index element={<AssetInventory />} />
             <Route path="add-category" element={<AddAssetForm />} />
             <Route path=":categoryId" element={<AssetTablePage />} />
+            <Route path=":categoryId/add-item" element={<AddItemPage />} />
             <Route
               path=":categoryId/assign"
               element={<AssetAssignmentTable />}

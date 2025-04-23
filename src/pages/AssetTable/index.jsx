@@ -115,8 +115,8 @@ const AssetTablePage = () => {
           <span className="text-green-500 text-xs">+5%</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h2 className="text-sm font-medium text-gray-600">Total Units</h2>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{totalUnits}</p>
+          <h2 className="text-sm font-medium text-gray-600">In Storage</h2>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{inStorage}</p>
           <span className="text-green-500 text-xs">+5%</span>
         </div>
       </div>
@@ -136,12 +136,13 @@ const AssetTablePage = () => {
           >
             + Bulk Upload...
           </button>
-          <button
+          <Link
+            to={`/asset-inventory/${categoryId}/add-item`}
             className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-            onClick={() => logger.info("Add Item button clicked")}
+            onClick={() => logger.info("Add new item link clicked")}
           >
             + Add new item
-          </button>
+          </Link>
         </div>
       </div>
     </div>

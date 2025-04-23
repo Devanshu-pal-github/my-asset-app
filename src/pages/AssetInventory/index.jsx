@@ -90,7 +90,7 @@ const AssetInventory = () => {
       total_value: category.total_value || 0,
       policies: category.policies || [],
       is_active: category.is_active !== undefined ? category.is_active : true,
-      category_type: category.category_type, // Include new field
+      category_type: category.category_type,
     });
     setIsEditModalOpen(true);
     setEditError(null);
@@ -263,6 +263,7 @@ const AssetInventory = () => {
             category._id || category.id || "default-id"
           );
           logger.debug("Category ID for View Details:", { categoryId });
+          const availableCount = category.count - category.assigned_count - category.maintenance_count;
           return (
             <div
               key={categoryId}
@@ -295,32 +296,26 @@ const AssetInventory = () => {
                 </div>
                 <div>
                   <div className="font-medium">Assigned</div>
-                  <div className="text-lg font-bold">
-                    {category.count > 0 ? Math.floor(category.count * 0.85) : 0}
-                  </div>
+                  <div className="text-lg font-bold">{category.assigned_count || 0}</div>
                 </div>
                 <div>
                   <div className="font-medium text-green-500">Available</div>
-                  <div className="text-lg font-bold text-green-500">
-                    {category.count > 0 ? Math.floor(category.count * 0.15) : 0}
-                  </div>
+                  <div className="text-lg font-bold text-green-500">{availableCount >= 0 ? availableCount : 0}</div>
                 </div>
                 <div>
                   <div className="font-medium text-yellow-500">Maintenance</div>
-                  <div className="text-lg font-bold text-yellow-500">
-                    {category.maintenance || 0}
-                  </div>
+                  <div className="text-lg font-bold text-yellow-500">{category.maintenance_count || 0}</div>
                 </div>
               </div>
               <div className="text-sm text-gray-900 mb-3">Utilization Rate</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                 <div
                   className="bg-[#2563EB] h-2 rounded-full"
-                  style={{ width: category.utilizationRate || "0%" }}
+                  style={{ width: `${category.utilization_rate || 0}%` }}
                 ></div>
               </div>
               <div className="text-right text-sm text-gray-900 font-semibold mb-3">
-                {category.utilizationRate || "0%"}
+                {category.utilization_rate ? `${category.utilization_rate}%` : "0%"}
               </div>
               <div className="flex space-x-2 gap-[84px] mb-6">
                 <Link
@@ -331,7 +326,7 @@ const AssetInventory = () => {
                     })
                   }
                 >
-                  <button className="px-3 py-2  bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200 text-sm font-medium">
+                  <button className="px-3 py-2 bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200 text-sm font-medium">
                     Assign Asset
                   </button>
                 </Link>

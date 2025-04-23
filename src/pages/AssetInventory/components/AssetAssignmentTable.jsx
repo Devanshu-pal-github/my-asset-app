@@ -25,10 +25,6 @@ const AssetAssignmentTable = () => {
     logger.info('Assign button clicked', { assetId: asset.id, assetName: asset.name });
   };
 
-  const handleAddAssetClick = () => {
-    logger.info('Add New Asset button clicked');
-  };
-
   const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId);
 
   const filteredAssets = assets.filter((asset) => {
@@ -93,12 +89,11 @@ const AssetAssignmentTable = () => {
               Back to Inventory
             </button>
           </Link>
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
-            onClick={handleAddAssetClick}
-          >
-            + Add New Asset
-          </button>
+          <Link to={`/asset-inventory/${categoryId}/add-item`} state={{ from: "assign" }}>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
+              + Add New Asset
+            </button>
+          </Link>
         </div>
       </div>
     );
@@ -117,12 +112,11 @@ const AssetAssignmentTable = () => {
               Back to Inventory
             </button>
           </Link>
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
-            onClick={handleAddAssetClick}
-          >
-            + Add New Asset
-          </button>
+          <Link to={`/asset-inventory/${categoryId}/add-item`} state={{ from: "assign" }}>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
+              + Add New Asset
+            </button>
+          </Link>
         </div>
       </div>
       <DataTable value={filteredAssets} className="asset-table" paginator rows={10} tableStyle={{ minWidth: '50rem' }}>
