@@ -117,7 +117,7 @@ const AddAssetForm = () => {
   };
 
   return (
-    <div className="add-asset-page">
+    <div className="add-asset-page ">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Create New Asset Type</h1>
         <button onClick={goBack} className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">

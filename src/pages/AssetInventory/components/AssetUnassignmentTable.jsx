@@ -40,7 +40,7 @@ const AssetUnassignmentTable = () => {
       <Link to={`/asset-inventory/${categoryId}/unassign/${rowData.id}`}>
         <Button
           label="Unassign"
-          className="p-button-sm p-button-danger"
+          className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
           onClick={() => logger.info('Navigating to EmployeeUnassignment', { assetId: rowData.id })}
         />
       </Link>
@@ -66,17 +66,24 @@ const AssetUnassignmentTable = () => {
   if (!assets.length) {
     logger.info('No assigned assets found for category', { categoryId });
     return (
-      <div className="p-6">
-        No assigned assets found.{' '}
-        <Link to="/asset-inventory" className="text-primary-blue underline">
-          Back to Inventory
-        </Link>
+      <div className="mt-24 p-6 flex flex-col items-center justify-center">
+        <div className="text-gray-600 text-lg mb-4">
+          No assets available to unassign in this category.
+        </div>
+        <div className="flex gap-3">
+          <Link to="/asset-inventory">
+            <Button
+              label="Back to Inventory"
+              className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+            />
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="content-container p-6">
+    <div className="content-container mt-24 p-6">
       <h2 className="text-2xl font-bold mb-4">Unassign Assets</h2>
       <DataTable
         value={assets}
@@ -96,7 +103,7 @@ const AssetUnassignmentTable = () => {
       <Link to="/asset-inventory">
         <Button
           label="Back to Inventory"
-          className="p-button-sm p-button-secondary mt-4"
+          className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors mt-4"
         />
       </Link>
     </div>

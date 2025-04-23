@@ -31,7 +31,6 @@ const AssetAssignmentTable = () => {
 
   const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId);
 
-  // Filter assets: Show unassigned assets or those allowing multiple assignments
   const filteredAssets = assets.filter((asset) => {
     if (!currentCategory) return false;
     const allowMultipleAssignments = currentCategory.allow_multiple_assignments === 1;
@@ -43,7 +42,7 @@ const AssetAssignmentTable = () => {
     return (
       <Link to={`/asset-inventory/${categoryId}/assign/${rowData.id}`}>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
           onClick={() => handleAssignClick(rowData)}
         >
           Assign
@@ -70,7 +69,7 @@ const AssetAssignmentTable = () => {
   }
 
   if (!currentCategory) {
-    logger.warn('Category not found', { categoryId });
+    logger.info('Category not found', { categoryId });
     return (
       <div className="p-6">
         Category not found.{' '}
@@ -84,17 +83,29 @@ const AssetAssignmentTable = () => {
   if (!filteredAssets.length) {
     logger.info('No assignable assets found for category', { categoryId, categoryName: currentCategory.name });
     return (
-      <div className="p-6">
-        No assignable assets found for category {currentCategory.name}.{' '}
-        <Link to="/asset-inventory" className="text-primary-blue underline">
-          Back to Inventory
-        </Link>
+      <div className="mt-24 p-6 flex flex-col items-center justify-center">
+        <div className="text-gray-600 text-lg mb-4">
+          No current assets available for assignment in {currentCategory.name}.
+        </div>
+        <div className="flex gap-3">
+          <Link to="/asset-inventory">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
+              Back to Inventory
+            </button>
+          </Link>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+            onClick={handleAddAssetClick}
+          >
+            + Add New Asset
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-100 p-5">
+    <div className="mt-24 p-5">
       <div className="flex justify-between items-center mb-5">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Asset Assignment</h2>
@@ -102,12 +113,12 @@ const AssetAssignmentTable = () => {
         </div>
         <div className="flex gap-3">
           <Link to="/asset-inventory">
-            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
               Back to Inventory
             </button>
           </Link>
           <button
-            className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
             onClick={handleAddAssetClick}
           >
             + Add New Asset

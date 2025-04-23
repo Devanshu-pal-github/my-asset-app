@@ -124,7 +124,7 @@ const EmployeeAssignment = () => {
     return (
       <button
         className={`px-4 py-2 rounded text-white ${
-          canAssign ? 'bg-primary-blue hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+          canAssign ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
         }`}
         onClick={() => canAssign && handleAssignClick(rowData)}
         disabled={!canAssign}
@@ -188,7 +188,7 @@ const EmployeeAssignment = () => {
   }
 
   return (
-    <div className="bg-gray-100 p-5">
+    <div className="mt-24 p-5">
       <Toast ref={toast} />
       <div className="flex justify-between items-center mb-5">
         <div>
@@ -204,7 +204,7 @@ const EmployeeAssignment = () => {
             className="p-2 border border-border-gray rounded-xl text-text-light"
           />
           <Link to={`/asset-inventory/${categoryId}/assign`}>
-            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
               Back to Asset Assignment
             </button>
           </Link>

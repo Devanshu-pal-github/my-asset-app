@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'; // Added useRef import
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -29,7 +29,6 @@ const EmployeeUnassignment = () => {
         const assetData = assetResponse.data;
         setAsset(assetData);
 
-        // Fetch employees assigned to the asset
         const employeePromises = assetData.current_assignee_id?.map(async (empId) => {
           const empResponse = await axios.get(`${API_URL}/employees/${empId}`);
           return empResponse.data;
@@ -62,11 +61,9 @@ const EmployeeUnassignment = () => {
         life: 3000,
       });
 
-      // Refresh employees list
       const updatedEmployees = employees.filter((emp) => emp.id !== employeeId);
       setEmployees(updatedEmployees);
 
-      // Navigate back if no employees remain
       if (updatedEmployees.length === 0) {
         navigate(`/asset-inventory/${categoryId}/unassign`);
       }
@@ -87,7 +84,7 @@ const EmployeeUnassignment = () => {
     return (
       <Button
         label="Unassign"
-        className="p-button-sm p-button-danger"
+        className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
         onClick={() => handleUnassign(rowData.id)}
       />
     );
@@ -122,7 +119,7 @@ const EmployeeUnassignment = () => {
   }
 
   return (
-    <div className="content-container p-6">
+    <div className="content-container mt-24 p-6">
       <Toast ref={toast} />
       <h2 className="text-2xl font-bold mb-4">Unassign Employees from {asset.name}</h2>
       {employees.length === 0 ? (
@@ -154,7 +151,7 @@ const EmployeeUnassignment = () => {
       <Link to={`/asset-inventory/${categoryId}/unassign`}>
         <Button
           label="Back"
-          className="p-button-sm p-button-secondary mt-4"
+          className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors mt-4"
         />
       </Link>
     </div>
