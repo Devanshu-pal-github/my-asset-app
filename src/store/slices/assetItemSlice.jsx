@@ -1,23 +1,30 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import logger from '../../utils/logger.jsx';
+import logger from '../../utils/logger';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-const axiosInstance = axios.create({ timeout: 15000 });
+const axiosInstance = axios.create({ timeout: 30000 }); // Increased timeout to 30s
 
-/**
- * Fetches asset items for a specific category.
- * @param {string} categoryId - ID of the category to filter items
- * @returns {Promise<Array>} List of asset items
- */
+// Retry utility function
+const withRetry = async (fn, retries = 3, delay = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      logger.warn('Retrying API call after failure', { attempt: i + 1, error: error.message });
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+};
+
 export const fetchAssetItemsByCategory = createAsyncThunk(
   'assetItems/fetchByCategory',
   async (categoryId, { rejectWithValue }) => {
     logger.debug('Initiating fetch of asset items by category', { categoryId });
     try {
-      const response = await axiosInstance.get(`${API_URL}/asset-items/?category_id=${categoryId}`);
+      const response = await withRetry(() => axiosInstance.get(`${API_URL}/asset-items/?category_id=${categoryId}`));
       logger.info('Successfully fetched asset items', { count: response.data.length });
-      console.log('API Response for asset items:', response.data); // Added for debugging
       return response.data;
     } catch (error) {
       logger.error('Failed to fetch asset items', { error: error.message });
@@ -26,19 +33,13 @@ export const fetchAssetItemsByCategory = createAsyncThunk(
   }
 );
 
-/**
- * Fetches a single asset item by ID.
- * @param {string} assetId - ID of the asset item
- * @returns {Promise<Object>} Asset item
- */
 export const fetchAssetItemById = createAsyncThunk(
   'assetItems/fetchById',
   async (assetId, { rejectWithValue }) => {
     logger.debug('Initiating fetch of asset item by ID', { assetId });
     try {
-      const response = await axiosInstance.get(`${API_URL}/asset-items/${assetId}`);
+      const response = await withRetry(() => axiosInstance.get(`${API_URL}/asset-items/${assetId}`));
       logger.info('Successfully fetched asset item', { assetId });
-      console.log('API Response for asset item:', response.data); // Added for debugging
       return response.data;
     } catch (error) {
       logger.error('Failed to fetch asset item', { error: error.message });
@@ -47,18 +48,14 @@ export const fetchAssetItemById = createAsyncThunk(
   }
 );
 
-/**
- * Creates a new asset item and updates the associated category.
- * @param {Object} itemData - Asset item data to create
- * @returns {Promise<Object>} Created asset item
- */
 export const createAssetItem = createAsyncThunk(
   'assetItems/create',
-  async (itemData, { rejectWithValue }) => {
+  async (itemData, { rejectWithValue, dispatch }) => {
     logger.debug('Initiating creation of asset item', { itemData });
     try {
-      const response = await axiosInstance.post(`${API_URL}/asset-items/`, itemData);
+      const response = await withRetry(() => axiosInstance.post(`${API_URL}/asset-items/`, itemData));
       logger.info('Successfully created asset item', { id: response.data.id });
+      await dispatch(fetchAssetItemsByCategory(itemData.category_id)).unwrap();
       return response.data;
     } catch (error) {
       logger.error('Failed to create asset item', { error: error.message });
@@ -67,17 +64,12 @@ export const createAssetItem = createAsyncThunk(
   }
 );
 
-/**
- * Updates an existing asset item and syncs category data.
- * @param {Object} payload - Contains id and updated item data
- * @returns {Promise<Object>} Updated asset item
- */
 export const updateAssetItem = createAsyncThunk(
   'assetItems/update',
   async ({ id, itemData }, { rejectWithValue }) => {
     logger.debug('Initiating update of asset item', { id, itemData });
     try {
-      const response = await axiosInstance.put(`${API_URL}/asset-items/${id}`, itemData);
+      const response = await withRetry(() => axiosInstance.put(`${API_URL}/asset-items/${id}`, itemData));
       logger.info('Successfully updated asset item', { id });
       return response.data;
     } catch (error) {
@@ -87,17 +79,12 @@ export const updateAssetItem = createAsyncThunk(
   }
 );
 
-/**
- * Deletes an asset item and syncs category data.
- * @param {string} id - Asset item ID to delete
- * @returns {Promise<string>} Deleted item ID
- */
 export const deleteAssetItem = createAsyncThunk(
   'assetItems/delete',
   async (id, { rejectWithValue }) => {
     logger.debug('Initiating deletion of asset item', { id });
     try {
-      await axiosInstance.delete(`${API_URL}/asset-items/${id}`);
+      await withRetry(() => axiosInstance.delete(`${API_URL}/asset-items/${id}`));
       logger.info('Successfully deleted asset item', { id });
       return id;
     } catch (error) {
@@ -111,7 +98,7 @@ const assetItemSlice = createSlice({
   name: 'assetItems',
   initialState: {
     items: [],
-    currentItem: null, // Store single asset item
+    currentItem: null,
     loading: false,
     error: null,
   },
@@ -165,7 +152,6 @@ const assetItemSlice = createSlice({
       .addCase(createAssetItem.fulfilled, (state, action) => {
         logger.info('Create asset item fulfilled', { id: action.payload.id });
         state.loading = false;
-        state.items.push(action.payload);
       })
       .addCase(createAssetItem.rejected, (state, action) => {
         logger.error('Create asset item rejected', { error: action.payload });

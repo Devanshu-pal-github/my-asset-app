@@ -10,7 +10,7 @@ const AddItemPage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const from = location.state?.from || "table"; // Default to "table" if no state is provided
+  const from = location.state?.from || "table";
 
   const [formData, setFormData] = useState({
     asset_tag: "",
@@ -25,7 +25,12 @@ const AddItemPage = () => {
     warranty_until: "",
     notes: "",
     category_id: categoryId,
+    name: "", // Added required field
+    purchase_date: "", // Added required field
   });
+
+  const [successMessage, setSuccessMessage] = useState(""); // For success feedback
+  const [errorMessage, setErrorMessage] = useState(""); // For error feedback
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -41,9 +46,16 @@ const AddItemPage = () => {
       logger.info("Submitting new asset item", { formData });
       await dispatch(createAssetItem(formData)).unwrap();
       logger.info("Successfully created asset item");
-      navigate(from === "assign" ? `/asset-inventory/${categoryId}/assign` : `/asset-inventory/${categoryId}`);
+      setSuccessMessage("Asset created successfully!");
+      setErrorMessage("");
+      // Delay navigation to show success message
+      setTimeout(() => {
+        navigate(from === "assign" ? `/asset-inventory/${categoryId}/assign` : `/asset-inventory/${categoryId}`);
+      }, 1500);
     } catch (error) {
       logger.error("Failed to create asset item", { error });
+      setErrorMessage(error.message || "Failed to create asset. Please try again.");
+      setSuccessMessage("");
     }
   };
 
@@ -61,12 +73,36 @@ const AddItemPage = () => {
         </p>
       </div>
       <div className="bg-white rounded-lg shadow-md p-6">
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md text-sm">
+            {successMessage}
+          </div>
+        )}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+            {errorMessage}
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="mb-8">
             <h2 className="text-lg font-medium text-gray-800 mb-4">
               Basic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Asset Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter asset name"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Asset Tag
@@ -173,6 +209,20 @@ const AddItemPage = () => {
                   onChange={handleInputChange}
                   placeholder="Enter cost"
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Purchase Date
+                </label>
+                <input
+                  type="date"
+                  name="purchase_date"
+                  value={formData.purchase_date}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
               </div>
               <div>

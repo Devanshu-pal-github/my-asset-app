@@ -1,499 +1,299 @@
 import React, { useState, useEffect } from 'react';
+import logger from '../../../utils/logger';
 
 /**
- * Form component to edit an existing asset
+ * Form component to edit basic asset details (Asset Information, Status, and Assignment)
  */
 const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
   const [formData, setFormData] = useState({
-    deviceId: '',
-    assetTag: '',
-    serialNumber: '',
-    model: '',
-    purchaseDate: '',
+    name: '',
+    asset_tag: '',
+    serial_number: '',
     status: '',
     condition: '',
-    assignedTo: '',
+    is_operational: '',
     department: '',
-    assignmentDate: '',
-    expectedReturn: '',
-    specs: '',
-    vendor: '',
-    purchaseCost: '',
-    warrantyExpiration: '',
-    currentValue: '',
-    notes: '',
-    policies: []
+    location: '',
   });
-  
-  const [newPolicy, setNewPolicy] = useState({
-    name: '',
-    description: ''
-  });
+
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   // Load asset data into form when component mounts or asset changes
   useEffect(() => {
     if (asset) {
       setFormData({
-        ...asset,
-        policies: asset.policies || []
+        name: asset.name || '',
+        asset_tag: asset.asset_tag || '',
+        serial_number: asset.serial_number || '',
+        status: asset.status || '',
+        condition: asset.condition || '',
+        is_operational: asset.is_operational === 1 ? true : false,
+        department: asset.department || '',
+        location: asset.location || '',
       });
+      logger.debug('Loaded asset data into form (basic fields)', { assetId: asset.id });
     }
   }, [asset]);
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.asset_tag) newErrors.asset_tag = 'Asset Tag is required';
+    if (!formData.status) newErrors.status = 'Status is required';
+    if (!formData.condition) newErrors.condition = 'Condition is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setErrors((prev) => ({ ...prev, [name]: null }));
+    logger.debug('Form field updated', { fieldName: name, value });
   };
 
-  const handlePolicyChange = (e) => {
-    const { name, value } = e.target;
-    setNewPolicy({
-      ...newPolicy,
-      [name]: value
-    });
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+    logger.debug('Checkbox field updated', { fieldName: name, value: checked });
   };
 
-  const addPolicy = () => {
-    if (!newPolicy.name || !newPolicy.description) {
-      alert('Please provide both a name and description for the policy.');
-      return;
-    }
-
-    const policyToAdd = {
-      id: Date.now(), // Use timestamp as a simple id
-      name: newPolicy.name,
-      description: newPolicy.description
-    };
-
-    setFormData({
-      ...formData,
-      policies: [...(formData.policies || []), policyToAdd]
-    });
-
-    // Reset new policy form
-    setNewPolicy({ name: '', description: '' });
-  };
-
-  const removePolicy = (policyId) => {
-    setFormData({
-      ...formData,
-      policies: formData.policies.filter(policy => policy.id !== policyId)
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate form
-    if (!formData.assetTag || !formData.model) {
-      alert('Please fill in all required fields');
+    setApiError(null);
+
+    if (!validateForm()) {
+      logger.warn('Form validation failed', { errors });
       return;
     }
-    
-    // Clear assignment data if status is not "Assigned"
-    const finalData = { ...formData };
-    if (formData.status !== 'Assigned') {
-      finalData.assignedTo = '';
-      finalData.department = '';
-      finalData.assignmentDate = '';
-      finalData.expectedReturn = '';
+
+    setIsSubmitting(true);
+    try {
+      const finalData = {
+        name: formData.name,
+        asset_tag: formData.asset_tag,
+        serial_number: formData.serial_number,
+        status: formData.status,
+        condition: formData.condition,
+        is_operational: formData.is_operational ? 1 : 0,
+        department: formData.department || null,
+        location: formData.location || null,
+      };
+
+      logger.debug('Submitting updated asset data (basic fields)', { finalData });
+      await onUpdateAsset(finalData);
+      logger.info('Asset basic fields updated successfully', { assetId: asset.id });
+      onClose();
+    } catch (error) {
+      setApiError(error.message || 'Failed to update asset');
+      logger.error('Failed to update asset basic fields', { error: error.message });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Update asset through props method
-    if (onUpdateAsset) {
-      onUpdateAsset(finalData);
-    }
-    
-    // Close the form
-    onClose();
   };
 
+  const statusOptions = ['In Use', 'Under Maintenance', 'Available', 'Retired', 'Lost'];
+  const conditionOptions = ['Excellent', 'Good', 'Fair', 'Poor', 'Broken'];
   const departments = [
-    'IT', 
-    'HR', 
-    'Finance', 
-    'Marketing', 
-    'Sales', 
-    'Design', 
-    'Operations', 
-    'Administration', 
-    'Legal', 
-    'Customer Support'
+    'IT', 'HR', 'Finance', 'Marketing', 'Sales',
+    'Design', 'Operations', 'Administration', 'Legal', 'Customer Support'
   ];
 
-  const statusOptions = ['In Storage', 'Assigned', 'In Repair', 'Retired'];
-  const conditionOptions = ['Excellent', 'Good', 'Fair', 'Poor', 'Needs Repair'];
-
   return (
-    <div className="bg-white p-6 max-w-4xl mx-auto">
+    <div className="bg-white p-6 max-w-3xl mx-auto rounded-lg shadow-md border border-gray-200">
+      {apiError && (
+        <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+          {apiError}
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Basic Information */}
+          {/* Asset Information */}
           <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Basic Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+              Asset Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`mt-1 block w-full rounded-md border ${errors.name ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="e.g., Dell XPS 15"
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+              <div>
+                <label htmlFor="asset_tag" className="block text-sm font-medium text-gray-700">
                   Asset Tag <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="assetTag"
-                  value={formData.assetTag}
+                  id="asset_tag"
+                  name="asset_tag"
+                  value={formData.asset_tag}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., LAPTOP001"
-                  required
+                  className={`mt-1 block w-full rounded-md border ${errors.asset_tag ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="e.g., LAP001"
                 />
+                {errors.asset_tag && <p className="text-red-500 text-xs mt-1">{errors.asset_tag}</p>}
               </div>
-              
               <div>
-                <label className="block text-gray-700 font-medium mb-2">
+                <label htmlFor="serial_number" className="block text-sm font-medium text-gray-700">
                   Serial Number
                 </label>
                 <input
                   type="text"
-                  name="serialNumber"
-                  value={formData.serialNumber || ''}
+                  id="serial_number"
+                  name="serial_number"
+                  value={formData.serial_number}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Device serial number"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Model <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Dell XPS 15"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Purchase Date
-                </label>
-                <input
-                  type="date"
-                  name="purchaseDate"
-                  value={formData.purchaseDate || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., XPS13-001"
                 />
               </div>
             </div>
           </div>
-          
-          {/* Status Information */}
+
+          {/* Asset Status */}
           <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Status Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+              Asset Status
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                   Status <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="status"
                   name="status"
-                  value={formData.status || ''}
+                  value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  className={`mt-1 block w-full rounded-md border ${errors.status ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 >
-                  <option value="">Select Status</option>
-                  {statusOptions.map(status => (
+                  <option value="" disabled>Select Status</option>
+                  {statusOptions.map((status) => (
                     <option key={status} value={status}>{status}</option>
                   ))}
                 </select>
+                {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
               </div>
-              
               <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Condition
+                <label htmlFor="condition" className="block text-sm font-medium text-gray-700">
+                  Condition <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="condition"
                   name="condition"
-                  value={formData.condition || ''}
+                  value={formData.condition}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`mt-1 block w-full rounded-md border ${errors.condition ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 >
-                  <option value="">Select Condition</option>
-                  {conditionOptions.map(condition => (
+                  <option value="" disabled>Select Condition</option>
+                  {conditionOptions.map((condition) => (
                     <option key={condition} value={condition}>{condition}</option>
                   ))}
                 </select>
+                {errors.condition && <p className="text-red-500 text-xs mt-1">{errors.condition}</p>}
               </div>
-            </div>
-          </div>
-          
-          {/* Assignment Information */}
-          <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Assignment Information</h3>
-            <div className={formData.status !== 'Assigned' ? 'opacity-50' : ''}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Assigned To
-                  </label>
-                  <input
-                    type="text"
-                    name="assignedTo"
-                    value={formData.assignedTo || ''}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Employee name"
-                    disabled={formData.status !== 'Assigned'}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Department
-                  </label>
-                  <select
-                    name="department"
-                    value={formData.department || ''}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={formData.status !== 'Assigned'}
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Assignment Date
-                  </label>
-                  <input
-                    type="date"
-                    name="assignmentDate"
-                    value={formData.assignmentDate || ''}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={formData.status !== 'Assigned'}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Expected Return
-                  </label>
-                  <input
-                    type="date"
-                    name="expectedReturn"
-                    value={formData.expectedReturn || ''}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={formData.status !== 'Assigned'}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Hardware Specifications */}
-          <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Hardware Specifications</h3>
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Specifications
-              </label>
-              <input
-                type="text"
-                name="specs"
-                value={formData.specs || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., i7, 16GB RAM, 512GB SSD"
-              />
-            </div>
-          </div>
-          
-          {/* Financial Information */}
-          <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Financial Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Vendor
+                <label htmlFor="is_operational" className="block text-sm font-medium text-gray-700">
+                  Operational Status
+                </label>
+                <div className="mt-1 flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_operational"
+                    name="is_operational"
+                    checked={formData.is_operational}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="is_operational" className="ml-2 text-sm text-gray-700">
+                    Operational
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Assignment Details */}
+          <div className="col-span-2">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+              Assignment Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-gray-700">
+                  Department
+                </label>
+                <select
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                  Location
                 </label>
                 <input
                   type="text"
-                  name="vendor"
-                  value={formData.vendor || ''}
+                  id="location"
+                  name="location"
+                  value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Dell"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Purchase Cost
-                </label>
-                <input
-                  type="number"
-                  name="purchaseCost"
-                  value={formData.purchaseCost || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 89999"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Warranty Until
-                </label>
-                <input
-                  type="date"
-                  name="warrantyExpiration"
-                  value={formData.warrantyExpiration || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Current Value
-                </label>
-                <input
-                  type="number"
-                  name="currentValue"
-                  value={formData.currentValue || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 72000"
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Mumbai Office"
                 />
               </div>
             </div>
           </div>
-          
-          {/* Policies Section */}
-          <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Asset Policies</h3>
-            
-            {/* Current Policies List */}
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Current Policies</h4>
-              {formData.policies && formData.policies.length > 0 ? (
-                <div className="space-y-2">
-                  {formData.policies.map(policy => (
-                    <div 
-                      key={policy.id} 
-                      className="flex justify-between items-start p-3 border border-gray-200 rounded-md hover:bg-gray-50"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium">{policy.name}</div>
-                        <div className="text-sm text-gray-600">{policy.description}</div>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => removePolicy(policy.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <i className="pi pi-trash"></i>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-500 text-sm italic">No policies attached to this asset.</div>
-              )}
-            </div>
-            
-            {/* Add New Policy */}
-            <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Add New Policy</h4>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Policy Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={newPolicy.name}
-                    onChange={handlePolicyChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., Laptop Usage Policy"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={newPolicy.description}
-                    onChange={handlePolicyChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Brief description of the policy"
-                    rows="2"
-                  ></textarea>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={addPolicy}
-                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
-                  >
-                    <i className="pi pi-plus mr-1"></i>
-                    Add Policy
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Notes */}
-          <div className="col-span-2">
-            <h3 className="font-medium text-gray-800 mb-3 border-b pb-2">Notes</h3>
-            <div>
-              <textarea
-                name="notes"
-                value={formData.notes || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Add any additional notes about this asset"
-                rows="3"
-              ></textarea>
-            </div>
-          </div>
-          
-          <div className="col-span-2 flex justify-end space-x-4 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Save Changes
-            </button>
-          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            type="button"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </form>
     </div>
   );
 };
 
-export default EditAssetForm; 
+export default EditAssetForm;

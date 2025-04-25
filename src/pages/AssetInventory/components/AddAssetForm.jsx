@@ -124,7 +124,7 @@ const AddAssetForm = () => {
           <h1 className="text-lg font-bold text-gray-800">AssetHR</h1>
         </div>
         <nav className="text-sm text-gray-500">
-          Management > Assets > Create New Type
+          Management  Assets  Create New Type
         </nav>
         <div className="flex items-center gap-2">
           <i className="pi pi-bell text-gray-600"></i>

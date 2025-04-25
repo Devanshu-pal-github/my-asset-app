@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 
 class EmployeeBase(BaseModel):
@@ -11,7 +11,7 @@ class EmployeeBase(BaseModel):
     job_title: Optional[str] = None
     phone: Optional[str] = None
     is_active: int = 1
-    assigned_assets: List[str] = []
+    assigned_assets: List[Dict[str, str]] = []  # Changed to store asset ID and name
 
 class EmployeeCreate(EmployeeBase):
     pass

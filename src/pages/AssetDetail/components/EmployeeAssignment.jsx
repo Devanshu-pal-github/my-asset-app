@@ -13,82 +13,79 @@ import logger from '../../../utils/logger';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // Utility to validate MongoDB ObjectId
-const isValidObjectId = (id) => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
+const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+
+// Retry utility function
+const withRetry = async (fn, retries = 3, delay = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      logger.error('Retrying API call after failure', { attempt: i + 1, error: error.message }); // Fallback to error if warn is missing
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
 };
 
 const EmployeeAssignment = ({ visible, onHide, categoryId, assetId, onAssignmentSuccess }) => {
   const dispatch = useDispatch();
   const toast = useRef(null);
-  const hasFetched = useRef(false);
-  const { employees, loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
-  const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
-  const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
+  const { employees = [], loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
+  const { items: assets = [], loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
+  const { categories = [], loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
+  const [categoryDetails, setCategoryDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
 
   const fetchData = useCallback(async () => {
-    if (!visible || !isValidObjectId(categoryId)) {
-      logger.error('Invalid categoryId or modal not visible', { categoryId, visible });
-      setFetchError('The asset category is invalid. Please contact support.');
+    if (!isValidObjectId(categoryId)) {
+      logger.error('Invalid categoryId', { categoryId });
       toast.current?.show({
         severity: 'error',
         summary: 'Invalid Category',
         detail: 'The asset category is invalid. Please contact support.',
         life: 5000,
       });
-      setIsLoading(false);
       return;
     }
 
-    if (hasFetched.current) {
-      logger.debug('Data already fetched, skipping fetchData', { categoryId, assetId });
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      setFetchError(null);
-      logger.debug('Fetching data for EmployeeAssignment', { categoryId, assetId });
       await Promise.all([
-        dispatch(fetchEmployees()).unwrap(),
-        dispatch(fetchAssetItemsByCategory(categoryId)).unwrap(),
-        dispatch(fetchAssetCategories()).unwrap(),
+        withRetry(() => dispatch(fetchEmployees()).unwrap().catch(() => dispatch(fetchEmployees()).unwrap()), 3, 1000),
+        withRetry(() => dispatch(fetchAssetItemsByCategory(categoryId)).unwrap(), 3, 1000),
+        withRetry(() => dispatch(fetchAssetCategories()).unwrap(), 3, 1000),
+        withRetry(() => axios.get(`${API_URL}/asset-categories/${categoryId}`).then((response) => setCategoryDetails(response.data)), 3, 1000)
+          .catch((error) => {
+            logger.warn('Failed to fetch category details, continuing without', { error: error.message });
+            setCategoryDetails({});
+          }),
       ]);
-      hasFetched.current = true;
       logger.info('Data fetched successfully', { categoryId, assetId });
     } catch (error) {
       logger.error('Failed to fetch initial data', { error: error.message });
-      setFetchError('Failed to load data. Please try again.');
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to load data. Please try again.',
+        detail: 'Failed to load data. Please refresh the page.',
         life: 3000,
       });
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, categoryId, assetId, visible]);
+  }, [dispatch, categoryId, assetId]);
 
   useEffect(() => {
-    logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId, visible, hasFetched: hasFetched.current });
     if (visible) {
       fetchData();
     }
-
-    // Reset hasFetched when modal closes
     return () => {
       if (!visible) {
-        hasFetched.current = false;
-        setFetchError(null);
+        setCategoryDetails(null);
         logger.debug('EmployeeAssignment cleanup', { categoryId, assetId });
       }
     };
   }, [fetchData, visible]);
-
-  const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId) || {};
-  const currentAsset = assets.find((asset) => asset.id === assetId) || {};
 
   const handleAssignClick = async (employee) => {
     logger.info('Assign button clicked', {
@@ -116,8 +113,6 @@ const EmployeeAssignment = ({ visible, onHide, categoryId, assetId, onAssignment
         life: 3000,
       });
 
-      // Refresh data and notify parent
-      await dispatch(fetchAssetItemsByCategory(categoryId)).unwrap();
       onAssignmentSuccess();
       onHide();
     } catch (error) {
@@ -141,20 +136,14 @@ const EmployeeAssignment = ({ visible, onHide, categoryId, assetId, onAssignment
     }
   };
 
-  const assignButton = (rowData) => {
-    const isAlreadyAssignedToEmployee = Array.isArray(rowData.assigned_assets) && rowData.assigned_assets.includes(assetId);
-    const isAssetAssigned = Array.isArray(currentAsset.current_assignee_id) && currentAsset.current_assignee_id.length > 0;
-    const allowMultipleAssignments = currentCategory.allow_multiple_assignments === 1;
-    const canAssign = !isAlreadyAssignedToEmployee && (!isAssetAssigned || allowMultipleAssignments);
+  const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId) || {};
+  const currentAsset = assets.find((asset) => asset.id === assetId || asset._id === assetId) || {};
 
-    logger.debug('Assign button conditions', {
-      isAlreadyAssignedToEmployee,
-      isAssetAssigned,
-      allowMultipleAssignments,
-      canAssign,
-      employeeId: rowData.id,
-      assetId,
-    });
+  const assignButton = (rowData) => {
+    const isAlreadyAssignedToEmployee = rowData.assigned_assets?.includes(assetId);
+    const isAssetAssigned = currentAsset.current_assignee_id?.length > 0;
+    const allowMultipleAssignments = categoryDetails?.allow_multiple_assignments === 1;
+    const canAssign = !isAlreadyAssignedToEmployee && (!isAssetAssigned || allowMultipleAssignments);
 
     return (
       <Button
@@ -166,39 +155,54 @@ const EmployeeAssignment = ({ visible, onHide, categoryId, assetId, onAssignment
     );
   };
 
-  // Check if all required data is available
-  const isDataReady = (
-    !isLoading &&
-    !employeesLoading &&
-    !assetsLoading &&
-    !categoriesLoading &&
-    currentCategory.name &&
-    currentAsset.name &&
-    employees.length > 0
-  );
-
   if (!visible) return null;
 
-  if (fetchError || employeesError || assetsError || categoriesError) {
+  if (isLoading || employeesLoading || assetsLoading || categoriesLoading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  if (employeesError || assetsError || categoriesError) {
+    const errorMessage = employeesError || assetsError || categoriesError;
+    logger.error('EmployeeAssignment error', { error: errorMessage });
     return (
-      <div className="p-4">
-        <Toast ref={toast} />
-        <div className="text-red-600">
-          {fetchError || employeesError || assetsError || categoriesError}
-        </div>
+      <div className="p-4 text-red-600">
+        <span className="flex items-center">
+          <i className="pi pi-exclamation-triangle mr-2"></i>
+          Error: {errorMessage}
+        </span>
+        <Button
+          label="Retry"
+          className="p-button-sm p-button-info mt-2"
+          onClick={fetchData}
+        />
       </div>
     );
   }
 
-  if (!isDataReady) {
+  if (!currentCategory.name && categoryDetails) {
+    logger.warn('Category not found', { categoryId });
     return (
       <div className="p-4">
-        <Toast ref={toast} />
-        {isLoading || employeesLoading || assetsLoading || categoriesLoading
-          ? 'Loading...'
-          : (!currentCategory.name && 'Category not found') ||
-            (!currentAsset.name && 'Asset not found') ||
-            (employees.length === 0 && 'No employees found')}
+        Category not found. <Button label="Close" className="p-button-sm mt-2" onClick={onHide} />
+      </div>
+    );
+  }
+
+  if (!currentAsset.name) {
+    logger.warn('Asset not found', { assetId });
+    return (
+      <div className="p-4">
+        Asset not found. <Button label="Close" className="p-button-sm mt-2" onClick={onHide} />
+      </div>
+    );
+  }
+
+  if (!employees.length) {
+    logger.info('No employees found');
+    return (
+      <div className="p-4">
+        No employees available for assignment. Please ensure employees are registered in the system.{' '}
+        <Button label="Close" className="p-button-sm mt-2" onClick={onHide} />
       </div>
     );
   }

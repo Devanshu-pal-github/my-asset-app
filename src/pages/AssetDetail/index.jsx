@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Button } from "primereact/button";
-import { Dialog } from "primereact/dialog";
 import axios from "axios";
-import EditAssetForm from "../AssetInventory/components/EditAssetForm";
+import EditAssetForm from "./components/EditAssetForm";
+import EditAssetSpecsAndFinanceForm from "./components/EditAssetSpecsAndFinanceForm";
 import EmployeeAssignment from "./components/EmployeeAssignment";
 import EmployeeUnassignment from "./components/EmployeeUnassignment";
 import {
@@ -35,7 +32,7 @@ const TABS = {
   ASSIGNMENT_HISTORY: "assignmentHistory",
   MAINTENANCE_HISTORY: "maintenanceHistory",
 };
-const axiosInstance = axios.create({ timeout: 15000 });
+const axiosInstance = axios.create({ timeout: 30000 }); // Increased timeout to 30s
 
 // Utility Functions
 const formatDate = (date) => {
@@ -60,7 +57,6 @@ const formatFileSize = (bytes) => {
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 };
 
-// Utility to validate MongoDB ObjectId
 const isValidObjectId = (id) => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
@@ -162,7 +158,7 @@ const TabNavigation = ({ activeTab, onTabChange }) => (
   </div>
 );
 
-const SpecificationsTab = ({ assetData }) => (
+const SpecificationsTab = ({ assetData, onEdit }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
     <div>
       <h3 className="text-lg font-semibold mb-4">Technical Specifications</h3>
@@ -178,6 +174,14 @@ const SpecificationsTab = ({ assetData }) => (
       </div>
     </div>
     <div>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={onEdit}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Edit
+        </button>
+      </div>
       <h3 className="text-lg font-semibold mb-4">Purchase Details</h3>
       <div className="space-y-4">
         {[
@@ -207,9 +211,10 @@ const AssignmentHistoryTab = ({
   error,
   currentAssigneeName,
   currentAssigneeId,
+  onAssign,
+  onUnassign,
 }) => {
-  if (loading)
-    return <p className="text-gray-600">Loading assignment history...</p>;
+  if (loading) return <p className="text-gray-600">Loading assignment history...</p>;
   if (error)
     return (
       <p className="text-red-500">
@@ -222,66 +227,59 @@ const AssignmentHistoryTab = ({
     return <p className="text-gray-500">No assignment history available</p>;
 
   return (
-    <DataTable
-      value={history}
-      responsiveLayout="scroll"
-      stripedRows
-      className="p-datatable-sm"
-    >
-      <Column
-        field="assigned_to"
-        header="Assignee"
-        sortable
-        body={(rowData) => (
-          <span>
-            {rowData.assigned_to === currentAssigneeId
-              ? currentAssigneeName
-              : rowData.assigned_to || "Unknown"}
-          </span>
-        )}
-      />
-      <Column
-        field="department"
-        header="Department"
-        sortable
-        body={(rowData) => rowData.department || "N/A"}
-      />
-      <Column
-        field="condition"
-        header="Condition"
-        sortable
-        body={(rowData) => rowData.condition || "N/A"}
-      />
-      <Column
-        field="assignment_date"
-        header="Assignment Date"
-        sortable
-        body={(rowData) => formatDate(rowData.assignment_date)}
-      />
-      <Column
-        field="return_date"
-        header="Return Date"
-        sortable
-        body={(rowData) => formatDate(rowData.return_date)}
-      />
-      <Column
-        field="is_active"
-        header="Active"
-        sortable
-        body={(rowData) => (rowData.is_active ? "Yes" : "No")}
-      />
-      <Column
-        field="notes"
-        header="Notes"
-        body={(rowData) => rowData.notes || "N/A"}
-      />
-    </DataTable>
+    <div className="w-full overflow-x-hidden">
+      <div className="flex justify-end mb-4 space-x-2">
+        <button
+          onClick={onAssign}
+          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        >
+          Assign
+        </button>
+        <button
+          onClick={onUnassign}
+          className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+        >
+          Unassign
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full max-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Assignee</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Department</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Condition</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Assignment Date</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Return Date</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Active</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Notes</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {history.map((rowData) => (
+              <tr key={rowData.id}>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {rowData.assigned_to === currentAssigneeId
+                    ? currentAssigneeName
+                    : rowData.assigned_to || "Unknown"}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">{rowData.department || "N/A"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{rowData.condition || "N/A"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.assignment_date)}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.return_date)}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{rowData.is_active ? "Yes" : "No"}</td>
+                <td className="px-4 py-2">{rowData.notes || "N/A"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
-const MaintenanceHistoryTab = ({ history, loading, error }) => {
-  if (loading)
-    return <p className="text-gray-600">Loading maintenance history...</p>;
+const MaintenanceHistoryTab = ({ history, loading, error, onLogMaintenance }) => {
+  if (loading) return <p className="text-gray-600">Loading maintenance history...</p>;
   if (error)
     return (
       <p className="text-red-500">
@@ -294,66 +292,46 @@ const MaintenanceHistoryTab = ({ history, loading, error }) => {
     return <p className="text-gray-500">No maintenance history available</p>;
 
   return (
-    <DataTable
-      value={history}
-      responsiveLayout="scroll"
-      stripedRows
-      className="p-datatable-sm"
-    >
-      <Column
-        field="maintenance_type"
-        header="Service Type"
-        sortable
-        body={(rowData) => rowData.maintenance_type || "N/A"}
-      />
-      <Column
-        field="technician"
-        header="Technician"
-        sortable
-        body={(rowData) => rowData.technician || "N/A"}
-      />
-      <Column
-        field="condition_before"
-        header="Condition Before"
-        sortable
-        body={(rowData) => rowData.condition_before || "N/A"}
-      />
-      <Column
-        field="condition_after"
-        header="Condition After"
-        sortable
-        body={(rowData) => rowData.condition_after || "N/A"}
-      />
-      <Column
-        field="maintenance_date"
-        header="Maintenance Date"
-        sortable
-        body={(rowData) => formatDate(rowData.maintenance_date)}
-      />
-      <Column
-        field="completed_date"
-        header="Completed Date"
-        sortable
-        body={(rowData) => formatDate(rowData.completed_date)}
-      />
-      <Column
-        field="cost"
-        header="Cost"
-        sortable
-        body={(rowData) => formatCurrency(rowData.cost)}
-      />
-      <Column
-        field="is_completed"
-        header="Completed"
-        sortable
-        body={(rowData) => (rowData.is_completed ? "Yes" : "No")}
-      />
-      <Column
-        field="notes"
-        header="Notes"
-        body={(rowData) => rowData.notes || "N/A"}
-      />
-    </DataTable>
+    <div className="overflow-x-auto">
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={onLogMaintenance}
+          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Log Maintenance
+        </button>
+      </div>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Service Type</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Technician</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Condition Before</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Condition After</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Maintenance Date</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Completed Date</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Cost</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Completed</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Notes</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {history.map((rowData) => (
+            <tr key={rowData.id}>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.maintenance_type || "N/A"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.technician || "N/A"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.condition_before || "N/A"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.condition_after || "N/A"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.maintenance_date)}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.completed_date)}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{formatCurrency(rowData.cost)}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.is_completed ? "Yes" : "No"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.notes || "N/A"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
@@ -368,15 +346,13 @@ const DocumentList = ({ assetId }) => {
   if (error)
     return (
       <div className="text-red-500">
-        <p>
-          {error.includes("404") ? "No documents found" : `Error: ${error}`}
-        </p>
-        <Button
-          label="Retry"
-          icon="pi pi-refresh"
-          className="p-button-sm p-button-outlined mt-2"
+        <p>{error.includes("404") ? "No documents found" : `Error: ${error}`}</p>
+        <button
           onClick={() => dispatch(fetchDocuments(assetId))}
-        />
+          className="mt-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Retry
+        </button>
       </div>
     );
 
@@ -392,14 +368,12 @@ const DocumentList = ({ assetId }) => {
             <p>
               Type: {doc.type} | Uploaded: {formatDate(doc.upload_date)}
             </p>
-            <Button
-              label="View"
-              icon="pi pi-eye"
-              className="p-button-sm p-button-outlined"
-              onClick={() =>
-                window.open(`${API_URL}${doc.file_path}`, "_blank")
-              }
-            />
+            <button
+              onClick={() => window.open(`${API_URL}${doc.file_path}`, "_blank")}
+              className="mt-2 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              View
+            </button>
           </div>
         ))
       ) : (
@@ -409,7 +383,6 @@ const DocumentList = ({ assetId }) => {
   );
 };
 
-// Main Component
 const AssetDetail = () => {
   const { categoryId: urlCategoryId, assetId } = useParams();
   const dispatch = useDispatch();
@@ -430,16 +403,19 @@ const AssetDetail = () => {
     error: maintenanceError,
   } = useSelector((state) => state.maintenanceHistory);
   const [activeTab, setActiveTab] = useState(TABS.SPECIFICATIONS);
-  const [showEditForm, setShowEditForm] = useState(false);
+  const [showBasicEditForm, setShowBasicEditForm] = useState(false);
+  const [showSpecsFinanceEditForm, setShowSpecsFinanceEditForm] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showUnassignModal, setShowUnassignModal] = useState(false);
   const [currentAssigneeName, setCurrentAssigneeName] = useState("Unassigned");
+
+  const memoizedAsset = useMemo(() => asset, [asset]);
 
   useEffect(() => {
     logger.debug("AssetDetail useEffect triggered", {
       urlCategoryId,
       assetId,
-      asset,
+      asset: memoizedAsset,
     });
     if (assetId && urlCategoryId) {
       logger.info("Dispatching fetchAssetItemById", { assetId });
@@ -471,7 +447,7 @@ const AssetDetail = () => {
   }, [dispatch, assetId, urlCategoryId]);
 
   useEffect(() => {
-    logger.debug("AssetLoading state", { assetLoading, assetId, asset });
+    logger.debug("AssetLoading state", { assetLoading, assetId, asset: memoizedAsset });
     if (assetLoading) {
       logger.info("AssetDetail is loading", { assetId });
     }
@@ -498,10 +474,9 @@ const AssetDetail = () => {
       }
     };
 
-    // Handle array or string for current_assignee_id
-    const assigneeId = Array.isArray(asset?.current_assignee_id)
-      ? asset.current_assignee_id[0]
-      : asset?.current_assignee_id;
+    const assigneeId = Array.isArray(memoizedAsset?.current_assignee_id)
+      ? memoizedAsset.current_assignee_id[0]
+      : memoizedAsset?.current_assignee_id;
 
     if (assigneeId) {
       fetchEmployeeName(assigneeId);
@@ -511,10 +486,9 @@ const AssetDetail = () => {
         "No current_assignee_id, setting currentAssigneeName to Unassigned"
       );
     }
-  }, [asset?.current_assignee_id]);
+  }, [memoizedAsset?.current_assignee_id]);
 
-  // Validate categoryId for EmployeeAssignment
-  const assignmentCategoryId = asset?.category_id;
+  const assignmentCategoryId = memoizedAsset?.category_id;
   if (assignmentCategoryId && !isValidObjectId(assignmentCategoryId)) {
     logger.error("Invalid categoryId for EmployeeAssignment", {
       assignmentCategoryId,
@@ -526,17 +500,6 @@ const AssetDetail = () => {
       assetId,
     });
   }
-
-  // Log EmployeeAssignment props for debugging
-  useEffect(() => {
-    if (showAssignModal) {
-      logger.debug("EmployeeAssignment props", {
-        visible: showAssignModal,
-        categoryId: assignmentCategoryId,
-        assetId,
-      });
-    }
-  }, [showAssignModal, assignmentCategoryId, assetId]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -566,9 +529,14 @@ const AssetDetail = () => {
     }
   };
 
-  const toggleEditForm = () => {
-    setShowEditForm((prev) => !prev);
-    logger.debug("Toggled edit form", { showEditForm: !showEditForm });
+  const toggleBasicEditForm = () => {
+    setShowBasicEditForm((prev) => !prev);
+    logger.debug("Toggled basic edit form", { showBasicEditForm: !showBasicEditForm });
+  };
+
+  const toggleSpecsFinanceEditForm = () => {
+    setShowSpecsFinanceEditForm((prev) => !prev);
+    logger.debug("Toggled specs and finance edit form", { showSpecsFinanceEditForm: !showSpecsFinanceEditForm });
   };
 
   const updateAssetDetails = (updatedData) => {
@@ -577,7 +545,8 @@ const AssetDetail = () => {
       .unwrap()
       .then(() => {
         logger.info("Successfully updated asset", { assetId });
-        toggleEditForm();
+        toggleBasicEditForm();
+        toggleSpecsFinanceEditForm();
       })
       .catch((err) =>
         logger.error("Failed to update asset", { error: err.message })
@@ -596,19 +565,36 @@ const AssetDetail = () => {
 
   const handleLogMaintenance = () => {
     logger.info("Log maintenance button clicked", { assetId });
-    // Placeholder for maintenance log logic
   };
 
   const handleAssignmentSuccess = () => {
     logger.info("Assignment successful, refreshing data", { assetId });
-    dispatch(fetchAssetItemById(assetId));
-    dispatch(fetchAssignmentHistory(assetId));
+    setShowAssignModal(false);
+    Promise.all([
+      dispatch(fetchAssetItemById(assetId)).unwrap(),
+      dispatch(fetchAssignmentHistory(assetId)).unwrap(),
+    ])
+      .then(() => {
+        logger.info("Data refresh completed after assignment", { assetId });
+      })
+      .catch((err) => {
+        logger.error("Failed to refresh data after assignment", { error: err.message });
+      });
   };
 
   const handleUnassignmentSuccess = () => {
     logger.info("Unassignment successful, refreshing data", { assetId });
-    dispatch(fetchAssetItemById(assetId));
-    dispatch(fetchAssignmentHistory(assetId));
+    setShowUnassignModal(false);
+    Promise.all([
+      dispatch(fetchAssetItemById(assetId)).unwrap(),
+      dispatch(fetchAssignmentHistory(assetId)).unwrap(),
+    ])
+      .then(() => {
+        logger.info("Data refresh completed after unassignment", { assetId });
+      })
+      .catch((err) => {
+        logger.error("Failed to refresh data after unassignment", { error: err.message });
+      });
   };
 
   if (!urlCategoryId || !assetId) {
@@ -631,11 +617,11 @@ const AssetDetail = () => {
     );
   }
 
-  if (assetError || !asset) {
+  if (assetError || !memoizedAsset) {
     logger.error("AssetDetail error or no asset found", {
       assetError,
       assetId,
-      asset,
+      asset: memoizedAsset,
     });
     return (
       <div className="px-6 py-5 text-red-500">
@@ -645,8 +631,7 @@ const AssetDetail = () => {
             to="/asset-inventory"
             className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50"
           >
-            <i className="pi pi-arrow-left mr-2" />
-            Return to Asset Inventory
+            <span className="mr-2">←</span> Return to Asset Inventory
           </Link>
         </div>
       </div>
@@ -654,47 +639,47 @@ const AssetDetail = () => {
   }
 
   const assetCategory = categories.find(
-    (cat) => cat.id === asset.category_id
+    (cat) => cat.id === memoizedAsset.category_id
   ) || {
-    id: asset.category_id,
+    id: memoizedAsset.category_id,
     name: "Unknown",
   };
 
   const assetData = {
-    assetId: asset.id,
-    assetTag: asset.asset_tag || "N/A",
-    categoryId: asset.category_id || "N/A",
+    assetId: memoizedAsset.id,
+    assetTag: memoizedAsset.asset_tag || "N/A",
+    categoryId: memoizedAsset.category_id || "N/A",
     categoryName: assetCategory.name,
-    assetName: asset.name || "N/A",
-    serialNumber: asset.serial_number || "N/A",
-    status: asset.status || "N/A",
-    isOperational: asset.is_operational ? "Operational" : "Non-Operational",
-    condition: asset.condition || "N/A",
-    createdAt: formatDate(asset.created_at),
-    lastUpdated: formatDate(asset.updated_at),
-    currentAssigneeId: Array.isArray(asset.current_assignee_id)
-      ? asset.current_assignee_id[0]
-      : asset.current_assignee_id || "",
+    assetName: memoizedAsset.name || "N/A",
+    serialNumber: memoizedAsset.serial_number || "N/A",
+    status: memoizedAsset.status || "N/A",
+    isOperational: memoizedAsset.is_operational ? "Operational" : "Non-Operational",
+    condition: memoizedAsset.condition || "N/A",
+    createdAt: formatDate(memoizedAsset.created_at),
+    lastUpdated: formatDate(memoizedAsset.updated_at),
+    currentAssigneeId: Array.isArray(memoizedAsset.current_assignee_id)
+      ? memoizedAsset.current_assignee_id[0]
+      : memoizedAsset.current_assignee_id || "",
     currentAssigneeName,
-    hasActiveAssignment: asset.has_active_assignment
+    hasActiveAssignment: memoizedAsset.has_active_assignment
       ? "Assigned"
       : "Not Assigned",
-    department: asset.department || "N/A",
-    location: asset.location || "N/A",
-    specifications: asset.specifications
-      ? Object.entries(asset.specifications)
+    department: memoizedAsset.department || "N/A",
+    location: memoizedAsset.location || "N/A",
+    specifications: memoizedAsset.specifications
+      ? Object.entries(memoizedAsset.specifications)
           .map(([k, v]) => `${k}: ${v}`)
           .join(", ")
       : "N/A",
-    vendor: asset.vendor || "N/A",
-    purchaseCost: formatCurrency(asset.purchase_cost),
-    purchaseDate: formatDate(asset.purchase_date),
-    warrantyExpiration: formatDate(asset.warranty_expiration),
-    currentValue: formatCurrency(asset.current_value),
-    notes: asset.notes || "N/A",
-    insurancePolicy: asset.insurance_policy || "N/A",
-    disposalDate: formatDate(asset.disposal_date),
-    currentAssignmentDate: formatDate(asset.current_assignment_date),
+    vendor: memoizedAsset.vendor || "N/A",
+    purchaseCost: formatCurrency(memoizedAsset.purchase_cost),
+    purchaseDate: formatDate(memoizedAsset.purchase_date),
+    warrantyExpiration: formatDate(memoizedAsset.warranty_expiration),
+    currentValue: formatCurrency(memoizedAsset.current_value),
+    notes: memoizedAsset.notes || "N/A",
+    insurancePolicy: memoizedAsset.insurance_policy || "N/A",
+    disposalDate: formatDate(memoizedAsset.disposal_date),
+    currentAssignmentDate: formatDate(memoizedAsset.current_assignment_date),
   };
 
   return (
@@ -703,28 +688,29 @@ const AssetDetail = () => {
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Asset Details</h1>
-        <Button
-          label="Edit Asset"
-          icon="pi pi-pencil"
-          className="p-button-sm p-button-indigo"
-          onClick={toggleEditForm}
-        />
+        <button
+          onClick={toggleBasicEditForm}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Edit Basic Details
+        </button>
       </div>
 
-      {showEditForm && (
+      {showBasicEditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Edit Asset</h3>
-              <Button
-                icon="pi pi-times"
-                className="p-button-text p-button-plain"
-                onClick={toggleEditForm}
-              />
+              <h3 className="text-xl font-bold">Edit Basic Asset Details</h3>
+              <button
+                onClick={toggleBasicEditForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
             </div>
             <EditAssetForm
               asset={assetData}
-              onClose={toggleEditForm}
+              onClose={toggleBasicEditForm}
               onUpdateAsset={updateAssetDetails}
             />
           </div>
@@ -781,111 +767,124 @@ const AssetDetail = () => {
         <ErrorBoundary>
           <div className="p-6">
             {activeTab === TABS.SPECIFICATIONS && (
-              <>
-                <div className="flex justify-end mb-4">
-                  <Button
-                    label="Edit"
-                    icon="pi pi-pencil"
-                    className="p-button-sm p-button-indigo"
-                    onClick={toggleEditForm}
-                  />
-                </div>
-                <SpecificationsTab assetData={assetData} />
-              </>
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <SpecificationsTab
+                  assetData={assetData}
+                  onEdit={toggleSpecsFinanceEditForm}
+                />
+              </div>
             )}
             {activeTab === TABS.ASSIGNMENT_HISTORY && (
-              <>
-                <div className="flex justify-end mb-4 space-x-2">
-                  <Button
-                    label="Assign"
-                    icon="pi pi-user-plus"
-                    className="p-button-sm p-button-success"
-                    onClick={handleAssign}
-                  />
-                  <Button
-                    label="Unassign"
-                    icon="pi pi-user-minus"
-                    className="p-button-sm p-button-warning"
-                    onClick={handleUnassign}
-                  />
-                </div>
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                 <AssignmentHistoryTab
                   history={assignmentHistory}
                   loading={assignmentLoading}
                   error={assignmentError}
                   currentAssigneeName={assetData.currentAssigneeName}
                   currentAssigneeId={assetData.currentAssigneeId}
+                  onAssign={handleAssign}
+                  onUnassign={handleUnassign}
                 />
-                <Dialog
-                  header="Assign Employee"
-                  visible={showAssignModal}
-                  onHide={() => setShowAssignModal(false)}
-                  style={{ width: "80vw", maxWidth: "1200px" }}
-                  className="p-6"
-                >
-                  <EmployeeAssignment
-                    visible={showAssignModal}
-                    onHide={() => setShowAssignModal(false)}
-                    categoryId={assignmentCategoryId}
-                    assetId={assetId}
-                    onAssignmentSuccess={handleAssignmentSuccess}
-                  />
-                </Dialog>
-                <Dialog
-                  header="Unassign Employee"
-                  visible={showUnassignModal}
-                  onHide={() => setShowUnassignModal(false)}
-                  style={{ width: "80vw", maxWidth: "1200px" }}
-                  className="p-6"
-                >
-                  <EmployeeUnassignment
-                    visible={showUnassignModal}
-                    onHide={() => setShowUnassignModal(false)}
-                    assetId={assetId}
-                    onUnassignmentSuccess={handleUnassignmentSuccess}
-                  />
-                </Dialog>
-              </>
+              </div>
             )}
             {activeTab === TABS.MAINTENANCE_HISTORY && (
-              <>
-                <div className="flex justify-end mb-4">
-                  <Button
-                    label="Log"
-                    icon="pi pi-file-edit"
-                    className="p-button-sm p-button-info"
-                    onClick={handleLogMaintenance}
-                  />
-                </div>
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                 <MaintenanceHistoryTab
                   history={maintenanceHistory}
                   loading={maintenanceLoading}
                   error={maintenanceError}
+                  onLogMaintenance={handleLogMaintenance}
                 />
-              </>
+              </div>
             )}
           </div>
         </ErrorBoundary>
       </div>
 
+      {showSpecsFinanceEditForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Edit Specifications & Financial Details</h3>
+              <button
+                onClick={toggleSpecsFinanceEditForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <EditAssetSpecsAndFinanceForm
+              asset={assetData}
+              onClose={toggleSpecsFinanceEditForm}
+              onUpdateAsset={updateAssetDetails}
+            />
+          </div>
+        </div>
+      )}
+
       <DocumentList assetId={assetId} />
 
       <div className="mt-6 flex justify-end space-x-2">
         <Link to={`/asset-inventory/${assetCategory.id}`}>
-          <Button
-            label="View All Units"
-            icon="pi pi-list"
-            className="p-button-sm p-button-primary"
-          />
+          <button
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            View All Units
+          </button>
         </Link>
         <Link to="/asset-inventory">
-          <Button
-            label="Return to Inventory"
-            icon="pi pi-arrow-left"
-            className="p-button-sm p-button-outlined"
-          />
+          <button
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          >
+            Return to Inventory
+          </button>
         </Link>
       </div>
+
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Assign Employee</h3>
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <EmployeeAssignment
+              visible={showAssignModal}
+              onHide={() => setShowAssignModal(false)}
+              categoryId={assignmentCategoryId}
+              assetId={assetId}
+              onAssignmentSuccess={handleAssignmentSuccess}
+            />
+          </div>
+        </div>
+      )}
+
+      {showUnassignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Unassign Employee</h3>
+              <button
+                onClick={() => setShowUnassignModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <EmployeeUnassignment
+              visible={showUnassignModal}
+              onHide={() => setShowUnassignModal(false)}
+              assetId={assetId}
+              onUnassignmentSuccess={handleUnassignmentSuccess}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
