@@ -21,8 +21,8 @@ const TopBar = () => {
       </div>
       <div className="flex items-center space-x-2">
         <img
-          src="https://via.placeholder.com/30"
-          alt="User Avatar"
+          src="/assets/placeholder.png"
+          alt="Placeholder"
           className="rounded-full"
         />
         <div>

@@ -15,13 +15,36 @@ export const fetchEmployees = createAsyncThunk(
   'employees/fetchEmployees',
   async (_, { rejectWithValue }) => {
     try {
-      safeLogger.debug('Fetching employees from API');
+      safeLogger.debug(`Fetching employees from API: ${API_URL}/employees/`);
       const response = await axiosInstance.get(`${API_URL}/employees/`);
       safeLogger.info('Successfully fetched employees', { count: response.data.length });
       return response.data;
     } catch (error) {
-      safeLogger.error('Failed to fetch employees', { error: error.message });
-      return rejectWithValue(error.message);
+      safeLogger.error('Failed to fetch employees', {
+        error: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      return rejectWithValue(error.response?.data?.detail || error.message);
+    }
+  }
+);
+
+export const fetchEmployeeDetails = createAsyncThunk(
+  'employees/fetchEmployeeDetails',
+  async (id, { rejectWithValue }) => {
+    try {
+      safeLogger.debug(`Fetching employee details from API: ${API_URL}/employees/${id}/details`);
+      const response = await axiosInstance.get(`${API_URL}/employees/${id}/details`);
+      safeLogger.info('Successfully fetched employee details', { id });
+      return response.data;
+    } catch (error) {
+      safeLogger.error('Failed to fetch employee details', {
+        error: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      return rejectWithValue(error.response?.data?.detail || error.message);
     }
   }
 );
@@ -30,12 +53,17 @@ const employeeSlice = createSlice({
   name: 'employees',
   initialState: {
     employees: [],
+    employeeDetails: null,
     loading: false,
     error: null,
   },
   reducers: {
     clearEmployees: (state) => {
       state.employees = [];
+      state.error = null;
+    },
+    clearEmployeeDetails: (state) => {
+      state.employeeDetails = null;
       state.error = null;
     },
   },
@@ -52,9 +80,21 @@ const employeeSlice = createSlice({
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(fetchEmployeeDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEmployeeDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.employeeDetails = action.payload;
+      })
+      .addCase(fetchEmployeeDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { clearEmployees } = employeeSlice.actions;
+export const { clearEmployees, clearEmployeeDetails } = employeeSlice.actions;
 export default employeeSlice.reducer;

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.dependencies import db
 from app.routers import (
@@ -12,9 +12,8 @@ from app.routers import (
 import logging
 import logging.handlers
 from starlette.responses import JSONResponse
-from starlette.requests import Request
 
-# Configure logging with StreamHandler for terminal output
+# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -28,25 +27,20 @@ app = FastAPI(title="Asset Management API")
 # CORS Middleware Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-logger.info("CORS middleware configured with origins: http://localhost:5173")
+logger.info("CORS middleware configured with origins: http://localhost:5173, http://127.0.0.1:5173")
 
-# Include routers with debug logging
-logger.debug("Registering asset_categories router with prefix /api/v1")
+# Include routers
+logger.debug("Registering routers with prefix /api/v1")
 app.include_router(asset_categories.router, prefix="/api/v1")
-logger.debug("Registering asset_items router with prefix /api/v1")
 app.include_router(asset_items.router, prefix="/api/v1")
-logger.debug("Registering assignment_history router with prefix /api/v1")
 app.include_router(assignment_history.router, prefix="/api/v1")
-logger.debug("Registering maintenance_history router with prefix /api/v1")
 app.include_router(maintenance_history.router, prefix="/api/v1")
-logger.debug("Registering documents router with prefix /api/v1")
 app.include_router(documents.router, prefix="/api/v1")
-logger.debug("Registering employees router with prefix /api/v1")
 app.include_router(employees.router, prefix="/api/v1")
 
 @app.on_event("startup")
@@ -58,7 +52,7 @@ async def startup_event():
         db.asset_categories.create_index("name")
         logger.info("Indexes ensured for asset_categories")
     except Exception as e:
-        logger.error(f"MongoDB connection failed: {str(e)}")
+        logger.error(f"MongoDB connection failed: {str(e)}", exc_info=True)
         raise
 
 @app.on_event("shutdown")
@@ -73,8 +67,8 @@ def read_root():
         logger.info("MongoDB connection test successful")
         return {"message": "Connected to MongoDB Atlas successfully!"}
     except Exception as e:
-        logger.error(f"MongoDB connection test failed: {str(e)}")
-        raise
+        logger.error(f"MongoDB connection test failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"MongoDB connection failed: {str(e)}")
 
 @app.get("/health")
 async def health_check():
@@ -89,27 +83,26 @@ async def health_check():
             "asset_categories_count": category_count
         }
     except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
+        logger.error(f"Health check failed: {str(e)}", exc_info=True)
         return {"status": "unhealthy", "error": str(e)}
 
-@app.get("/test")
-async def test_endpoint():
-    logger.info("Test endpoint hit")
-    return {"message": "Server is responding"}
+@app.get("/debug-request")
+async def debug_request(request: Request):
+    logger.info(f"Debug request received: {request.method} {request.url} from {request.client.host}")
+    return {
+        "message": "Request received",
+        "method": request.method,
+        "url": str(request.url),
+        "client": request.client.host
+    }
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    logger.debug(f"Received request: {request.method} {request.url}")
+    logger.debug(f"Received request: {request.method} {request.url} from {request.client.host}")
     try:
         response = await call_next(request)
-        if response.status_code == 422:
-            body = b""
-            async for chunk in response.body_iterator:
-                body += chunk
-            logger.error(f"422 Validation Error: {body.decode()}")
-            return JSONResponse(content={"detail": body.decode()}, status_code=422)
         logger.debug(f"Completed request: {request.method} {request.url} - Status: {response.status_code}")
         return response
     except Exception as e:
-        logger.error(f"Request failed: {request.method} {request.url} - Error: {str(e)}")
+        logger.error(f"Request failed: {request.method} {request.url} - Error: {str(e)}", exc_info=True)
         raise
