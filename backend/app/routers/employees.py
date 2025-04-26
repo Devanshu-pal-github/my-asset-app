@@ -44,7 +44,7 @@ async def read_employees(
             query["role"] = role
         employees = get_employees(db)
         filtered_employees = [emp for emp in employees if all(emp.dict().get(k) == v for k, v in query.items())]
-        logger.debug(f"Fetched {len(filtered_employees)} employees")
+        logger.debug(f"Fetched {len(filtered_employees)} employees: {[emp.employee_id for emp in filtered_employees]}")
         return filtered_employees
     except Exception as e:
         logger.error(f"Failed to fetch employees: {str(e)}", exc_info=True)

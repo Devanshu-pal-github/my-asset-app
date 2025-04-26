@@ -1,8 +1,6 @@
-
 const logger = {
   debug: (message, context = {}) => {
-    console.debug(message, context);
-    // Optionally log to a service or file
+    console.debug(`[DEBUG] ${message}`, context);
     console.log(JSON.stringify({
       level: 'debug',
       message,
@@ -11,7 +9,7 @@ const logger = {
     }));
   },
   info: (message, context = {}) => {
-    console.info(message, context);
+    console.info(`[INFO] ${message}`, context);
     console.log(JSON.stringify({
       level: 'info',
       message,
@@ -19,17 +17,17 @@ const logger = {
       timestamp: new Date().toISOString()
     }));
   },
-  warning: (message, context = {}) => {
-    console.warn(message, context);
+  warn: (message, context = {}) => {
+    console.warn(`[WARN] ${message}`, context);
     console.log(JSON.stringify({
-      level: 'warning',
+      level: 'warn',
       message,
       context,
       timestamp: new Date().toISOString()
     }));
   },
   error: (message, context = {}) => {
-    console.error(message, context);
+    console.error(`[ERROR] ${message}`, context);
     console.log(JSON.stringify({
       level: 'error',
       message,

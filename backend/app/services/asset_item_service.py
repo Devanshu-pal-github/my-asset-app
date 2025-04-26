@@ -1,9 +1,11 @@
+
 from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime
 from app.models.asset_item import AssetItem, AssetItemCreate, AssetStatus
+from app.models.employee import Employee, AssignedAsset
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ def get_asset_items(
     try:
         query = {}
         if category_id:
-            query["category_id"] = category_id
+            query["category_id"] = str(category_id)  # Ensure stringified ObjectId
         if status:
             query["status"] = status
         if has_active_assignment is not None:
@@ -102,13 +104,13 @@ def create_asset_item(db: Collection, item: AssetItemCreate) -> AssetItem:
         logger.debug(f"Inserted asset item: {item.name} with ID: {result.inserted_id}")
         
         response_dict = {**item_dict, "id": str(result.inserted_id)}
-        response_dict.pop("_id", None)  # Remove raw _id to prevent ObjectId type conflict
+        response_dict.pop("_id", None)
         created_item = AssetItem(**response_dict)
         logger.info(f"Created asset item with ID: {created_item.id}")
         return created_item
     except DuplicateKeyError:
         logger.warning(f"Duplicate found: asset_tag={item.asset_tag}, serial_number={item.serial_number}")
-        raise ValueError(f"Asset tag '{item.asset_tag}' or serial number '{item.serial_number}' already exists")
+        raise ValueError(f"Asset tag '{item.asset_tag}' or serial_number '{item.serial_number}' already exists")
     except Exception as e:
         logger.error(f"Error creating asset item: {str(e)}", exc_info=True)
         raise
@@ -195,6 +197,157 @@ def delete_asset_item(db: Collection, id: str) -> bool:
         return True
     except Exception as e:
         logger.error(f"Error deleting asset item {id}: {str(e)}", exc_info=True)
+        raise
+
+def assign_asset_item(db: Collection, asset_id: str, employee_id: str, department: Optional[str] = None) -> Optional[AssetItem]:
+    """
+    Assign an asset item to an employee.
+    """
+    logger.info(f"Assigning asset item {asset_id} to employee {employee_id}")
+    try:
+        if not ObjectId.is_valid(asset_id) or not ObjectId.is_valid(employee_id):
+            logger.warning(f"Invalid IDs - asset_id: {asset_id}, employee_id: {employee_id}")
+            raise ValueError("Invalid asset or employee ID")
+        
+        asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
+        if not asset:
+            logger.warning(f"Asset item not found: {asset_id}")
+            raise ValueError("Asset item not found")
+        
+        employee = db.employee.find_one({"_id": ObjectId(employee_id)})
+        if not employee:
+            logger.warning(f"Employee not found: {employee_id}")
+            raise ValueError("Employee not found")
+        
+        category = db.asset_categories.find_one({"_id": ObjectId(asset["category_id"])})
+        if not category:
+            logger.warning(f"Category not found: {asset['category_id']}")
+            raise ValueError("Category not found")
+        
+        if asset["has_active_assignment"] and category["allow_multiple_assignments"] != 1:
+            logger.warning(f"Asset already assigned and multiple assignments not allowed: {asset_id}")
+            raise ValueError("Asset is already assigned and multiple assignments are not allowed")
+        
+        assignment_entry = {
+            "_id": ObjectId(),
+            "asset_id": asset_id,
+            "assigned_to": [employee_id],
+            "department": department or employee.get("department", None),
+            "condition_at_assignment": asset["condition"],
+            "condition_at_return": None,
+            "assignment_date": datetime.utcnow(),
+            "return_date": None,
+            "notes": f"Assigned to {employee['name']}",
+            "created_at": datetime.utcnow(),
+            "updated_at": None
+        }
+        
+        employee_assignment = AssignedAsset(
+            asset_id=asset_id,
+            assigned_at=datetime.utcnow()
+        )
+        
+        result = db.asset_items.update_one(
+            {"_id": ObjectId(asset_id)},
+            {
+                "$set": {
+                    "has_active_assignment": True,
+                    "current_assignee_id": employee_id,
+                    "current_assignment_date": datetime.utcnow(),
+                    "department": department or employee.get("department", None),
+                    "updated_at": datetime.utcnow()
+                },
+                "$push": {"assignment_history": assignment_entry}
+            }
+        )
+        if result.matched_count == 0:
+            logger.warning(f"Asset item not found: {asset_id}")
+            raise ValueError("Asset item not found")
+        
+        db.employee.update_one(
+            {"_id": ObjectId(employee_id)},
+            {
+                "$push": {"assigned_assets": employee_assignment.dict()},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        updated_asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
+        updated_item = AssetItem(**{**updated_asset, "id": str(updated_asset["_id"])})
+        logger.debug(f"Assigned asset item: {updated_item.name} to employee {employee_id}")
+        return updated_item
+    except Exception as e:
+        logger.error(f"Error assigning asset item {asset_id}: {str(e)}", exc_info=True)
+        raise
+
+def unassign_asset_item(db: Collection, asset_id: str) -> Optional[AssetItem]:
+    """
+    Unassign an asset item from its current assignee.
+    """
+    logger.info(f"Unassigning asset item {asset_id}")
+    try:
+        if not ObjectId.is_valid(asset_id):
+            logger.warning(f"Invalid asset ID: {asset_id}")
+            raise ValueError("Invalid asset ID")
+        
+        asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
+        if not asset:
+            logger.warning(f"Asset item not found: {asset_id}")
+            raise ValueError("Asset item not found")
+        
+        if not asset["has_active_assignment"]:
+            logger.warning(f"Asset is not assigned: {asset_id}")
+            raise ValueError("Asset is not currently assigned")
+        
+        current_assignee_id = asset.get("current_assignee_id")
+        if not current_assignee_id:
+            logger.warning(f"No assignee found for asset: {asset_id}")
+            raise ValueError("No assignee found for asset")
+        
+        result = db.asset_items.update_one(
+            {"_id": ObjectId(asset_id)},
+            {
+                "$set": {
+                    "has_active_assignment": False,
+                    "current_assignee_id": None,
+                    "current_assignment_date": None,
+                    "updated_at": datetime.utcnow()
+                },
+                "$push": {
+                    "assignment_history": {
+                        "_id": ObjectId(),
+                        "asset_id": asset_id,
+                        "assigned_to": [current_assignee_id],
+                        "department": asset.get("department", None),
+                        "condition_at_assignment": asset["condition"],
+                        "condition_at_return": asset["condition"],
+                        "assignment_date": asset["current_assignment_date"],
+                        "return_date": datetime.utcnow(),
+                        "notes": "Asset unassigned",
+                        "created_at": datetime.utcnow(),
+                        "updated_at": None
+                    }
+                }
+            }
+        )
+        if result.matched_count == 0:
+            logger.warning(f"Asset item not found: {asset_id}")
+            raise ValueError("Asset item not found")
+        
+        db.employee.update_one(
+            {"_id": ObjectId(current_assignee_id), "assigned_assets.asset_id": asset_id},
+            {
+                "$pull": {"assigned_assets": {"asset_id": asset_id}},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        updated_asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
+        updated_item = AssetItem(**{**updated_asset, "id": str(updated_asset["_id"])})
+        logger.debug(f"Unassigned asset item: {updated_item.name}")
+        return updated_item
+    except Exception as e:
+        logger.error(f"Error unassigning asset item {asset_id}: {str(e)}", exc_info=True)
         raise
 
 def get_asset_statistics(db: Collection) -> dict:

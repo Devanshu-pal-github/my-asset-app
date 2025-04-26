@@ -5,25 +5,34 @@ import logger from '../../utils/logger';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 const axiosInstance = axios.create({ timeout: 30000 });
 
-// Ensure logger has warn method, fallback to error if missing
-const safeLogger = {
-  ...logger,
-  warn: logger.warn || ((message, context) => logger.error(`[WARN] ${message}`, context)),
+const withRetry = async (fn, retries = 3, delay = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      logger.warn('Retrying API call after failure', { attempt: i + 1, error: error.message });
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
 };
 
 export const fetchEmployees = createAsyncThunk(
   'employees/fetchEmployees',
   async (_, { rejectWithValue }) => {
     try {
-      safeLogger.debug(`Fetching employees from API: ${API_URL}/employees/`);
-      const response = await axiosInstance.get(`${API_URL}/employees/`);
-      safeLogger.info('Successfully fetched employees', { count: response.data.length });
+      logger.debug(`Fetching employees from API: ${API_URL}/employees/`);
+      const response = await withRetry(() => axiosInstance.get(`${API_URL}/employees/`));
+      logger.info('Successfully fetched employees', {
+        count: response.data.length,
+        employeeIds: response.data.map((emp) => emp.employee_id),
+      });
       return response.data;
     } catch (error) {
-      safeLogger.error('Failed to fetch employees', {
+      logger.error('Failed to fetch employees', {
         error: error.message,
         status: error.response?.status,
-        data: error.response?.data
+        data: error.response?.data,
       });
       return rejectWithValue(error.response?.data?.detail || error.message);
     }
@@ -34,15 +43,18 @@ export const fetchEmployeeDetails = createAsyncThunk(
   'employees/fetchEmployeeDetails',
   async (id, { rejectWithValue }) => {
     try {
-      safeLogger.debug(`Fetching employee details from API: ${API_URL}/employees/${id}/details`);
-      const response = await axiosInstance.get(`${API_URL}/employees/${id}/details`);
-      safeLogger.info('Successfully fetched employee details', { id });
+      logger.debug(`Fetching employee details from API: ${API_URL}/employees/${id}/details`);
+      const response = await withRetry(() => axiosInstance.get(`${API_URL}/employees/${id}/details`));
+      logger.info('Successfully fetched employee details', {
+        id,
+        employee_id: response.data.employee_id,
+      });
       return response.data;
     } catch (error) {
-      safeLogger.error('Failed to fetch employee details', {
+      logger.error('Failed to fetch employee details', {
         error: error.message,
         status: error.response?.status,
-        data: error.response?.data
+        data: error.response?.data,
       });
       return rejectWithValue(error.response?.data?.detail || error.message);
     }
@@ -59,10 +71,12 @@ const employeeSlice = createSlice({
   },
   reducers: {
     clearEmployees: (state) => {
+      logger.debug('Clearing employees state');
       state.employees = [];
       state.error = null;
     },
     clearEmployeeDetails: (state) => {
+      logger.debug('Clearing employee details state');
       state.employeeDetails = null;
       state.error = null;
     },
@@ -70,26 +84,32 @@ const employeeSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchEmployees.pending, (state) => {
+        logger.debug('Fetch employees pending');
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchEmployees.fulfilled, (state, action) => {
+        logger.info('Fetch employees fulfilled', { count: action.payload.length });
         state.loading = false;
         state.employees = action.payload;
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
+        logger.error('Fetch employees rejected', { error: action.payload });
         state.loading = false;
         state.error = action.payload;
       })
       .addCase(fetchEmployeeDetails.pending, (state) => {
+        logger.debug('Fetch employee details pending');
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchEmployeeDetails.fulfilled, (state, action) => {
+        logger.info('Fetch employee details fulfilled', { id: action.payload.id });
         state.loading = false;
         state.employeeDetails = action.payload;
       })
       .addCase(fetchEmployeeDetails.rejected, (state, action) => {
+        logger.error('Fetch employee details rejected', { error: action.payload });
         state.loading = false;
         state.error = action.payload;
       });

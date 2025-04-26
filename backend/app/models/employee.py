@@ -7,6 +7,10 @@ class AssignedAsset(BaseModel):
     asset_id: str = Field(..., description="ID of the assigned asset")
     assigned_at: datetime = Field(default_factory=datetime.utcnow, description="Assignment timestamp")
 
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
 class Employee(BaseModel):
     id: Optional[str] = Field(None, alias="_id", description="Unique employee ID")
     employee_id: str = Field(..., description="Unique employee identifier, e.g., 'EMP001'")
@@ -23,6 +27,7 @@ class Employee(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+        allow_population_by_field_name = True  # Allow population by alias (_id)
 
 class EmployeeCreate(BaseModel):
     employee_id: str

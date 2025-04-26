@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo.collection import Collection
 from typing import List, Optional
@@ -9,7 +10,9 @@ from app.services.asset_item_service import (
     create_asset_item,
     update_asset_item,
     delete_asset_item,
-    get_asset_statistics
+    get_asset_statistics,
+    assign_asset_item,
+    unassign_asset_item
 )
 import logging
 
@@ -159,3 +162,43 @@ async def delete_existing_asset_item(id: str, db: Collection = Depends(get_db)):
     except Exception as e:
         logger.error(f"Failed to delete asset item {id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to delete asset item: {str(e)}")
+
+@router.post("/{id}/assign", response_model=AssetItem)
+async def assign_asset(id: str, employee_id: str, department: Optional[str] = None, db: Collection = Depends(get_db)):
+    """
+    Assign an asset item to an employee.
+    """
+    logger.info(f"Assigning asset item {id} to employee {employee_id}")
+    try:
+        assigned_item = assign_asset_item(db, id, employee_id, department)
+        if not assigned_item:
+            logger.warning(f"Asset item not found: {id}")
+            raise HTTPException(status_code=404, detail="Asset item not found")
+        logger.debug(f"Assigned asset item: {assigned_item.name}")
+        return assigned_item
+    except ValueError as ve:
+        logger.warning(f"Failed to assign asset item: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to assign asset item {id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to assign asset item: {str(e)}")
+
+@router.post("/{id}/unassign", response_model=AssetItem)
+async def unassign_asset(id: str, db: Collection = Depends(get_db)):
+    """
+    Unassign an asset item from its current assignee.
+    """
+    logger.info(f"Unassigning asset item {id}")
+    try:
+        unassigned_item = unassign_asset_item(db, id)
+        if not unassigned_item:
+            logger.warning(f"Asset item not found: {id}")
+            raise HTTPException(status_code=404, detail="Asset item not found")
+        logger.debug(f"Unassigned asset item: {unassigned_item.name}")
+        return unassigned_item
+    except ValueError as ve:
+        logger.warning(f"Failed to unassign asset item: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to unassign asset item {id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to unassign asset item: {str(e)}")

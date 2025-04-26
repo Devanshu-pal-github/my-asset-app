@@ -17,7 +17,12 @@ def get_employees(db: Database) -> List[Employee]:
     logger.info("Fetching all employees")
     try:
         employees = list(db.employees.find())
-        result = [Employee(**{**emp, "id": str(emp["_id"])}) for emp in employees]
+        result = []
+        for emp in employees:
+            # Remove _id from the document and set id as string
+            emp_dict = {k: v for k, v in emp.items() if k != "_id"}
+            emp_dict["id"] = str(emp["_id"])
+            result.append(Employee(**emp_dict))
         logger.debug(f"Fetched {len(result)} employees")
         return result
     except Exception as e:
@@ -39,7 +44,10 @@ def get_employee_by_id(db: Database, id: str) -> Optional[Employee]:
             logger.warning(f"Employee not found: {id}")
             return None
         
-        employee = Employee(**{**emp, "id": str(emp["_id"])})
+        # Remove _id from the document and set id as string
+        emp_dict = {k: v for k, v in emp.items() if k != "_id"}
+        emp_dict["id"] = str(emp["_id"])
+        employee = Employee(**emp_dict)
         logger.debug(f"Fetched employee: {employee.name}")
         return employee
     except Exception as e:
@@ -102,8 +110,11 @@ def get_employee_details(db: Database, id: str) -> dict:
             raise ValueError("Employee not found")
         
         emp = result[0]
+        # Remove _id from the employee document and set id as string
+        emp_dict = {k: v for k, v in emp.items() if k != "_id"}
+        emp_dict["id"] = str(emp["_id"])
         details = {
-            "employee": Employee(**{**emp, "id": str(emp["_id"])}),
+            "employee": Employee(**emp_dict),
             "assets": [
                 AssetItem(**{**asset, "id": str(asset["_id"])})
                 for asset in emp["assets"]
@@ -135,8 +146,8 @@ def create_employee(db: Database, employee: EmployeeCreate) -> Employee:
         result = db.employees.insert_one(emp_dict)
         logger.debug(f"Inserted employee: {employee.name} with ID: {result.inserted_id}")
         
+        # Prepare response without _id
         response_dict = {**emp_dict, "id": str(result.inserted_id)}
-        response_dict.pop("_id", None)  # Remove raw _id to prevent ObjectId type conflict
         created_employee = Employee(**response_dict)
         logger.info(f"Created employee with ID: {created_employee.id}")
         return created_employee
@@ -180,7 +191,10 @@ def update_employee(db: Database, id: str, employee: EmployeeCreate) -> Optional
             return None
         
         updated = db.employees.find_one({"_id": ObjectId(id)})
-        updated_employee = Employee(**{**updated, "id": str(updated["_id"])})
+        # Remove _id from the document and set id as string
+        updated_dict = {k: v for k, v in updated.items() if k != "_id"}
+        updated_dict["id"] = str(updated["_id"])
+        updated_employee = Employee(**updated_dict)
         logger.debug(f"Updated employee: {updated_employee.name}")
         return updated_employee
     except DuplicateKeyError:

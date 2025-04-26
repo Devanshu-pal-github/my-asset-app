@@ -1,11 +1,11 @@
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import logger from '../../utils/logger';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-const axiosInstance = axios.create({ timeout: 30000 }); // Increased timeout to 30s
+const axiosInstance = axios.create({ timeout: 30000 });
 
-// Retry utility function
 const withRetry = async (fn, retries = 3, delay = 1000) => {
   for (let i = 0; i < retries; i++) {
     try {
@@ -90,6 +90,38 @@ export const deleteAssetItem = createAsyncThunk(
     } catch (error) {
       logger.error('Failed to delete asset item', { error: error.message });
       return rejectWithValue(error.response?.data?.detail || 'Failed to delete asset item');
+    }
+  }
+);
+
+export const assignAssetItem = createAsyncThunk(
+  'assetItems/assign',
+  async ({ assetId, employeeId, department }, { rejectWithValue, dispatch }) => {
+    logger.debug('Initiating assignment of asset item', { assetId, employeeId, department });
+    try {
+      const response = await withRetry(() => axiosInstance.post(`${API_URL}/asset-items/${assetId}/assign`, { employee_id: employeeId, department }));
+      logger.info('Successfully assigned asset item', { assetId, employeeId });
+      await dispatch(fetchAssetItemsByCategory(response.data.category_id)).unwrap();
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to assign asset item', { error: error.message });
+      return rejectWithValue(error.response?.data?.detail || 'Failed to assign asset item');
+    }
+  }
+);
+
+export const unassignAssetItem = createAsyncThunk(
+  'assetItems/unassign',
+  async (assetId, { rejectWithValue, dispatch }) => {
+    logger.debug('Initiating unassignment of asset item', { assetId });
+    try {
+      const response = await withRetry(() => axiosInstance.post(`${API_URL}/asset-items/${assetId}/unassign`));
+      logger.info('Successfully unassigned asset item', { assetId });
+      await dispatch(fetchAssetItemsByCategory(response.data.category_id)).unwrap();
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to unassign asset item', { error: error.message });
+      return rejectWithValue(error.response?.data?.detail || 'Failed to unassign asset item');
     }
   }
 );
@@ -192,6 +224,44 @@ const assetItemSlice = createSlice({
       })
       .addCase(deleteAssetItem.rejected, (state, action) => {
         logger.error('Delete asset item rejected', { error: action.payload });
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(assignAssetItem.pending, (state) => {
+        logger.debug('Assign asset item pending');
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(assignAssetItem.fulfilled, (state, action) => {
+        logger.info('Assign asset item fulfilled', { id: action.payload.id });
+        state.loading = false;
+        const index = state.items.findIndex((item) => item.id === action.payload.id);
+        if (index !== -1) state.items[index] = action.payload;
+        if (state.currentItem && state.currentItem.id === action.payload.id) {
+          state.currentItem = action.payload;
+        }
+      })
+      .addCase(assignAssetItem.rejected, (state, action) => {
+        logger.error('Assign asset item rejected', { error: action.payload });
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(unassignAssetItem.pending, (state) => {
+        logger.debug('Unassign asset item pending');
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(unassignAssetItem.fulfilled, (state, action) => {
+        logger.info('Unassign asset item fulfilled', { id: action.payload.id });
+        state.loading = false;
+        const index = state.items.findIndex((item) => item.id === action.payload.id);
+        if (index !== -1) state.items[index] = action.payload;
+        if (state.currentItem && state.currentItem.id === action.payload.id) {
+          state.currentItem = action.payload;
+        }
+      })
+      .addCase(unassignAssetItem.rejected, (state, action) => {
+        logger.error('Unassign asset item rejected', { error: action.payload });
         state.loading = false;
         state.error = action.payload;
       });
