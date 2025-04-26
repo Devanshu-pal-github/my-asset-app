@@ -1,60 +1,119 @@
-from fastapi import APIRouter, HTTPException
-from bson import ObjectId
-from app.dependencies import db
-from app.models.asset_category import AssetCategory, AssetCategoryCreate, AssetCategoryBase
-from typing import List
-from datetime import datetime
+from fastapi import APIRouter, HTTPException, Depends
+from pymongo.database import Database
+from typing import List, Optional
+from app.dependencies import get_db
+from app.models.asset_category import AssetCategory, AssetCategoryCreate
+from app.services.asset_category_service import (
+    get_asset_categories,
+    get_asset_category_by_id,
+    create_asset_category,
+    update_asset_category,
+    delete_asset_category
+)
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/asset-categories", tags=["Asset Categories"])
 
 @router.get("/", response_model=List[AssetCategory])
-def read_asset_categories():
-    print("Fetching all asset categories")
-    categories = list(db.asset_categories.find())
-    return [AssetCategory(**{**cat, "id": str(cat["_id"])}) for cat in categories]
+async def read_asset_categories(
+    category_type: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    db: Database = Depends(get_db)
+):
+    """
+    Retrieve all asset categories with optional filters for category_type and is_active.
+    Includes computed fields like count, total_value, assigned_count, maintenance_count, and utilization_rate.
+    """
+    logger.info(f"Fetching asset categories - category_type: {category_type}, is_active: {is_active}")
+    try:
+        query = {}
+        if category_type:
+            query["category_type"] = category_type
+        if is_active is not None:
+            query["is_active"] = is_active
+        categories = get_asset_categories(db)
+        filtered_categories = [cat for cat in categories if all(cat.dict().get(k) == v for k, v in query.items())]
+        logger.debug(f"Fetched {len(filtered_categories)} categories")
+        return filtered_categories
+    except Exception as e:
+        logger.error(f"Failed to fetch categories: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch categories: {str(e)}")
 
 @router.get("/{id}", response_model=AssetCategory)
-def read_asset_category(id: str):
-    print(f"Fetching asset category with ID: {id}")
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status_code=400, detail="Invalid category ID")
-    category = db.asset_categories.find_one({"_id": ObjectId(id)})
-    if not category:
-        raise HTTPException(status_code=404, detail="Asset category not found")
-    return AssetCategory(**{**category, "id": str(category["_id"])})
+async def read_asset_category(id: str, db: Database = Depends(get_db)):
+    """
+    Retrieve a specific asset category by ID with computed statistics.
+    """
+    logger.info(f"Fetching asset category with ID: {id}")
+    try:
+        category = get_asset_category_by_id(db, id)
+        if not category:
+            logger.warning(f"Category not found: {id}")
+            raise HTTPException(status_code=404, detail="Asset category not found")
+        logger.debug(f"Found category: {category.name}")
+        return category
+    except ValueError as ve:
+        logger.warning(f"Invalid category ID: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to fetch category {id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch category: {str(e)}")
 
 @router.post("/", response_model=AssetCategory)
-def create_asset_category(category: AssetCategoryCreate):
-    print(f"Creating asset category: {category.name}")
-    category_dict = category.dict()
-    category_dict["created_at"] = datetime.utcnow()
-    category_dict["updated_at"] = datetime.utcnow()
-    result = db.asset_categories.insert_one(category_dict)
-    return AssetCategory(**{**category_dict, "id": str(result.inserted_id)})
+async def create_new_asset_category(category: AssetCategoryCreate, db: Database = Depends(get_db)):
+    """
+    Create a new asset category with specified policies and attributes.
+    """
+    logger.info(f"Creating asset category: {category.name}")
+    try:
+        created_category = create_asset_category(db, category)
+        logger.debug(f"Created category with ID: {created_category.id}")
+        return created_category
+    except ValueError as ve:
+        logger.warning(f"Failed to create category: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to create category: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to create category: {str(e)}")
 
 @router.put("/{id}", response_model=AssetCategory)
-def update_asset_category(id: str, category: AssetCategoryBase):
-    print(f"Updating asset category with ID: {id}")
-    update_data = category.dict(exclude_unset=True)
-    update_data["updated_at"] = datetime.utcnow()
-    result = db.asset_categories.update_one(
-        {"_id": ObjectId(id)},
-        {"$set": update_data}
-    )
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Asset category not found")
-    updated_category = db.asset_categories.find_one({"_id": ObjectId(id)})
-    return AssetCategory(**{**updated_category, "id": str(updated_category["_id"])})
+async def update_existing_asset_category(id: str, category: AssetCategoryCreate, db: Database = Depends(get_db)):
+    """
+    Update an existing asset category.
+    """
+    logger.info(f"Updating asset category with ID: {id}")
+    try:
+        updated_category = update_asset_category(db, id, category)
+        if not updated_category:
+            logger.warning(f"Category not found: {id}")
+            raise HTTPException(status_code=404, detail="Asset category not found")
+        logger.debug(f"Updated category: {updated_category.name}")
+        return updated_category
+    except ValueError as ve:
+        logger.warning(f"Failed to update category: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to update category {id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update category: {str(e)}")
 
 @router.delete("/{id}", response_model=dict)
-def delete_asset_category(id: str):
-    print(f"Deleting asset category with ID: {id}")
-    category = db.asset_categories.find_one({"_id": ObjectId(id)})
-    if not category:
-        raise HTTPException(status_code=404, detail="Asset category not found")
-    if db.asset_items.find_one({"category_id": id}):
-        raise HTTPException(status_code=400, detail="Cannot delete category with assigned assets")
-    result = db.asset_categories.delete_one({"_id": ObjectId(id)})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Asset category not found")
-    return {"message": "Asset category deleted successfully"}
+async def delete_existing_asset_category(id: str, db: Database = Depends(get_db)):
+    """
+    Delete an asset category if no assets are associated.
+    """
+    logger.info(f"Deleting asset category with ID: {id}")
+    try:
+        deleted = delete_asset_category(db, id)
+        if not deleted:
+            logger.warning(f"Category not found: {id}")
+            raise HTTPException(status_code=404, detail="Asset category not found")
+        logger.debug(f"Deleted category ID: {id}")
+        return {"message": "Asset category deleted successfully"}
+    except ValueError as ve:
+        logger.warning(f"Cannot delete category: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to delete category {id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete category: {str(e)}")

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -24,12 +25,21 @@ const AssetInventory = () => {
 
   useEffect(() => {
     logger.debug("AssetInventory useEffect triggered");
-    dispatch(fetchAssetCategories()).catch((err) => {
-      logger.error("Failed to fetch categories", { error: err.message });
-    });
+    console.log("Dispatching fetchAssetCategories"); // Debug log
+    dispatch(fetchAssetCategories())
+      .unwrap()
+      .then(() => {
+        logger.info("Successfully fetched categories");
+        console.log("fetchAssetCategories succeeded");
+      })
+      .catch((err) => {
+        logger.error("Failed to fetch categories", { error: err });
+        console.error("fetchAssetCategories failed:", err);
+      });
   }, [dispatch]);
 
   logger.debug("Rendering AssetInventory", { categories, loading, error });
+  console.log("AssetInventory state:", { categories, loading, error }); // Debug log
 
   const handleDeleteClick = (category) => {
     logger.debug("Delete icon clicked for category", {
@@ -86,11 +96,34 @@ const AssetInventory = () => {
       id: category._id,
       name: category.name,
       icon: category.icon || "pi pi-desktop",
+      description: category.description || "",
+      category_type: category.category_type || "",
+      is_active: category.is_active !== undefined ? category.is_active : true,
+      is_reassignable: category.is_reassignable !== undefined ? category.is_reassignable : true,
+      is_consumable: category.is_consumable !== undefined ? category.is_consumable : false,
+      requires_maintenance: category.requires_maintenance !== undefined ? category.requires_maintenance : false,
+      maintenance_frequency: category.maintenance_frequency || "",
+      maintenance_alert_days: category.maintenance_alert_days || null,
+      cost_per_unit: category.cost_per_unit || null,
+      expected_life: category.expected_life || null,
+      life_unit: category.life_unit || "",
+      depreciation_method: category.depreciation_method || "",
+      residual_value: category.residual_value || null,
+      assignment_policies: category.assignment_policies || {
+        max_assignments: 1,
+        assignable_to: null,
+        assignment_duration: null,
+        duration_unit: null,
+        allow_multiple_assignments: false,
+      },
+      specifications: category.specifications || {},
+      save_as_template: category.save_as_template !== undefined ? category.save_as_template : false,
+      // Read-only computed fields
       count: category.count || 0,
       total_value: category.total_value || 0,
-      policies: category.policies || [],
-      is_active: category.is_active !== undefined ? category.is_active : true,
-      category_type: category.category_type,
+      assigned_count: category.assigned_count || 0,
+      maintenance_count: category.maintenance_count || 0,
+      utilization_rate: category.utilization_rate || 0,
     });
     setIsEditModalOpen(true);
     setEditError(null);
@@ -141,6 +174,7 @@ const AssetInventory = () => {
 
   if (error) {
     logger.error("AssetInventory error", { error });
+    console.error("Rendering error state:", error); // Debug log
     return (
       <div className="p-6 text-red-600">
         Error: {error}.{" "}
@@ -150,7 +184,10 @@ const AssetInventory = () => {
             and try again.
           </span>
         ) : (
-          <span>Contact support for assistance.</span>
+          <span>
+            Failed to fetch categories. Check logs and contact support for
+            assistance.
+          </span>
         )}
       </div>
     );
@@ -158,6 +195,7 @@ const AssetInventory = () => {
 
   if (!categories.length) {
     logger.info("No categories found");
+    console.log("Rendering no categories state"); // Debug log
     return (
       <div className="p-6">
         No categories found.{" "}
@@ -205,7 +243,9 @@ const AssetInventory = () => {
     <div className="p-8">
       <div className="mt-[80px]">
         <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
-        <p className="text-sm text-gray-600">Overview of your asset management system</p>
+        <p className="text-sm text-gray-600">
+          Overview of your asset management system
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mt-8 gap-4 mb-20">
         {stats.map((stat, index) => (
@@ -263,7 +303,8 @@ const AssetInventory = () => {
             category._id || category.id || "default-id"
           );
           logger.debug("Category ID for View Details:", { categoryId });
-          const availableCount = category.count - category.assigned_count - category.maintenance_count;
+          const availableCount =
+            category.count - category.assigned_count - category.maintenance_count;
           return (
             <div
               key={categoryId}
@@ -296,15 +337,21 @@ const AssetInventory = () => {
                 </div>
                 <div>
                   <div className="font-medium">Assigned</div>
-                  <div className="text-lg font-bold">{category.assigned_count || 0}</div>
+                  <div className="text-lg font-bold">
+                    {category.assigned_count || 0}
+                  </div>
                 </div>
                 <div>
                   <div className="font-medium text-green-500">Available</div>
-                  <div className="text-lg font-bold text-green-500">{availableCount >= 0 ? availableCount : 0}</div>
+                  <div className="text-lg font-bold text-green-500">
+                    {availableCount >= 0 ? availableCount : 0}
+                  </div>
                 </div>
                 <div>
                   <div className="font-medium text-yellow-500">Maintenance</div>
-                  <div className="text-lg font-bold text-yellow-500">{category.maintenance_count || 0}</div>
+                  <div className="text-lg font-bold text-yellow-500">
+                    {category.maintenance_count || 0}
+                  </div>
                 </div>
               </div>
               <div className="text-sm text-gray-900 mb-3">Utilization Rate</div>
