@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAssetItemsByCategory } from "../../store/slices/assetItemSlice";
@@ -10,9 +10,9 @@ const AssetTablePage = () => {
   const dispatch = useDispatch();
   const { items, loading, error } = useSelector((state) => state.assetItems);
   const { categories } = useSelector((state) => state.assetCategories);
+  const [globalFilter, setGlobalFilter] = useState("");
 
   useEffect(() => {
-    console.log("Category ID from useParams:", categoryId);
     logger.debug("AssetTablePage useEffect triggered", { categoryId });
     logger.debug("Categories in AssetTablePage:", { categories });
     if (categoryId) {
@@ -46,11 +46,17 @@ const AssetTablePage = () => {
     categories.find((cat) => (cat._id || cat.id) === categoryId) || {};
   logger.debug("Category details", { category });
 
-  const totalUnits = items.length;
-  const totalCost = items
+  // Transform items to map backend fields to frontend expectations
+  const transformedItems = items.map((item) => ({
+    ...item,
+    assigned_at: item.current_assignment_date || null,
+  }));
+
+  const totalUnits = transformedItems.length;
+  const totalCost = transformedItems
     .reduce((sum, item) => sum + (item.purchase_cost || 0), 0)
     .toLocaleString("en-US", { style: "currency", currency: "USD" });
-  const inStorage = items.filter((item) => !item.is_assigned).length;
+  const inStorage = transformedItems.filter((item) => !item.has_active_assignment).length;
 
   if (loading) {
     logger.info("AssetTablePage is loading");
@@ -77,7 +83,7 @@ const AssetTablePage = () => {
     );
   }
 
-  if (!items.length) {
+  if (!transformedItems.length) {
     logger.info("No asset items found for category", { categoryId });
     return (
       <div className="p-6">
@@ -125,9 +131,11 @@ const AssetTablePage = () => {
           type="text"
           placeholder="Search by ID, IMEI, or employee..."
           className="w-full max-w-md p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onChange={(e) =>
-            logger.debug("Search input changed", { value: e.target.value })
-          }
+          value={globalFilter}
+          onChange={(e) => {
+            setGlobalFilter(e.target.value);
+            logger.debug("Search input changed", { value: e.target.value });
+          }}
         />
         <div className="flex gap-2">
           <button
@@ -159,9 +167,9 @@ const AssetTablePage = () => {
       {header}
       <div className="bg-white rounded-lg shadow-md p-4">
         <AssetTable
-          data={items}
+          data={transformedItems}
           header={null}
-          globalFilter=""
+          globalFilter={globalFilter}
           columns={columns}
           specKeys={[]}
           categoryId={categoryId}

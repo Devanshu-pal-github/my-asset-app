@@ -23,11 +23,25 @@ export const fetchEmployees = createAsyncThunk(
     try {
       logger.debug(`Fetching employees from API: ${API_URL}/employees/`);
       const response = await withRetry(() => axiosInstance.get(`${API_URL}/employees/`));
-      logger.info('Successfully fetched employees', {
-        count: response.data.length,
-        employeeIds: response.data.map((emp) => emp.employee_id),
+      
+      // Transform the response to match frontend expectations
+      const transformedData = response.data.map(employee => {
+        // Split name into first_name and last_name (assuming name is "First Last")
+        const [first_name, ...lastNameParts] = employee.name.split(' ');
+        const last_name = lastNameParts.join(' ') || '';
+        
+        return {
+          ...employee,
+          first_name,
+          last_name,
+        };
       });
-      return response.data;
+
+      logger.info('Successfully fetched employees', {
+        count: transformedData.length,
+        employeeIds: transformedData.map((emp) => emp.employee_id),
+      });
+      return transformedData;
     } catch (error) {
       logger.error('Failed to fetch employees', {
         error: error.message,

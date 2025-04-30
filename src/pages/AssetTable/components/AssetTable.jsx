@@ -12,7 +12,7 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
   );
 
   const renderSpecifications = (item) => {
-    const specs = item.specifications || item.specs;
+    const specs = item.specifications;
     if (!specs) {
       logger.debug('No specifications found for item', { itemId: item.id });
       return "N/A";
@@ -47,7 +47,7 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {filteredData.map((item) => (
-            <tr key={item.id} className={item.asset_tag === 'MBA-004' ? 'bg-yellow-100' : ''}>
+            <tr key={item.id}>
               {columns.map((col) => (
                 <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {col === "specifications" ? (
@@ -58,7 +58,7 @@ const AssetTable = ({ data, header, globalFilter, columns, specKeys, categoryId 
                       className="text-blue-600 hover:text-blue-800"
                       onClick={() => logger.info('Navigating to asset detail', { assetId: item.id })}
                     >
-                      View D...
+                      View Details
                     </Link>
                   ) : (
                     item[col] || "-"

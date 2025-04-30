@@ -58,19 +58,10 @@ const EmployeeAssignment = () => {
   const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId) || {};
   const currentAsset = assets.find((asset) => asset.id === assetId || asset._id === assetId) || {};
 
-  const parseEmployeeName = (employee) => {
-    if (!employee?.name) return { first_name: 'Unknown', last_name: '' };
-    const nameParts = employee.name.trim().split(' ');
-    return {
-      first_name: nameParts[0],
-      last_name: nameParts.slice(1).join(' ') || '',
-    };
-  };
-
   const handleAssignClick = (employee) => {
     logger.info('Assign button clicked', {
       employeeId: employee.id,
-      employeeName: employee.name,
+      employeeName: `${employee.first_name} ${employee.last_name}`,
       assetId,
     });
     setSelectedEmployee(employee);
@@ -94,7 +85,7 @@ const EmployeeAssignment = () => {
 
       setNotification({
         type: 'success',
-        message: `Asset ${currentAsset.name || 'asset'} assigned to ${selectedEmployee.name}`,
+        message: `Asset ${currentAsset.name || 'asset'} assigned to ${selectedEmployee.first_name} ${selectedEmployee.last_name}`,
       });
 
       dispatch(fetchAssetItemsByCategory(categoryId));
@@ -121,7 +112,7 @@ const EmployeeAssignment = () => {
     setSortOrder(newSortOrder);
   };
 
-  const filteredEmployees = filterData(employees, globalFilter, ['employee_id', 'name', 'department', 'role']);
+  const filteredEmployees = filterData(employees, globalFilter, ['employee_id', 'first_name', 'last_name', 'department', 'role']);
   const sortedEmployees = sortData(filteredEmployees, sortField, sortOrder);
   const paginatedEmployees = paginate(sortedEmployees, currentPage, itemsPerPage);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
@@ -234,8 +225,7 @@ const EmployeeAssignment = () => {
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Employee Details</h4>
               <p className="text-gray-600">
-                <strong>Name:</strong> {selectedEmployee ? parseEmployeeName(selectedEmployee).first_name : 'N/A'}{' '}
-                {selectedEmployee ? parseEmployeeName(selectedEmployee).last_name : ''}
+                <strong>Name:</strong> {selectedEmployee?.first_name || 'N/A'} {selectedEmployee?.last_name || ''}
               </p>
               <p className="text-gray-600">
                 <strong>Employee ID:</strong> {selectedEmployee?.employee_id || 'N/A'}
@@ -313,9 +303,9 @@ const EmployeeAssignment = () => {
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('name')}
+                onClick={() => handleSort('first_name')}
               >
-                Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Name {sortField === 'first_name' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -338,23 +328,20 @@ const EmployeeAssignment = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {paginatedEmployees.map((employee) => {
-              const { first_name, last_name } = parseEmployeeName(employee);
-              return (
-                <tr key={employee.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.employee_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{`${first_name} ${last_name}`}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.role || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {employee.assigned_assets?.length
-                      ? employee.assigned_assets.map((asset) => asset.asset_id).join(', ')
-                      : 'None'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{assignButton(employee)}</td>
-                </tr>
-              );
-            })}
+            {paginatedEmployees.map((employee) => (
+              <tr key={employee.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.employee_id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{`${employee.first_name} ${employee.last_name}`}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.role || 'N/A'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {employee.assigned_assets?.length
+                    ? employee.assigned_assets.map((asset) => asset.asset_id).join(', ')
+                    : 'None'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">{assignButton(employee)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

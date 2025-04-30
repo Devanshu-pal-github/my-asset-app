@@ -32,7 +32,7 @@ const TABS = {
   ASSIGNMENT_HISTORY: "assignmentHistory",
   MAINTENANCE_HISTORY: "maintenanceHistory",
 };
-const axiosInstance = axios.create({ timeout: 30000 }); // Increased timeout to 30s
+const axiosInstance = axios.create({ timeout: 30000 });
 
 // Utility Functions
 const formatDate = (date) => {
@@ -42,7 +42,7 @@ const formatDate = (date) => {
 
 const formatCurrency = (amount) => {
   if (!amount && amount !== 0) return "N/A";
-  return `₹${Number(amount).toLocaleString("en-IN")}`;
+  return Number(amount).toLocaleString("en-US", { style: "currency", currency: "USD" });
 };
 
 const formatFileSize = (bytes) => {
@@ -62,37 +62,38 @@ const isValidObjectId = (id) => {
 };
 
 // Error Boundary Component
-class ErrorBoundary extends React.Component {
-  state = { hasError: false, error: null };
+const ErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
+  React.useEffect(() => {
+    const errorHandler = (error) => {
+      setHasError(true);
+      setError(error);
+    };
+    window.addEventListener("error", errorHandler);
+    return () => window.removeEventListener("error", errorHandler);
+  }, []);
 
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="text-red-500 p-6">
-          <p>
-            Error rendering content:{" "}
-            {this.state.error?.message || "Unknown error"}
-          </p>
-          <p>Please try refreshing the page or contact support.</p>
-        </div>
-      );
-    }
-    return this.props.children;
+  if (hasError) {
+    return (
+      <div className="text-red-500 p-6">
+        <p>Error rendering content: {error?.message || "Unknown error"}</p>
+        <p>Please try refreshing the page or contact support.</p>
+      </div>
+    );
   }
-}
+  return children;
+};
 
 // Components
 const Breadcrumb = ({ assetData, categoryId }) => (
   <div className="flex items-center text-sm mb-4">
     <Link
       to="/asset-inventory"
-      className="text-gray-600 hover:text-blue-600 transition-colors"
+      className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
     >
-      Asset Management
+      <i className="pi pi-arrow-left mr-2"></i>Asset Management
     </Link>
     <span className="mx-2 text-gray-400">›</span>
     <Link
@@ -259,12 +260,12 @@ const AssignmentHistoryTab = ({
             {history.map((rowData) => (
               <tr key={rowData.id}>
                 <td className="px-4 py-2 whitespace-nowrap">
-                  {rowData.assigned_to === currentAssigneeId
+                  {rowData.assigned_to.includes(currentAssigneeId)
                     ? currentAssigneeName
-                    : rowData.assigned_to || "Unknown"}
+                    : rowData.assigned_to.join(", ") || "Unknown"}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">{rowData.department || "N/A"}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{rowData.condition || "N/A"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{rowData.condition_at_assignment || "N/A"}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.assignment_date)}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.return_date)}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{rowData.is_active ? "Yes" : "No"}</td>
@@ -325,7 +326,7 @@ const MaintenanceHistoryTab = ({ history, loading, error, onLogMaintenance }) =>
               <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.maintenance_date)}</td>
               <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.completed_date)}</td>
               <td className="px-4 py-2 whitespace-nowrap">{formatCurrency(rowData.cost)}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.is_completed ? "Yes" : "No"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">{rowData.status === "Completed" ? "Yes" : "No"}</td>
               <td className="px-4 py-2 whitespace-nowrap">{rowData.notes || "N/A"}</td>
             </tr>
           ))}
@@ -363,13 +364,13 @@ const DocumentList = ({ assetId }) => {
         documents.map((doc) => (
           <div key={doc.id} className="p-4 border rounded-lg mb-2">
             <p>
-              <strong>{doc.filename}</strong>
+              <strong>{doc.file_url.split('/').pop()}</strong>
             </p>
             <p>
-              Type: {doc.type} | Uploaded: {formatDate(doc.upload_date)}
+              Type: {doc.document_type} | Uploaded: {formatDate(doc.created_at)}
             </p>
             <button
-              onClick={() => window.open(`${API_URL}${doc.file_path}`, "_blank")}
+              onClick={() => window.open(`${API_URL}${doc.file_url}`, "_blank")}
               className="mt-2 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               View
@@ -411,32 +412,39 @@ const AssetDetail = () => {
 
   const memoizedAsset = useMemo(() => asset, [asset]);
 
+  // Validate URL parameters
+  if (!urlCategoryId || !assetId || !isValidObjectId(assetId)) {
+    logger.error("Invalid or missing URL parameters", {
+      urlCategoryId,
+      assetId,
+      url: window.location.href,
+    });
+    return <Navigate to="/asset-inventory" replace />;
+  }
+
   useEffect(() => {
     logger.debug("AssetDetail useEffect triggered", {
       urlCategoryId,
       assetId,
       asset: memoizedAsset,
     });
-    if (assetId && urlCategoryId) {
-      logger.info("Dispatching fetchAssetItemById", { assetId });
-      dispatch(fetchAssetItemById(assetId))
-        .unwrap()
-        .then((result) => {
-          logger.info("Successfully fetched asset item", { assetId, result });
-        })
-        .catch((err) => {
-          logger.error("Failed to fetch asset item", {
-            error: err.message,
-            assetId,
-          });
+    dispatch(fetchAssetItemById(assetId))
+      .unwrap()
+      .then((result) => {
+        logger.info("Successfully fetched asset item", { assetId, result });
+      })
+      .catch((err) => {
+        logger.error("Failed to fetch asset item", {
+          error: err.message,
+          assetId,
         });
-      dispatch(fetchDocuments(assetId))
-        .unwrap()
-        .then(() => logger.info("Successfully fetched documents", { assetId }))
-        .catch((err) =>
-          logger.error("Failed to fetch documents", { error: err.message })
-        );
-    }
+      });
+    dispatch(fetchDocuments(assetId))
+      .unwrap()
+      .then(() => logger.info("Successfully fetched documents", { assetId }))
+      .catch((err) =>
+        logger.error("Failed to fetch documents", { error: err.message })
+      );
     return () => {
       dispatch(clearCurrentItem());
       dispatch(clearAssignmentHistory());
@@ -474,10 +482,7 @@ const AssetDetail = () => {
       }
     };
 
-    const assigneeId = Array.isArray(memoizedAsset?.current_assignee_id)
-      ? memoizedAsset.current_assignee_id[0]
-      : memoizedAsset?.current_assignee_id;
-
+    const assigneeId = memoizedAsset?.current_assignee_id;
     if (assigneeId) {
       fetchEmployeeName(assigneeId);
     } else {
@@ -597,15 +602,6 @@ const AssetDetail = () => {
       });
   };
 
-  if (!urlCategoryId || !assetId) {
-    logger.error("Missing URL parameters", {
-      urlCategoryId,
-      assetId,
-      url: window.location.href,
-    });
-    return <Navigate to="/asset-inventory" replace />;
-  }
-
   if (assetLoading) {
     return (
       <div className="px-6 py-5 flex justify-center items-center h-64">
@@ -625,13 +621,19 @@ const AssetDetail = () => {
     });
     return (
       <div className="px-6 py-5 text-red-500">
-        Error: {assetError || "Asset not found or data not loaded"}
-        <div className="flex justify-end mt-4">
+        <p>Error: {assetError || "Asset not found"}</p>
+        <div className="mt-4 space-x-4">
+          <button
+            onClick={() => dispatch(fetchAssetItemById(assetId))}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Retry
+          </button>
           <Link
             to="/asset-inventory"
-            className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
-            <span className="mr-2">←</span> Return to Asset Inventory
+            Return to Asset Inventory
           </Link>
         </div>
       </div>
@@ -639,7 +641,7 @@ const AssetDetail = () => {
   }
 
   const assetCategory = categories.find(
-    (cat) => cat.id === memoizedAsset.category_id
+    (cat) => (cat.id || cat._id) === memoizedAsset.category_id
   ) || {
     id: memoizedAsset.category_id,
     name: "Unknown",
@@ -657,9 +659,7 @@ const AssetDetail = () => {
     condition: memoizedAsset.condition || "N/A",
     createdAt: formatDate(memoizedAsset.created_at),
     lastUpdated: formatDate(memoizedAsset.updated_at),
-    currentAssigneeId: Array.isArray(memoizedAsset.current_assignee_id)
-      ? memoizedAsset.current_assignee_id[0]
-      : memoizedAsset.current_assignee_id || "",
+    currentAssigneeId: memoizedAsset.current_assignee_id || "",
     currentAssigneeName,
     hasActiveAssignment: memoizedAsset.has_active_assignment
       ? "Assigned"
@@ -683,7 +683,7 @@ const AssetDetail = () => {
   };
 
   return (
-    <div className="px-6 py-5 mt-20">
+    <div className="p-6 bg-background-offwhite min-h-screen text-gray-900">
       <Breadcrumb assetData={assetData} categoryId={assetCategory.id} />
 
       <div className="flex justify-between items-center mb-6">

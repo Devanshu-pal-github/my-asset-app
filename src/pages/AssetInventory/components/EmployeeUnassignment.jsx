@@ -57,19 +57,10 @@ const EmployeeUnassignment = () => {
     });
   }
 
-  const parseEmployeeName = (employee) => {
-    if (!employee?.name) return { first_name: 'Unknown', last_name: '' };
-    const nameParts = employee.name.trim().split(' ');
-    return {
-      first_name: nameParts[0],
-      last_name: nameParts.slice(1).join(' ') || '',
-    };
-  };
-
   const handleUnassign = (employee) => {
     logger.info('Unassign button clicked', {
       employeeId: employee.id,
-      employeeName: employee.name,
+      employeeName: `${employee.first_name} ${employee.last_name}`,
       assetId,
     });
     setSelectedEmployee(employee);
@@ -175,8 +166,7 @@ const EmployeeUnassignment = () => {
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Employee Details</h4>
               <p className="text-gray-600">
-                <strong>Name:</strong> {selectedEmployee ? parseEmployeeName(selectedEmployee).first_name : 'N/A'}{' '}
-                {selectedEmployee ? parseEmployeeName(selectedEmployee).last_name : ''}
+                <strong>Name:</strong> {selectedEmployee?.first_name || 'N/A'} {selectedEmployee?.last_name || ''}
               </p>
               <p className="text-gray-600">
                 <strong>Employee ID:</strong> {selectedEmployee?.employee_id || 'N/A'}
@@ -242,9 +232,9 @@ const EmployeeUnassignment = () => {
                   </th>
                   <th
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleSort('first_name')}
                   >
-                    Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Name {sortField === 'first_name' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -264,25 +254,22 @@ const EmployeeUnassignment = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedEmployees.map((employee) => {
-                  const { first_name, last_name } = parseEmployeeName(employee);
-                  return (
-                    <tr key={employee.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.employee_id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{`${first_name} ${last_name}`}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.email || 'N/A'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-                          onClick={() => handleUnassign(employee)}
-                        >
-                          Unassign
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {paginatedEmployees.map((employee) => (
+                  <tr key={employee.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.employee_id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{`${employee.first_name} ${employee.last_name}`}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.email || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+                        onClick={() => handleUnassign(employee)}
+                      >
+                        Unassign
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
