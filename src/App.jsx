@@ -3,7 +3,6 @@ import {
   Routes,
   Route,
   Navigate,
-  useParams,
 } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
 import AssetInventory from "./pages/AssetInventory/index.jsx";
@@ -18,23 +17,6 @@ import AddItemPage from "./pages/AssetTable/components/AddItemPage.jsx";
 import EmployeeAssets from "./pages/EmployeeAssets/index.jsx";
 import EmployeeDetails from "./pages/EmployeeDetails/index.jsx";
 import logger from "./utils/logger.jsx";
-
-// Utility to validate MongoDB ObjectId
-const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
-
-// Route guard to validate assetId
-const RouteGuard = ({ children }) => {
-  const { categoryId, assetId } = useParams();
-  if (!categoryId || !assetId || !isValidObjectId(assetId)) {
-    logger.error("Invalid or missing URL parameters", {
-      categoryId,
-      assetId,
-      url: window.location.href,
-    });
-    return <Navigate to="/asset-inventory" replace />;
-  }
-  return children;
-};
 
 logger.debug("Rendering App component");
 
@@ -67,15 +49,9 @@ function App() {
               path=":categoryId/unassign/:assetId"
               element={<EmployeeUnassignment />}
             />
-            <Route
-              path=":categoryId/:assetId"
-              element={
-                <RouteGuard>
-                  <AssetDetail />
-                </RouteGuard>
-              }
-            />
           </Route>
+          {/* Separate root-level route for AssetDetail */}
+          <Route path="asset/:assetId" element={<AssetDetail />} />
           <Route path="employee-assets" element={<EmployeeAssets />} />
           <Route path="employee-profile/:id" element={<EmployeeDetails />} />
           <Route
