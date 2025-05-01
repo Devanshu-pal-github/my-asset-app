@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { fetchEmployees } from '../../../store/slices/employeeSlice';
 import { fetchAssetItemsByCategory, assignAssetItem } from '../../../store/slices/assetItemSlice';
 import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
@@ -9,22 +9,25 @@ import { paginate, sortData, filterData } from './tableUtils';
 
 const EmployeeAssignment = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { categoryId, assetId } = useParams();
+  const location = useLocation();
+  const { selectedAssets = [] } = location.state || {};
   const { employees = [], loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
   const { items: assets = [], loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
   const { categories = [], loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEntity, setSelectedEntity] = useState(null);
   const [globalFilter, setGlobalFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState('employee_id');
+  const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [notification, setNotification] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId });
+    logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId, selectedAssets });
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -43,66 +46,57 @@ const EmployeeAssignment = () => {
     fetchData();
   }, [dispatch, categoryId, assetId]);
 
-  logger.debug('Rendering EmployeeAssignment', {
-    employees,
-    employeesLoading,
-    employeesError,
-    assets,
-    assetsLoading,
-    assetsError,
-    categories,
-    categoriesLoading,
-    categoriesError,
-  });
+  const currentCategory = categories.find((cat) => cat._id === categoryId) || {};
+  const currentAsset = assetId ? assets.find((asset) => asset._id === assetId) : null;
 
-  const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId) || {};
-  const currentAsset = assets.find((asset) => asset.id === assetId || asset._id === assetId) || {};
+  // Dynamically fetch entities based on assignable_to
+  const entities = currentCategory.assignable_to === 'employee' ? employees : []; // TODO: Add teams, departments, etc.
 
-  const handleAssignClick = (employee) => {
-    logger.info('Assign button clicked', {
-      employeeId: employee.id,
-      employeeName: `${employee.first_name} ${employee.last_name}`,
-      assetId,
-    });
-    setSelectedEmployee(employee);
+  const handleAssignClick = (entity) => {
+    logger.info('Assign button clicked', { entityId: entity._id, assetId, selectedAssets });
+    setSelectedEntity(entity);
     setShowConfirmModal(true);
   };
 
   const confirmAssignment = async () => {
-    if (!selectedEmployee) {
+    if (!selectedEntity) {
       setShowConfirmModal(false);
       return;
     }
 
     try {
-      await dispatch(
-        assignAssetItem({
-          assetId,
-          employeeId: selectedEmployee.id,
-          department: selectedEmployee.department || null,
-        })
-      ).unwrap();
+      const assetsToAssign = selectedAssets.length > 0 ? selectedAssets : [assetId];
+      for (const id of assetsToAssign) {
+        await dispatch(
+          assignAssetItem({
+            assetId: id,
+            entityId: selectedEntity._id,
+            entityType: currentCategory.assignable_to,
+          })
+        ).unwrap();
+      }
 
       setNotification({
         type: 'success',
-        message: `Asset ${currentAsset.name || 'asset'} assigned to ${selectedEmployee.first_name} ${selectedEmployee.last_name}`,
+        message: `Asset(s) assigned to ${selectedEntity.name || selectedEntity.first_name + ' ' + selectedEntity.last_name}`,
       });
 
       dispatch(fetchAssetItemsByCategory(categoryId));
       dispatch(fetchEmployees());
+
+      // Navigate back to the assignment table after successful assignment
+      setTimeout(() => {
+        navigate(`/asset-inventory/${categoryId}/assign`);
+      }, 1500);
     } catch (error) {
-      logger.error('Failed to assign asset', {
-        error: error.message,
-        employeeId: selectedEmployee.id,
-        assetId,
-      });
+      logger.error('Failed to assign asset', { error: error.message });
       setNotification({
         type: 'error',
         message: error.message || 'Failed to assign asset',
       });
     } finally {
       setShowConfirmModal(false);
-      setSelectedEmployee(null);
+      setSelectedEntity(null);
     }
   };
 
@@ -112,27 +106,28 @@ const EmployeeAssignment = () => {
     setSortOrder(newSortOrder);
   };
 
-  const filteredEmployees = filterData(employees, globalFilter, ['employee_id', 'first_name', 'last_name', 'department', 'role']);
-  const sortedEmployees = sortData(filteredEmployees, sortField, sortOrder);
-  const paginatedEmployees = paginate(sortedEmployees, currentPage, itemsPerPage);
-  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+  const filteredEntities = filterData(entities, globalFilter, ['name', 'first_name', 'last_name', 'department', 'role']);
+  const sortedEntities = sortData(filteredEntities, sortField, sortOrder);
+  const paginatedEntities = paginate(sortedEntities, currentPage, itemsPerPage);
+  const totalPages = Math.ceil(filteredEntities.length / itemsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  const assignButton = (employee) => {
-    const isAlreadyAssignedToEmployee = employee.assigned_assets?.some((asset) => asset.asset_id === assetId);
-    const isAssetAssigned = currentAsset.has_active_assignment;
-    const allowMultipleAssignments = currentCategory.allow_multiple_assignments === 1;
-    const canAssign = !isAlreadyAssignedToEmployee && (!isAssetAssigned || allowMultipleAssignments);
+  const assignButton = (entity) => {
+    const isAlreadyAssigned = entity.assigned_assets?.some((asset) =>
+      (selectedAssets.length > 0 ? selectedAssets : [assetId]).includes(asset.asset_id)
+    );
+    const allowMultipleAssignments = currentCategory.allow_multiple_assignments;
+    const canAssign = !isAlreadyAssigned || allowMultipleAssignments;
 
     return (
       <button
         className={`px-4 py-2 rounded text-white ${
           canAssign ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
         }`}
-        onClick={() => canAssign && handleAssignClick(employee)}
+        onClick={() => canAssign && handleAssignClick(entity)}
         disabled={!canAssign}
       >
         Assign
@@ -174,7 +169,7 @@ const EmployeeAssignment = () => {
     );
   }
 
-  if (!currentAsset.name) {
+  if (!currentAsset && selectedAssets.length === 0) {
     logger.warn('Asset not found', { assetId });
     return (
       <div className="p-6 text-gray-600">
@@ -186,11 +181,11 @@ const EmployeeAssignment = () => {
     );
   }
 
-  if (!employees.length) {
-    logger.info('No employees found');
+  if (!entities.length) {
+    logger.info('No entities found');
     return (
       <div className="p-6 text-gray-600">
-        No employees available for assignment. Please ensure employees are registered in the system.{' '}
+        No {currentCategory.assignable_to}s available for assignment.{' '}
         <Link to={`/asset-inventory/${categoryId}/assign`} className="text-blue-600 underline hover:text-blue-800">
           Back to Asset Assignment
         </Link>
@@ -207,10 +202,7 @@ const EmployeeAssignment = () => {
           }`}
         >
           {notification.message}
-          <button
-            className="ml-4 text-white"
-            onClick={() => setNotification(null)}
-          >
+          <button className="ml-4 text-white" onClick={() => setNotification(null)}>
             ✕
           </button>
         </div>
@@ -220,41 +212,46 @@ const EmployeeAssignment = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-gray-800">Confirm Assignment</h3>
             <p className="text-gray-600 mt-2">
-              Are you sure you want to assign the following asset to this employee?
+              Are you sure you want to assign the following asset(s) to this {currentCategory.assignable_to}?
             </p>
             <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800">Employee Details</h4>
+              <h4 className="text-md font-semibold text-gray-800">{currentCategory.assignable_to} Details</h4>
               <p className="text-gray-600">
-                <strong>Name:</strong> {selectedEmployee?.first_name || 'N/A'} {selectedEmployee?.last_name || ''}
+                <strong>Name:</strong> {selectedEntity?.name || `${selectedEntity?.first_name} ${selectedEntity?.last_name}`}
               </p>
               <p className="text-gray-600">
-                <strong>Employee ID:</strong> {selectedEmployee?.employee_id || 'N/A'}
+                <strong>ID:</strong> {selectedEntity?.employee_id || selectedEntity?._id}
               </p>
               <p className="text-gray-600">
-                <strong>Department:</strong> {selectedEmployee?.department || 'N/A'}
-              </p>
-              <p className="text-gray-600">
-                <strong>Designation:</strong> {selectedEmployee?.role || 'N/A'}
+                <strong>Department:</strong> {selectedEntity?.department || 'N/A'}
               </p>
             </div>
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Asset Details</h4>
-              <p className="text-gray-600">
-                <strong>Name:</strong> {currentAsset.name || 'N/A'}
-              </p>
-              <p className="text-gray-600">
-                <strong>Category:</strong> {currentCategory.name || 'N/A'}
-              </p>
-              <p className="text-gray-600">
-                <strong>Condition:</strong> {currentAsset.condition || 'Excellent'}
-              </p>
+              {selectedAssets.length > 0 ? (
+                <p className="text-gray-600">
+                  <strong>Assets:</strong> {selectedAssets.length} selected
+                </p>
+              ) : (
+                <>
+                  <p className="text-gray-600">
+                    <strong>Name:</strong> {currentAsset?.name || 'N/A'}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>Category:</strong> {currentCategory.name || 'N/A'}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>Status:</strong> {currentAsset?.status || 'N/A'}
+                  </p>
+                </>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
                 onClick={() => {
                   setShowConfirmModal(false);
-                  setSelectedEmployee(null);
+                  setSelectedEntity(null);
                 }}
               >
                 Cancel
@@ -271,25 +268,27 @@ const EmployeeAssignment = () => {
       )}
       <div className="flex justify-between items-center mb-5">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Assign Employee to Asset</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Assign Asset - {currentCategory.name}
+          </h2>
           <span className="text-gray-600 text-sm">
-            Assign an employee to {currentAsset.name || 'asset'} ({currentCategory.name || 'category'})
+            Assign asset(s) to a {currentCategory.assignable_to}
           </span>
         </div>
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Search employees..."
-            className="p-2 border border-gray-300 rounded-lg text-gray-700"
-          />
-          <Link to={`/asset-inventory/${categoryId}/assign`}>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-              Back to Asset Assignment
-            </button>
-          </Link>
-        </div>
+        <Link to={`/asset-inventory/${categoryId}/assign`}>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            Back to Assign Assets
+          </button>
+        </Link>
+      </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder={`Search ${currentCategory.assignable_to}s...`}
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="p-2 border border-gray-300 rounded-lg w-full max-w-md text-gray-700"
+        />
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
@@ -297,30 +296,15 @@ const EmployeeAssignment = () => {
             <tr>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('employee_id')}
+                onClick={() => handleSort('name')}
               >
-                Employee ID {sortField === 'employee_id' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('first_name')}
-              >
-                Name {sortField === 'first_name' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('department')}
-              >
-                Department {sortField === 'department' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('role')}
-              >
-                Designation {sortField === 'role' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assets Assigned
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Department
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Action
@@ -328,18 +312,20 @@ const EmployeeAssignment = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {paginatedEmployees.map((employee) => (
-              <tr key={employee.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.employee_id}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{`${employee.first_name} ${employee.last_name}`}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.role || 'N/A'}</td>
+            {paginatedEntities.map((entity) => (
+              <tr key={entity._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {employee.assigned_assets?.length
-                    ? employee.assigned_assets.map((asset) => asset.asset_id).join(', ')
-                    : 'None'}
+                  {entity.name || `${entity.first_name} ${entity.last_name}`}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">{assignButton(employee)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {entity.employee_id || entity._id}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {entity.department || 'N/A'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {assignButton(entity)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -348,7 +334,7 @@ const EmployeeAssignment = () => {
       <div className="mt-4 flex justify-between items-center">
         <div className="text-sm text-gray-600">
           Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-          {Math.min(currentPage * itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} employees
+          {Math.min(currentPage * itemsPerPage, filteredEntities.length)} of {filteredEntities.length} {currentCategory.assignable_to}s
         </div>
         <div className="flex gap-2">
           <button

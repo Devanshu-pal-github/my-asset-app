@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useParams, Link } from 'react-router-dom';
 import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
 import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
 import logger from '../../../utils/logger';
@@ -11,10 +11,10 @@ const AssetUnassignmentTable = () => {
   const dispatch = useDispatch();
   const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [selectedAssets, setSelectedAssets] = useState([]);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -23,14 +23,20 @@ const AssetUnassignmentTable = () => {
     dispatch(fetchAssetCategories());
   }, [dispatch, categoryId]);
 
-  const filteredAssets = assets.filter((asset) => asset.has_active_assignment === true);
+  const filteredAssets = assets.filter((asset) => asset.status === 'assigned');
 
-  const currentCategory = categories.find((cat) => cat._id === categoryId || cat.id === categoryId);
+  const currentCategory = categories.find((cat) => cat._id === categoryId);
 
   const handleSort = (field) => {
     const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortOrder(newSortOrder);
+  };
+
+  const handleAssetSelect = (assetId) => {
+    setSelectedAssets((prev) =>
+      prev.includes(assetId) ? prev.filter((id) => id !== assetId) : [...prev, assetId]
+    );
   };
 
   const sortedAssets = sortData(filteredAssets, sortField, sortOrder);
@@ -90,11 +96,30 @@ const AssetUnassignmentTable = () => {
 
   return (
     <div className="mt-24 p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Unassign Assets - {currentCategory.name}</h2>
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-2xl font-bold text-gray-800">Unassign Assets - {currentCategory.name}</h2>
+        <div className="flex gap-3">
+          <Link to="/asset-inventory">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+              Back to Inventory
+            </button>
+          </Link>
+          {selectedAssets.length > 0 && (
+            <Link to={`/asset-inventory/${categoryId}/unassign-multiple`} state={{ selectedAssets }}>
+              <button className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                Unassign Selected
+              </button>
+            </Link>
+          )}
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
           <thead className="bg-gray-100">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Select
+              </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort('name')}
@@ -107,23 +132,8 @@ const AssetUnassignmentTable = () => {
               >
                 Asset Tag {sortField === 'asset_tag' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('serial_number')}
-              >
-                Serial Number {sortField === 'serial_number' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('department')}
-              >
-                Department {sortField === 'department' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('location')}
-              >
-                Location {sortField === 'location' && (sortOrder === 'asc' ? '↑' : '↓')}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Action
@@ -132,17 +142,23 @@ const AssetUnassignmentTable = () => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {paginatedAssets.map((asset) => (
-              <tr key={asset.id} className="hover:bg-gray-50">
+              <tr key={asset._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={selectedAssets.includes(asset._id)}
+                    onChange={() => handleAssetSelect(asset._id)}
+                    className="h-4 w-4"
+                  />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{asset.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{asset.asset_tag}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{asset.serial_number}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{asset.department || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{asset.location || 'N/A'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{asset.status}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <Link to={`/asset-inventory/${categoryId}/unassign/${asset.id}`}>
+                  <Link to={`/asset-inventory/${categoryId}/unassign/${asset._id}`}>
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-                      onClick={() => logger.info('Navigating to EmployeeUnassignment', { assetId: asset.id })}
+                      onClick={() => logger.info('Navigating to EmployeeUnassignment', { assetId: asset._id })}
                     >
                       Unassign
                     </button>
@@ -183,13 +199,6 @@ const AssetUnassignmentTable = () => {
             Next
           </button>
         </div>
-      </div>
-      <div className="mt-4">
-        <Link to="/asset-inventory">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-            Back to Inventory
-          </button>
-        </Link>
       </div>
     </div>
   );

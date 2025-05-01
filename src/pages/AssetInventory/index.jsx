@@ -1,440 +1,342 @@
-
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchAssetCategories,
-  deleteAssetCategory,
-  updateAssetCategory,
-} from "../../store/slices/assetCategorySlice";
-import DeleteConfirmationModal from "../AssetInventory/components/DeleteConfirmationModal";
-import EditAssetForm from "../AssetInventory/components/EditAssetForm";
-import logger from "../../utils/logger";
 import { Link } from "react-router-dom";
+import { fetchAssetCategories } from "../../store/slices/assetCategorySlice";
+import logger from "../../utils/logger";
 
 const AssetInventory = () => {
   const dispatch = useDispatch();
   const { categories, loading, error } = useSelector(
     (state) => state.assetCategories
   );
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
+  const [showAllotmentModal, setShowAllotmentModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [deleteError, setDeleteError] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editCategory, setEditCategory] = useState(null);
-  const [editError, setEditError] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
 
   useEffect(() => {
     logger.debug("AssetInventory useEffect triggered");
-    console.log("Dispatching fetchAssetCategories"); // Debug log
-    dispatch(fetchAssetCategories())
-      .unwrap()
-      .then(() => {
-        logger.info("Successfully fetched categories");
-        console.log("fetchAssetCategories succeeded");
-      })
-      .catch((err) => {
-        logger.error("Failed to fetch categories", { error: err });
-        console.error("fetchAssetCategories failed:", err);
-      });
+    dispatch(fetchAssetCategories());
   }, [dispatch]);
 
-  logger.debug("Rendering AssetInventory", { categories, loading, error });
-  console.log("AssetInventory state:", { categories, loading, error }); // Debug log
+  // Compute top card stats
+  const totalAssets = categories.reduce(
+    (sum, cat) => sum + (cat.total_items || 0),
+    0
+  );
+  const activeAssets = categories.reduce(
+    (sum, cat) => sum + (cat.assigned || 0),
+    0
+  );
+  const totalValue = categories.reduce(
+    (sum, cat) => sum + (cat.total_cost || 0),
+    0
+  );
 
-  const handleDeleteClick = (category) => {
-    logger.debug("Delete icon clicked for category", {
-      categoryId: category._id,
-      categoryName: category.name,
-    });
+  const filteredCategories = categories.filter((category) =>
+    category.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const handleEmployeeSelect = (employeeId) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(employeeId)
+        ? prev.filter((id) => id !== employeeId)
+        : [...prev, employeeId]
+    );
+  };
+
+  const handleBulkAssign = async () => {
+    try {
+      logger.info("Bulk assigning categories", {
+        selectedCategories,
+        selectedEmployees,
+      });
+      // TODO: API call to assign selected categories to selected employees
+      setShowBulkAssignModal(false);
+      setSelectedCategories([]);
+      setSelectedEmployees([]);
+    } catch (err) {
+      logger.error("Bulk assignment failed", { error: err.message });
+    }
+  };
+
+  const handleAllotmentAssign = (category) => {
     setSelectedCategory(category);
-    setIsDeleteModalOpen(true);
-    setDeleteError(null);
+    setShowAllotmentModal(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!selectedCategory) {
-      logger.error("No category selected for deletion");
-      return;
-    }
-
-    logger.debug("Confirming deletion for category", {
-      categoryId: selectedCategory._id,
-    });
-    dispatch(deleteAssetCategory(selectedCategory._id))
-      .unwrap()
-      .then(() => {
-        logger.info("Successfully deleted category", {
-          categoryId: selectedCategory._id,
-        });
-        setIsDeleteModalOpen(false);
-        setSelectedCategory(null);
-      })
-      .catch((err) => {
-        logger.error("Failed to delete category", {
-          categoryId: selectedCategory._id,
-          error: err,
-        });
-        setDeleteError(err || "Failed to delete category");
+  const confirmAllotment = async (employeeId) => {
+    try {
+      logger.info("Allotting item", {
+        categoryId: selectedCategory._id,
+        employeeId,
       });
-  };
-
-  const handleDeleteCancel = () => {
-    logger.debug("Delete cancelled for category", {
-      categoryId: selectedCategory?._id,
-    });
-    setIsDeleteModalOpen(false);
-    setSelectedCategory(null);
-    setDeleteError(null);
-  };
-
-  const handleEditClick = (category) => {
-    logger.debug("Edit icon clicked for category", {
-      categoryId: category._id,
-      categoryName: category.name,
-    });
-    setEditCategory({
-      id: category._id,
-      name: category.name,
-      icon: category.icon || "pi pi-desktop",
-      description: category.description || "",
-      category_type: category.category_type || "",
-      is_active: category.is_active !== undefined ? category.is_active : true,
-      is_reassignable: category.is_reassignable !== undefined ? category.is_reassignable : true,
-      is_consumable: category.is_consumable !== undefined ? category.is_consumable : false,
-      requires_maintenance: category.requires_maintenance !== undefined ? category.requires_maintenance : false,
-      maintenance_frequency: category.maintenance_frequency || "",
-      maintenance_alert_days: category.maintenance_alert_days || null,
-      cost_per_unit: category.cost_per_unit || null,
-      expected_life: category.expected_life || null,
-      life_unit: category.life_unit || "",
-      depreciation_method: category.depreciation_method || "",
-      residual_value: category.residual_value || null,
-      assignment_policies: category.assignment_policies || {
-        max_assignments: 1,
-        assignable_to: null,
-        assignment_duration: null,
-        duration_unit: null,
-        allow_multiple_assignments: false,
-      },
-      specifications: category.specifications || {},
-      save_as_template: category.save_as_template !== undefined ? category.save_as_template : false,
-      // Read-only computed fields
-      count: category.count || 0,
-      total_value: category.total_value || 0,
-      assigned_count: category.assigned_count || 0,
-      maintenance_count: category.maintenance_count || 0,
-      utilization_rate: category.utilization_rate || 0,
-    });
-    setIsEditModalOpen(true);
-    setEditError(null);
-  };
-
-  const handleEditSubmit = (updatedData) => {
-    if (!editCategory) {
-      logger.error("No category selected for editing");
-      return;
+      // TODO: API call to allot item to employee
+      setShowAllotmentModal(false);
+      setSelectedCategory(null);
+    } catch (err) {
+      logger.error("Allotment failed", { error: err.message });
     }
-
-    logger.debug("Submitting updated category", {
-      categoryId: editCategory.id,
-      updatedData,
-    });
-    dispatch(
-      updateAssetCategory({ id: editCategory.id, category: updatedData })
-    )
-      .unwrap()
-      .then(() => {
-        logger.info("Successfully updated category", {
-          categoryId: editCategory.id,
-        });
-        setIsEditModalOpen(false);
-        setEditCategory(null);
-      })
-      .catch((err) => {
-        logger.error("Failed to update category", {
-          categoryId: editCategory.id,
-          error: err,
-        });
-        setEditError(err || "Failed to update category");
-      });
   };
 
-  const handleEditCancel = () => {
-    logger.debug("Edit cancelled for category", {
-      categoryId: editCategory?.id,
-    });
-    setIsEditModalOpen(false);
-    setEditCategory(null);
-    setEditError(null);
-  };
-
-  if (loading && !categories.length) {
-    return <div className="p-6">Loading categories...</div>;
-  }
-
+  if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
   if (error) {
     logger.error("AssetInventory error", { error });
-    console.error("Rendering error state:", error); // Debug log
-    return (
-      <div className="p-6 text-red-600">
-        Error: {error}.{" "}
-        {error.includes("Network error") ? (
-          <span>
-            Please ensure the backend server is running at http://localhost:8000
-            and try again.
-          </span>
-        ) : (
-          <span>
-            Failed to fetch categories. Check logs and contact support for
-            assistance.
-          </span>
-        )}
-      </div>
-    );
+    return <div className="p-6 text-red-600">Error: {error}</div>;
   }
-
-  if (!categories.length) {
-    logger.info("No categories found");
-    console.log("Rendering no categories state"); // Debug log
-    return (
-      <div className="p-6">
-        No categories found.{" "}
-        <Link
-          to="/asset-inventory/add-category"
-          className="text-[#2563EB] underline"
-        >
-          Add a new category
-        </Link>
-      </div>
-    );
-  }
-
-  const stats = [
-    {
-      title: "Total Assets",
-      value: categories.reduce((sum, cat) => sum + cat.count, 0).toString(),
-      trend: "+0%",
-    },
-    {
-      title: "Active Assets",
-      value: categories
-        .filter((cat) => cat.is_active)
-        .reduce((sum, cat) => sum + cat.count, 0)
-        .toString(),
-      trend: "+0%",
-    },
-    {
-      title: "Total Value",
-      value: categories
-        .reduce((sum, cat) => sum + (cat.total_value || 0), 0)
-        .toLocaleString("en-US", { style: "currency", currency: "USD" }),
-      trend: "+0%",
-    },
-    {
-      title: "Depreciated Assets",
-      value: categories
-        .reduce((sum, cat) => sum + (cat.total_value || 0) * 0.2, 0)
-        .toLocaleString("en-US", { style: "currency", currency: "USD" }),
-      trend: "-0%",
-    },
-  ];
 
   return (
-    <div className="p-8">
-      <div className="mt-[80px]">
-        <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
-        <p className="text-sm text-gray-600">
-          Overview of your asset management system
-        </p>
+    <div className="mt-24 p-6">
+      {/* Top Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-800">Total Assets</h3>
+          <p className="text-3xl font-bold text-gray-900">{totalAssets}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-800">Active Assets</h3>
+          <p className="text-3xl font-bold text-gray-900">{activeAssets}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-800">Total Value</h3>
+          <p className="text-3xl font-bold text-gray-900">
+            ${totalValue.toLocaleString()}
+          </p>
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mt-8 gap-4 mb-20">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white p-4 rounded-xl shadow-md">
-            <div className="text-gray-900 font-semibold">{stat.title}</div>
-            <div className="text-2xl font-bold text-gray-900 mt-2">
-              {stat.value}{" "}
-              <span
-                className={
-                  stat.trend.startsWith("+") ? "text-green-500" : "text-red-500"
-                }
-              >
-                {stat.trend}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-col md:flex-row justify-between mb-4 gap-3 mt-[-40px]">
-        <input
-          type="text"
-          placeholder="Search assets..."
-          className="p-2 border border-gray-300 rounded-xl w-full md:w-1/3 text-gray-500"
-        />
-        <div className="flex gap-2 justify-end">
-          <button className="px-4 py-2 bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200">
+
+      {/* Search, Filter, and Buttons */}
+      <div className="flex justify-between items-center mb-5">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-2 border border-gray-300 rounded-lg text-gray-700"
+          />
+          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors">
             Filter
           </button>
+        </div>
+        <div className="flex gap-3">
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            onClick={() => setShowBulkAssignModal(true)}
+          >
+            Bulk Assign Categories
+          </button>
           <Link to="/asset-inventory/add-category">
-            <button className="px-4 py-2 bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200">
-              Add New Asset
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+              + Add New Category
             </button>
           </Link>
         </div>
       </div>
-      {deleteError && (
-        <div className="p-4 mb-4 text-red-600 bg-red-50 rounded-md">
-          <span className="flex items-center">
-            <i className="pi pi-exclamation-triangle mr-2"></i>
-            {deleteError}
-          </span>
+
+      {/* Bulk Assign Modal */}
+      {showBulkAssignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Bulk Category Assignment
+            </h3>
+            <div className="mt-4">
+              <h4 className="text-md font-semibold text-gray-800">
+                Select Categories
+              </h4>
+              <div className="grid grid-cols-2 gap-4 mt-2 max-h-64 overflow-y-auto">
+                {categories.map((category) => (
+                  <label key={category._id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category._id)}
+                      onChange={() => handleCategorySelect(category._id)}
+                      className="mr-2"
+                    />
+                    {category.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4">
+              <h4 className="text-md font-semibold text-gray-800">
+                Select Employees
+              </h4>
+              <div className="grid grid-cols-2 gap-4 mt-2 max-h-64 overflow-y-auto">
+                {/* TODO: Fetch employees dynamically */}
+                {[
+                  { id: "emp1", name: "Employee 1" },
+                  { id: "emp2", name: "Employee 2" },
+                ].map((employee) => (
+                  <label key={employee.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedEmployees.includes(employee.id)}
+                      onChange={() => handleEmployeeSelect(employee.id)}
+                      className="mr-2"
+                    />
+                    {employee.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
+                onClick={() => setShowBulkAssignModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                onClick={handleBulkAssign}
+              >
+                Assign
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      {editError && (
-        <div className="p-4 mb-4 text-red-600 bg-red-50 rounded-md">
-          <span className="flex items-center">
-            <i className="pi pi-exclamation-triangle mr-2"></i>
-            {editError}
-          </span>
+
+      {/* Allotment Modal */}
+      {showAllotmentModal && selectedCategory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Allot Items - {selectedCategory.name}
+            </h3>
+            <div className="mt-4">
+              <h4 className="text-md font-semibold text-gray-800">
+                Select Employees
+              </h4>
+              <div className="grid grid-cols-2 gap-4 mt-2 max-h-64 overflow-y-auto">
+                {/* TODO: Fetch employees dynamically */}
+                {[
+                  { id: "emp1", name: "Employee 1" },
+                  { id: "emp2", name: "Employee 2" },
+                ].map((employee) => (
+                  <div
+                    key={employee.id}
+                    className="flex items-center justify-between"
+                  >
+                    <span>{employee.name}</span>
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+                      onClick={() => confirmAllotment(employee.id)}
+                    >
+                      Assign
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
+                onClick={() => setShowAllotmentModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-h-[90vh] max-w-[80vw] overflow-y-auto pr-2">
-        {categories.map((category) => {
-          const categoryId = String(
-            category._id || category.id || "default-id"
-          );
-          logger.debug("Category ID for View Details:", { categoryId });
-          const availableCount =
-            category.count - category.assigned_count - category.maintenance_count;
+
+      {/* Category Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCategories.map((category) => {
+          const available =
+            (category.total_items || 0) -
+            (category.assigned || 0) -
+            (category.under_maintenance || 0);
+          const utilizationRate = category.total_items
+            ? ((category.assigned || 0) / category.total_items) * 100
+            : 0;
+
           return (
             <div
-              key={categoryId}
-              className="bg-white rounded-xl shadow-md p-4 relative"
+              key={category._id}
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <span className="text-gray-900 font-semibold text-xl">
-                    {category.name}
-                  </span>
-                  <div className="text-sm text-gray-500 mt-1">
-                    {category.category_type || "Unknown Category"}
-                  </div>
-                </div>
-                <div className="flex space-x-2 text-gray-500 text-lg">
-                  <i
-                    className="pi pi-pencil cursor-pointer"
-                    onClick={() => handleEditClick(category)}
-                  />
-                  <i
-                    className="pi pi-trash cursor-pointer"
-                    onClick={() => handleDeleteClick(category)}
-                  />
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {category.name}
+                </h3>
               </div>
-              <div className="grid grid-cols-2 text-base text-gray-900 mb-6">
-                <div>
-                  <div className="font-medium">Total Items</div>
-                  <div className="text-lg font-bold">{category.count || 0}</div>
-                </div>
-                <div>
-                  <div className="font-medium">Assigned</div>
-                  <div className="text-lg font-bold">
-                    {category.assigned_count || 0}
-                  </div>
-                </div>
-                <div>
-                  <div className="font-medium text-green-500">Available</div>
-                  <div className="text-lg font-bold text-green-500">
-                    {availableCount >= 0 ? availableCount : 0}
-                  </div>
-                </div>
-                <div>
-                  <div className="font-medium text-yellow-500">Maintenance</div>
-                  <div className="text-lg font-bold text-yellow-500">
-                    {category.maintenance_count || 0}
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <strong>Total Items:</strong> {category.total_items || 0}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Assigned:</strong> {category.assigned || 0}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Available:</strong> {available}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Under Maintenance:</strong>{" "}
+                  {category.under_maintenance || 0}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Utilization Rate:</strong>{" "}
+                  {utilizationRate.toFixed(2)}%
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Total Cost:</strong> $
+                  {category.total_cost?.toLocaleString() || 0}
+                </p>
               </div>
-              <div className="text-sm text-gray-900 mb-3">Utilization Rate</div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div
-                  className="bg-[#2563EB] h-2 rounded-full"
-                  style={{ width: `${category.utilization_rate || 0}%` }}
-                ></div>
-              </div>
-              <div className="text-right text-sm text-gray-900 font-semibold mb-3">
-                {category.utilization_rate ? `${category.utilization_rate}%` : "0%"}
-              </div>
-              <div className="flex space-x-2 gap-[84px] mb-6">
-                <Link
-                  to={`/asset-inventory/${categoryId}/assign`}
-                  onClick={() =>
-                    logger.info("Navigating to AssetAssignmentTable", {
-                      categoryId,
-                    })
-                  }
-                >
-                  <button className="px-3 py-2 bg-[#216DCF] text-white rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200 text-sm font-medium">
-                    Assign Asset
-                  </button>
-                </Link>
-                <Link
-                  to={`/asset-inventory/${categoryId}/unassign`}
-                  onClick={() =>
-                    logger.info("Navigating to AssetUnassignmentTable", {
-                      categoryId,
-                    })
-                  }
-                >
-                  <button className="px-3 py-2 bg-[#F87171] text-white rounded-lg hover:bg-[#dc2626] transition-colors duration-200 text-sm font-medium">
-                    Unassign Asset
-                  </button>
-                </Link>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="bg-green-100 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">
-                  ${Number(category.total_value || 0).toLocaleString()}
-                </div>
-                <Link
-                  to={`/asset-inventory/${categoryId}`}
-                  onClick={() =>
-                    logger.info("Navigating to AssetTablePage", { categoryId })
-                  }
-                >
-                  <button className="px-3 py-1 text-[#2563EB] font-semibold bg-transparent hover:underline text-sm">
-                    View Details
-                  </button>
-                </Link>
+              <div className="mt-4 flex gap-2">
+                {category.is_allotment ? (
+                  <>
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      onClick={() => handleAllotmentAssign(category)}
+                    >
+                      Assign
+                    </button>
+                    <Link to={`/asset-inventory/${category._id}/details`}>
+                      <button className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        View Details
+                      </button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to={`/asset-inventory/${category._id}/assign`}>
+                      <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        Assign
+                      </button>
+                    </Link>
+                    <Link to={`/asset-inventory/${category._id}/unassign`}>
+                      <button className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        Unassign
+                      </button>
+                    </Link>
+                    
+                    <Link to={`/asset-inventory/${category._id}`}>
+                      <button className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        View Details
+                      </button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           );
         })}
       </div>
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-        selectedAssets={selectedCategory ? [selectedCategory] : []}
-      />
-      {isEditModalOpen && editCategory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Edit Category</h3>
-              <button
-                onClick={handleEditCancel}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <i className="pi pi-times"></i>
-              </button>
-            </div>
-            <EditAssetForm
-              asset={editCategory}
-              onClose={handleEditCancel}
-              onUpdateAsset={handleEditSubmit}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

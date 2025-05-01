@@ -35,31 +35,24 @@ const TABS = {
 const axiosInstance = axios.create({ timeout: 30000 });
 
 // Utility Functions
-const formatDate = (date) => {
-  if (!date) return "N/A";
-  return new Date(date).toISOString().split("T")[0];
-};
-
-const formatCurrency = (amount) => {
-  if (!amount && amount !== 0) return "N/A";
-  return Number(amount).toLocaleString("en-US", { style: "currency", currency: "USD" });
-};
-
-const formatFileSize = (bytes) => {
-  if (!bytes && bytes !== 0) return "N/A";
-  const units = ["B", "KB", "MB", "GB"];
-  let size = bytes;
-  let unitIndex = 0;
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
-};
-
-const isValidObjectId = (id) => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
-};
+const formatDate = (date) =>
+  date ? new Date(date).toISOString().split("T")[0] : "N/A";
+const formatCurrency = (amount) =>
+  amount || amount === 0
+    ? Number(amount).toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      })
+    : "N/A";
+const formatFileSize = (bytes) =>
+  bytes || bytes === 0
+    ? `${(bytes / 1024 ** Math.floor(Math.log(bytes) / Math.log(1024))).toFixed(
+        2
+      )} ${
+        ["B", "KB", "MB", "GB"][Math.floor(Math.log(bytes) / Math.log(1024))]
+      }`
+    : "N/A";
+const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
 
 // Error Boundary Component
 const ErrorBoundary = ({ children }) => {
@@ -109,18 +102,17 @@ const Breadcrumb = ({ assetData, categoryId }) => (
 
 const StatusIndicator = ({ status }) => {
   const statusStyles = {
-    "In Use": "bg-blue-500",
-    "Under Maintenance": "bg-yellow-500",
-    Available: "bg-green-500",
-    Retired: "bg-red-500",
-    Lost: "bg-red-500",
+    assigned: "bg-blue-500",
+    under_maintenance: "bg-yellow-500",
+    available: "bg-green-500",
+    retired: "bg-red-500",
+    lost: "bg-red-500",
   };
   const bgColor = statusStyles[status] || "bg-gray-400";
-
   return (
     <div className="flex items-center">
       <span className={`inline-block w-2 h-2 rounded-full mr-2 ${bgColor}`} />
-      <span>{status}</span>
+      <span>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
     </div>
   );
 };
@@ -169,8 +161,20 @@ const SpecificationsTab = ({ assetData, onEdit }) => (
           <span className="font-medium">{assetData.specifications}</span>
         </div>
         <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+          <span className="text-gray-600">Model</span>
+          <span className="font-medium">{assetData.model}</span>
+        </div>
+        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
           <span className="text-gray-600">Notes</span>
           <span className="font-medium">{assetData.notes}</span>
+        </div>
+        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+          <span className="text-gray-600">Maintenance Due Date</span>
+          <span className="font-medium">{assetData.maintenanceDueDate}</span>
+        </div>
+        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+          <span className="text-gray-600">Disposal Date</span>
+          <span className="font-medium">{assetData.disposalDate}</span>
         </div>
       </div>
     </div>
@@ -215,7 +219,8 @@ const AssignmentHistoryTab = ({
   onAssign,
   onUnassign,
 }) => {
-  if (loading) return <p className="text-gray-600">Loading assignment history...</p>;
+  if (loading)
+    return <p className="text-gray-600">Loading assignment history...</p>;
   if (error)
     return (
       <p className="text-red-500">
@@ -226,7 +231,6 @@ const AssignmentHistoryTab = ({
     );
   if (!history || history.length === 0)
     return <p className="text-gray-500">No assignment history available</p>;
-
   return (
     <div className="w-full overflow-x-hidden">
       <div className="flex justify-end mb-4 space-x-2">
@@ -247,13 +251,30 @@ const AssignmentHistoryTab = ({
         <table className="w-full max-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Assignee</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Department</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Condition</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Assignment Date</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Return Date</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Active</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">Notes</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Assignee
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Entity Type
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Department
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Condition
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Assignment Date
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Return Date
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Active
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 whitespace-nowrap w-1/6">
+                Notes
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -262,13 +283,26 @@ const AssignmentHistoryTab = ({
                 <td className="px-4 py-2 whitespace-nowrap">
                   {rowData.assigned_to.includes(currentAssigneeId)
                     ? currentAssigneeName
-                    : rowData.assigned_to.join(", ") || "Unknown"}
+                    : rowData.assigned_to || "Unknown"}
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">{rowData.department || "N/A"}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{rowData.condition_at_assignment || "N/A"}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.assignment_date)}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.return_date)}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{rowData.is_active ? "Yes" : "No"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {rowData.entity_type || "N/A"}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {rowData.department || "N/A"}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {rowData.condition_at_assignment || "N/A"}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {formatDate(rowData.assigned_at)}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {formatDate(rowData.unassigned_at)}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {rowData.is_active ? "Yes" : "No"}
+                </td>
                 <td className="px-4 py-2">{rowData.notes || "N/A"}</td>
               </tr>
             ))}
@@ -279,8 +313,14 @@ const AssignmentHistoryTab = ({
   );
 };
 
-const MaintenanceHistoryTab = ({ history, loading, error, onLogMaintenance }) => {
-  if (loading) return <p className="text-gray-600">Loading maintenance history...</p>;
+const MaintenanceHistoryTab = ({
+  history,
+  loading,
+  error,
+  onLogMaintenance,
+}) => {
+  if (loading)
+    return <p className="text-gray-600">Loading maintenance history...</p>;
   if (error)
     return (
       <p className="text-red-500">
@@ -291,7 +331,6 @@ const MaintenanceHistoryTab = ({ history, loading, error, onLogMaintenance }) =>
     );
   if (!history || history.length === 0)
     return <p className="text-gray-500">No maintenance history available</p>;
-
   return (
     <div className="overflow-x-auto">
       <div className="flex justify-end mb-4">
@@ -305,29 +344,65 @@ const MaintenanceHistoryTab = ({ history, loading, error, onLogMaintenance }) =>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Service Type</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Technician</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Condition Before</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Condition After</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Maintenance Date</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Completed Date</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Cost</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Completed</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Notes</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Service Type
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Technician
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Condition Before
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Condition After
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Maintenance Date
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Completed Date
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Cost
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Completed
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+              Notes
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {history.map((rowData) => (
             <tr key={rowData.id}>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.maintenance_type || "N/A"}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.technician || "N/A"}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.condition_before || "N/A"}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.condition_after || "N/A"}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.maintenance_date)}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{formatDate(rowData.completed_date)}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{formatCurrency(rowData.cost)}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.status === "Completed" ? "Yes" : "No"}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{rowData.notes || "N/A"}</td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {rowData.maintenance_type || "N/A"}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {rowData.technician || "N/A"}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {rowData.condition_before || "N/A"}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {rowData.condition_after || "N/A"}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {formatDate(rowData.maintenance_date)}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {formatDate(rowData.completed_date)}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {formatCurrency(rowData.cost)}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {rowData.status === "completed" ? "Yes" : "No"}
+              </td>
+              <td className="px-4 py-2 whitespace-nowrap">
+                {rowData.notes || "N/A"}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -338,16 +413,17 @@ const MaintenanceHistoryTab = ({ history, loading, error, onLogMaintenance }) =>
 
 const DocumentList = ({ assetId }) => {
   const { documents, loading, error } = useSelector((state) => state.documents);
-
-  useEffect(() => {
-    logger.debug("DocumentList useEffect", { assetId, documents });
-  }, [assetId, documents]);
-
+  useEffect(
+    () => logger.debug("DocumentList useEffect", { assetId, documents }),
+    [assetId, documents]
+  );
   if (loading) return <p>Loading documents...</p>;
   if (error)
     return (
       <div className="text-red-500">
-        <p>{error.includes("404") ? "No documents found" : `Error: ${error}`}</p>
+        <p>
+          {error.includes("404") ? "No documents found" : `Error: ${error}`}
+        </p>
         <button
           onClick={() => dispatch(fetchDocuments(assetId))}
           className="mt-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -356,7 +432,6 @@ const DocumentList = ({ assetId }) => {
         </button>
       </div>
     );
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-md p-6 mt-6">
       <h3 className="text-lg font-semibold mb-4">Documents</h3>
@@ -364,10 +439,11 @@ const DocumentList = ({ assetId }) => {
         documents.map((doc) => (
           <div key={doc.id} className="p-4 border rounded-lg mb-2">
             <p>
-              <strong>{doc.file_url.split('/').pop()}</strong>
+              <strong>{doc.file_url.split("/").pop()}</strong>
             </p>
             <p>
-              Type: {doc.document_type} | Uploaded: {formatDate(doc.created_at)}
+              Type: {doc.document_type} | Uploaded: {formatDate(doc.created_at)}{" "}
+              | Size: {formatFileSize(doc.file_size)}
             </p>
             <button
               onClick={() => window.open(`${API_URL}${doc.file_url}`, "_blank")}
@@ -385,7 +461,7 @@ const DocumentList = ({ assetId }) => {
 };
 
 const AssetDetail = () => {
-  const { categoryId: urlCategoryId, assetId } = useParams();
+  const { assetId } = useParams();
   const dispatch = useDispatch();
   const {
     currentItem: asset,
@@ -405,40 +481,50 @@ const AssetDetail = () => {
   } = useSelector((state) => state.maintenanceHistory);
   const [activeTab, setActiveTab] = useState(TABS.SPECIFICATIONS);
   const [showBasicEditForm, setShowBasicEditForm] = useState(false);
-  const [showSpecsFinanceEditForm, setShowSpecsFinanceEditForm] = useState(false);
+  const [showSpecsFinanceEditForm, setShowSpecsFinanceEditForm] =
+    useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showUnassignModal, setShowUnassignModal] = useState(false);
   const [currentAssigneeName, setCurrentAssigneeName] = useState("Unassigned");
 
   const memoizedAsset = useMemo(() => asset, [asset]);
 
-  // Validate URL parameters
-  if (!urlCategoryId || !assetId || !isValidObjectId(assetId)) {
-    logger.error("Invalid or missing URL parameters", {
-      urlCategoryId,
-      assetId,
+  logger.debug("AssetDetail rendering", {
+    assetId,
+    asset: memoizedAsset,
+    assetError,
+  });
+
+  // Only redirect if assetId is completely missing
+  if (!assetId) {
+    logger.error("Missing assetId in AssetDetail", {
       url: window.location.href,
     });
     return <Navigate to="/asset-inventory" replace />;
   }
 
+  // Handle invalid ObjectId gracefully
+  if (!isValidObjectId(assetId)) {
+    logger.warn("Using fallback assetId, not a valid ObjectId", { assetId });
+    // Proceed with rendering, fetch will likely fail but we handle it below
+  }
+
   useEffect(() => {
     logger.debug("AssetDetail useEffect triggered", {
-      urlCategoryId,
       assetId,
       asset: memoizedAsset,
     });
     dispatch(fetchAssetItemById(assetId))
       .unwrap()
-      .then((result) => {
-        logger.info("Successfully fetched asset item", { assetId, result });
-      })
-      .catch((err) => {
+      .then((result) =>
+        logger.info("Successfully fetched asset item", { assetId, result })
+      )
+      .catch((err) =>
         logger.error("Failed to fetch asset item", {
           error: err.message,
           assetId,
-        });
-      });
+        })
+      );
     dispatch(fetchDocuments(assetId))
       .unwrap()
       .then(() => logger.info("Successfully fetched documents", { assetId }))
@@ -452,13 +538,15 @@ const AssetDetail = () => {
       dispatch(clearDocuments());
       logger.debug("Cleared all state on unmount");
     };
-  }, [dispatch, assetId, urlCategoryId]);
+  }, [dispatch, assetId]);
 
   useEffect(() => {
-    logger.debug("AssetLoading state", { assetLoading, assetId, asset: memoizedAsset });
-    if (assetLoading) {
-      logger.info("AssetDetail is loading", { assetId });
-    }
+    logger.debug("AssetLoading state", {
+      assetLoading,
+      assetId,
+      asset: memoizedAsset,
+    });
+    if (assetLoading) logger.info("AssetDetail is loading", { assetId });
   }, [assetLoading, assetId]);
 
   useEffect(() => {
@@ -481,11 +569,9 @@ const AssetDetail = () => {
         setCurrentAssigneeName("Unknown");
       }
     };
-
     const assigneeId = memoizedAsset?.current_assignee_id;
-    if (assigneeId) {
-      fetchEmployeeName(assigneeId);
-    } else {
+    if (assigneeId) fetchEmployeeName(assigneeId);
+    else {
       setCurrentAssigneeName("Unassigned");
       logger.debug(
         "No current_assignee_id, setting currentAssigneeName to Unassigned"
@@ -494,22 +580,21 @@ const AssetDetail = () => {
   }, [memoizedAsset?.current_assignee_id]);
 
   const assignmentCategoryId = memoizedAsset?.category_id;
-  if (assignmentCategoryId && !isValidObjectId(assignmentCategoryId)) {
+  if (assignmentCategoryId && !isValidObjectId(assignmentCategoryId))
     logger.error("Invalid categoryId for EmployeeAssignment", {
       assignmentCategoryId,
       assetId,
     });
-  } else if (assignmentCategoryId) {
+  else if (assignmentCategoryId)
     logger.debug("Valid categoryId for EmployeeAssignment", {
       assignmentCategoryId,
       assetId,
     });
-  }
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     logger.debug("Switched tab", { tab });
-    if (tab === TABS.ASSIGNMENT_HISTORY) {
+    if (tab === TABS.ASSIGNMENT_HISTORY)
       dispatch(fetchAssignmentHistory(assetId))
         .unwrap()
         .then(() =>
@@ -520,7 +605,7 @@ const AssetDetail = () => {
             error: err.message,
           })
         );
-    } else if (tab === TABS.MAINTENANCE_HISTORY) {
+    else if (tab === TABS.MAINTENANCE_HISTORY)
       dispatch(fetchMaintenanceHistory(assetId))
         .unwrap()
         .then(() =>
@@ -531,19 +616,20 @@ const AssetDetail = () => {
             error: err.message,
           })
         );
-    }
   };
 
   const toggleBasicEditForm = () => {
     setShowBasicEditForm((prev) => !prev);
-    logger.debug("Toggled basic edit form", { showBasicEditForm: !showBasicEditForm });
+    logger.debug("Toggled basic edit form", {
+      showBasicEditForm: !showBasicEditForm,
+    });
   };
-
   const toggleSpecsFinanceEditForm = () => {
     setShowSpecsFinanceEditForm((prev) => !prev);
-    logger.debug("Toggled specs and finance edit form", { showSpecsFinanceEditForm: !showSpecsFinanceEditForm });
+    logger.debug("Toggled specs and finance edit form", {
+      showSpecsFinanceEditForm: !showSpecsFinanceEditForm,
+    });
   };
-
   const updateAssetDetails = (updatedData) => {
     logger.debug("Updating asset details", { assetId, updatedData });
     dispatch(updateAssetItem({ id: assetId, itemData: updatedData }))
@@ -557,21 +643,16 @@ const AssetDetail = () => {
         logger.error("Failed to update asset", { error: err.message })
       );
   };
-
   const handleAssign = () => {
     logger.info("Assign button clicked, opening modal", { assetId });
     setShowAssignModal(true);
   };
-
   const handleUnassign = () => {
     logger.info("Unassign button clicked, opening modal", { assetId });
     setShowUnassignModal(true);
   };
-
-  const handleLogMaintenance = () => {
+  const handleLogMaintenance = () =>
     logger.info("Log maintenance button clicked", { assetId });
-  };
-
   const handleAssignmentSuccess = () => {
     logger.info("Assignment successful, refreshing data", { assetId });
     setShowAssignModal(false);
@@ -579,14 +660,15 @@ const AssetDetail = () => {
       dispatch(fetchAssetItemById(assetId)).unwrap(),
       dispatch(fetchAssignmentHistory(assetId)).unwrap(),
     ])
-      .then(() => {
-        logger.info("Data refresh completed after assignment", { assetId });
-      })
-      .catch((err) => {
-        logger.error("Failed to refresh data after assignment", { error: err.message });
-      });
+      .then(() =>
+        logger.info("Data refresh completed after assignment", { assetId })
+      )
+      .catch((err) =>
+        logger.error("Failed to refresh data after assignment", {
+          error: err.message,
+        })
+      );
   };
-
   const handleUnassignmentSuccess = () => {
     logger.info("Unassignment successful, refreshing data", { assetId });
     setShowUnassignModal(false);
@@ -594,15 +676,17 @@ const AssetDetail = () => {
       dispatch(fetchAssetItemById(assetId)).unwrap(),
       dispatch(fetchAssignmentHistory(assetId)).unwrap(),
     ])
-      .then(() => {
-        logger.info("Data refresh completed after unassignment", { assetId });
-      })
-      .catch((err) => {
-        logger.error("Failed to refresh data after unassignment", { error: err.message });
-      });
+      .then(() =>
+        logger.info("Data refresh completed after unassignment", { assetId })
+      )
+      .catch((err) =>
+        logger.error("Failed to refresh data after unassignment", {
+          error: err.message,
+        })
+      );
   };
 
-  if (assetLoading) {
+  if (assetLoading)
     return (
       <div className="px-6 py-5 flex justify-center items-center h-64">
         <div className="flex flex-col items-center">
@@ -611,81 +695,85 @@ const AssetDetail = () => {
         </div>
       </div>
     );
-  }
 
-  if (assetError || !memoizedAsset) {
-    logger.error("AssetDetail error or no asset found", {
-      assetError,
-      assetId,
-      asset: memoizedAsset,
-    });
-    return (
-      <div className="px-6 py-5 text-red-500">
-        <p>Error: {assetError || "Asset not found"}</p>
-        <div className="mt-4 space-x-4">
-          <button
-            onClick={() => dispatch(fetchAssetItemById(assetId))}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Retry
-          </button>
-          <Link
-            to="/asset-inventory"
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          >
-            Return to Asset Inventory
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const assetCategory = categories.find(
-    (cat) => (cat.id || cat._id) === memoizedAsset.category_id
-  ) || {
-    id: memoizedAsset.category_id,
-    name: "Unknown",
-  };
-
-  const assetData = {
-    assetId: memoizedAsset.id,
-    assetTag: memoizedAsset.asset_tag || "N/A",
-    categoryId: memoizedAsset.category_id || "N/A",
-    categoryName: assetCategory.name,
-    assetName: memoizedAsset.name || "N/A",
-    serialNumber: memoizedAsset.serial_number || "N/A",
-    status: memoizedAsset.status || "N/A",
-    isOperational: memoizedAsset.is_operational ? "Operational" : "Non-Operational",
-    condition: memoizedAsset.condition || "N/A",
-    createdAt: formatDate(memoizedAsset.created_at),
-    lastUpdated: formatDate(memoizedAsset.updated_at),
-    currentAssigneeId: memoizedAsset.current_assignee_id || "",
-    currentAssigneeName,
-    hasActiveAssignment: memoizedAsset.has_active_assignment
-      ? "Assigned"
-      : "Not Assigned",
-    department: memoizedAsset.department || "N/A",
-    location: memoizedAsset.location || "N/A",
-    specifications: memoizedAsset.specifications
-      ? Object.entries(memoizedAsset.specifications)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(", ")
-      : "N/A",
-    vendor: memoizedAsset.vendor || "N/A",
-    purchaseCost: formatCurrency(memoizedAsset.purchase_cost),
-    purchaseDate: formatDate(memoizedAsset.purchase_date),
-    warrantyExpiration: formatDate(memoizedAsset.warranty_expiration),
-    currentValue: formatCurrency(memoizedAsset.current_value),
-    notes: memoizedAsset.notes || "N/A",
-    insurancePolicy: memoizedAsset.insurance_policy || "N/A",
-    disposalDate: formatDate(memoizedAsset.disposal_date),
-    currentAssignmentDate: formatDate(memoizedAsset.current_assignment_date),
-  };
+  // Display fallback data or error message if asset fetch fails
+  const assetData = memoizedAsset
+    ? {
+        assetId: memoizedAsset._id || assetId,
+        assetTag: memoizedAsset.asset_tag || assetId,
+        categoryId: memoizedAsset.category_id || "N/A",
+        categoryName:
+          (categories.find(
+            (cat) => (cat.id || cat._id) === memoizedAsset.category_id
+          ) || {}).name || "Unknown",
+        assetName: memoizedAsset.name || "N/A",
+        serialNumber: memoizedAsset.serial_number || "N/A",
+        model: memoizedAsset.model || "N/A",
+        status: memoizedAsset.status || "available",
+        isOperational: memoizedAsset.is_operational
+          ? "Operational"
+          : "Non-Operational",
+        condition: memoizedAsset.condition || "N/A",
+        createdAt: formatDate(memoizedAsset.created_at),
+        lastUpdated: formatDate(memoizedAsset.updated_at),
+        currentAssigneeId: memoizedAsset.current_assignee_id || "",
+        currentAssigneeName,
+        hasActiveAssignment: memoizedAsset.has_active_assignment
+          ? "Assigned"
+          : "Not Assigned",
+        department: memoizedAsset.department || "N/A",
+        location: memoizedAsset.location || "N/A",
+        specifications: memoizedAsset.specifications
+          ? Object.entries(memoizedAsset.specifications)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(", ")
+          : "N/A",
+        vendor: memoizedAsset.vendor || "N/A",
+        purchaseCost: formatCurrency(memoizedAsset.purchase_cost),
+        purchaseDate: formatDate(memoizedAsset.purchase_date),
+        warrantyExpiration: formatDate(memoizedAsset.warranty_until),
+        currentValue: formatCurrency(memoizedAsset.current_value),
+        notes: memoizedAsset.notes || "N/A",
+        insurancePolicy: memoizedAsset.insurance_policy || "N/A",
+        disposalDate: formatDate(memoizedAsset.disposal_date),
+        currentAssignmentDate: formatDate(memoizedAsset.current_assignment_date),
+        maintenanceDueDate: formatDate(memoizedAsset.maintenance_due_date),
+      }
+    : {
+        // Fallback data if asset is not fetched
+        assetId: assetId,
+        assetTag: assetId,
+        categoryId: "N/A",
+        categoryName: "Unknown",
+        assetName: "N/A",
+        serialNumber: "N/A",
+        model: "N/A",
+        status: "available",
+        isOperational: "N/A",
+        condition: "N/A",
+        createdAt: "N/A",
+        lastUpdated: "N/A",
+        currentAssigneeId: "",
+        currentAssigneeName: "Unassigned",
+        hasActiveAssignment: "Not Assigned",
+        department: "N/A",
+        location: "N/A",
+        specifications: "N/A",
+        vendor: "N/A",
+        purchaseCost: "N/A",
+        purchaseDate: "N/A",
+        warrantyExpiration: "N/A",
+        currentValue: "N/A",
+        notes: "N/A",
+        insurancePolicy: "N/A",
+        disposalDate: "N/A",
+        currentAssignmentDate: "N/A",
+        maintenanceDueDate: "N/A",
+      };
 
   return (
     <div className="p-6 bg-background-offwhite min-h-screen text-gray-900">
-      <Breadcrumb assetData={assetData} categoryId={assetCategory.id} />
-
+      <Breadcrumb assetData={assetData} categoryId={assetData.categoryId} />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Asset Details</h1>
         <button
@@ -695,7 +783,6 @@ const AssetDetail = () => {
           Edit Basic Details
         </button>
       </div>
-
       {showBasicEditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
@@ -716,7 +803,6 @@ const AssetDetail = () => {
           </div>
         </div>
       )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <AssetInfoCard
           title="Asset Status"
@@ -740,6 +826,7 @@ const AssetDetail = () => {
             { label: "Asset Name", value: assetData.assetName },
             { label: "Asset Tag", value: assetData.assetTag },
             { label: "Serial Number", value: assetData.serialNumber },
+            { label: "Model", value: assetData.model },
             { label: "Category", value: assetData.categoryName },
             { label: "Created At", value: assetData.createdAt },
           ]}
@@ -761,7 +848,6 @@ const AssetDetail = () => {
           ]}
         />
       </div>
-
       <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 mb-6">
         <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
         <ErrorBoundary>
@@ -800,12 +886,13 @@ const AssetDetail = () => {
           </div>
         </ErrorBoundary>
       </div>
-
       {showSpecsFinanceEditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Edit Specifications & Financial Details</h3>
+              <h3 className="text-xl font-bold">
+                Edit Specifications & Financial Details
+              </h3>
               <button
                 onClick={toggleSpecsFinanceEditForm}
                 className="text-gray-500 hover:text-gray-700"
@@ -821,26 +908,19 @@ const AssetDetail = () => {
           </div>
         </div>
       )}
-
       <DocumentList assetId={assetId} />
-
       <div className="mt-6 flex justify-end space-x-2">
-        <Link to={`/asset-inventory/${assetCategory.id}`}>
-          <button
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
+        <Link to={`/asset-inventory/${assetData.categoryId}`}>
+          <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
             View All Units
           </button>
         </Link>
         <Link to="/asset-inventory">
-          <button
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          >
+          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
             Return to Inventory
           </button>
         </Link>
       </div>
-
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
@@ -856,14 +936,13 @@ const AssetDetail = () => {
             <EmployeeAssignment
               visible={showAssignModal}
               onHide={() => setShowAssignModal(false)}
-              categoryId={assignmentCategoryId}
+              categoryId={assetData.categoryId}
               assetId={assetId}
               onAssignmentSuccess={handleAssignmentSuccess}
             />
           </div>
         </div>
       )}
-
       {showUnassignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
@@ -879,6 +958,7 @@ const AssetDetail = () => {
             <EmployeeUnassignment
               visible={showUnassignModal}
               onHide={() => setShowUnassignModal(false)}
+              categoryId={assetData.categoryId}
               assetId={assetId}
               onUnassignmentSuccess={handleUnassignmentSuccess}
             />

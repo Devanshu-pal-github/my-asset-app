@@ -16,7 +16,7 @@ const AddItemPage = () => {
     asset_tag: "",
     serial_number: "",
     model: "",
-    status: "",
+    status: "available",
     condition: "",
     assigned_to: "",
     purchase_cost: "",
@@ -25,12 +25,19 @@ const AddItemPage = () => {
     warranty_until: "",
     notes: "",
     category_id: categoryId,
-    name: "", // Added required field
-    purchase_date: "", // Added required field
+    name: "",
+    purchase_date: "",
+    department: "",
+    location: "",
+    specifications: {},
+    maintenance_due_date: "",
+    insurance_policy: "",
+    disposal_date: "",
+    is_operational: true,
   });
 
-  const [successMessage, setSuccessMessage] = useState(""); // For success feedback
-  const [errorMessage, setErrorMessage] = useState(""); // For error feedback
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +55,6 @@ const AddItemPage = () => {
       logger.info("Successfully created asset item");
       setSuccessMessage("Asset created successfully!");
       setErrorMessage("");
-      // Delay navigation to show success message
       setTimeout(() => {
         navigate(from === "assign" ? `/asset-inventory/${categoryId}/assign` : `/asset-inventory/${categoryId}`);
       }, 1500);
@@ -153,11 +159,10 @@ const AddItemPage = () => {
                   onChange={handleInputChange}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select status</option>
-                  <option value="In Use">In Use</option>
-                  <option value="In Storage">In Storage</option>
-                  <option value="Under Repair">Under Repair</option>
-                  <option value="Retired">Retired</option>
+                  <option value="available">Available</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="under_maintenance">Under Maintenance</option>
+                  <option value="retired">Retired</option>
                 </select>
               </div>
               <div>
@@ -171,10 +176,10 @@ const AddItemPage = () => {
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select condition</option>
-                  <option value="New">New</option>
-                  <option value="Good">Good</option>
-                  <option value="Fair">Fair</option>
-                  <option value="Poor">Poor</option>
+                  <option value="new">New</option>
+                  <option value="good">Good</option>
+                  <option value="fair">Fair</option>
+                  <option value="poor">Poor</option>
                 </select>
               </div>
               <div>
@@ -187,6 +192,32 @@ const AddItemPage = () => {
                   value={formData.assigned_to}
                   onChange={handleInputChange}
                   placeholder="Enter assignee name"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  placeholder="Enter department"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  placeholder="Enter location"
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -259,6 +290,63 @@ const AddItemPage = () => {
                   type="date"
                   name="warranty_until"
                   value={formData.warranty_until}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Insurance Policy
+                </label>
+                <input
+                  type="text"
+                  name="insurance_policy"
+                  value={formData.insurance_policy}
+                  onChange={handleInputChange}
+                  placeholder="Enter insurance policy"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-medium text-gray-800 mb-4">Maintenance Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Maintenance Due Date
+                </label>
+                <input
+                  type="date"
+                  name="maintenance_due_date"
+                  value={formData.maintenance_due_date}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Is Operational
+                </label>
+                <select
+                  name="is_operational"
+                  value={formData.is_operational}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={true}>Yes</option>
+                  <option value={false}>No</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Disposal Date
+                </label>
+                <input
+                  type="date"
+                  name="disposal_date"
+                  value={formData.disposal_date}
                   onChange={handleInputChange}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

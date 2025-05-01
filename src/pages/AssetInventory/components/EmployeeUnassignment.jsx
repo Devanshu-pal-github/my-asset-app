@@ -1,139 +1,174 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAssetItemsByCategory, unassignAssetItem } from '../../../store/slices/assetItemSlice';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchEmployees } from '../../../store/slices/employeeSlice';
+import { fetchAssetItemsByCategory, unassignAssetItem } from '../../../store/slices/assetItemSlice';
+import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
 import logger from '../../../utils/logger';
-import { paginate, sortData } from './tableUtils';
+import { paginate, sortData, filterData } from './tableUtils';
 
 const EmployeeUnassignment = () => {
-  const { categoryId, assetId } = useParams();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
-  const { employees, loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { categoryId, assetId } = useParams();
+  const { employees = [], loading: employeesLoading, error: employeesError } = useSelector((state) => state.employees);
+  const { items: assets = [], loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
+  const { categories = [], loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
+  const [isLoading, setIsLoading] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [notification, setNotification] = useState(null);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [actionType, setActionType] = useState('unassign');
+  const [globalFilter, setGlobalFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState('employee_id');
+  const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [notification, setNotification] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
     logger.debug('EmployeeUnassignment useEffect triggered', { categoryId, assetId });
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
         await Promise.all([
-          dispatch(fetchAssetItemsByCategory(categoryId)).unwrap(),
           dispatch(fetchEmployees()).unwrap(),
+          dispatch(fetchAssetItemsByCategory(categoryId)),
+          dispatch(fetchAssetCategories()),
         ]);
-      } catch (err) {
-        logger.error('Failed to fetch asset or employees', { error: err.message });
-        setError('Failed to load data. Please try again.');
+      } catch (error) {
+        logger.error('Failed to fetch initial data', { error: error.message });
+        setNotification({ type: 'error', message: 'Failed to load data. Please refresh the page.' });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
     fetchData();
   }, [dispatch, categoryId, assetId]);
 
-  const asset = assets.find((a) => a.id === assetId || a._id === assetId);
-  const assignedEmployees = employees.filter((emp) => {
-    if (!asset?.current_assignee_id) return false;
-    const assigneeIds = Array.isArray(asset.current_assignee_id)
-      ? asset.current_assignee_id
-      : [asset.current_assignee_id];
-    return assigneeIds.includes(emp.id);
-  });
+  const currentCategory = categories.find((cat) => cat._id === categoryId) || {};
+  const currentAsset = assets.find((asset) => asset._id === assetId) || null;
 
-  if (asset && !assignedEmployees.length && asset.has_active_assignment) {
-    logger.warn('No matching employees found for asset assignment', {
-      assetId,
-      current_assignee_id: asset.current_assignee_id,
-    });
-  }
+  const assignedEntities = employees.filter((entity) =>
+    entity.assigned_assets?.some((asset) => asset.asset_id === assetId)
+  );
 
-  const handleUnassign = (employee) => {
-    logger.info('Unassign button clicked', {
-      employeeId: employee.id,
-      employeeName: `${employee.first_name} ${employee.last_name}`,
-      assetId,
-    });
-    setSelectedEmployee(employee);
+  const handleUnassignClick = (entity, type) => {
+    logger.info('Unassign button clicked', { entityId: entity._id, assetId, type });
+    setSelectedEntity(entity);
+    setActionType(type);
     setShowConfirmModal(true);
   };
 
   const confirmUnassignment = async () => {
-    if (!selectedEmployee) {
+    if (!selectedEntity) {
       setShowConfirmModal(false);
       return;
     }
 
     try {
-      logger.info('Unassigning asset', { assetId });
-      await dispatch(unassignAssetItem(assetId)).unwrap();
-      logger.info('Successfully unassigned asset', { assetId });
+      await dispatch(
+        unassignAssetItem({
+          assetId,
+          entityId: selectedEntity._id,
+          entityType: currentCategory.assignable_to,
+        })
+      ).unwrap();
+
       setNotification({
         type: 'success',
-        message: `Employee unassigned from ${asset?.name || 'asset'}`,
+        message: `Asset unassigned from ${selectedEntity.name || selectedEntity.first_name + ' ' + selectedEntity.last_name}`,
       });
 
-      await dispatch(fetchAssetItemsByCategory(categoryId)).unwrap();
-      navigate(`/asset-inventory/${categoryId}/unassign`);
-    } catch (err) {
-      logger.error('Failed to unassign asset', { assetId, error: err.message });
+      dispatch(fetchAssetItemsByCategory(categoryId));
+      dispatch(fetchEmployees());
+
+      if (actionType === 'unassign_and_reassign') {
+        navigate(`/asset-inventory/${categoryId}/assign/${assetId}`);
+      } else {
+        setTimeout(() => {
+          navigate(`/asset-inventory/${categoryId}/unassign`);
+        }, 1500);
+      }
+    } catch (error) {
+      logger.error('Failed to unassign asset', { error: error.message });
       setNotification({
         type: 'error',
-        message: err.message || 'Failed to unassign employee',
+        message: error.message || 'Failed to unassign asset',
       });
     } finally {
       setShowConfirmModal(false);
-      setSelectedEmployee(null);
+      setSelectedEntity(null);
     }
   };
 
   const handleSort = (field) => {
-    const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
+    const newSortOrder = sortField === 'field' && sortOrder === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortOrder(newSortOrder);
   };
 
-  const sortedEmployees = sortData(assignedEmployees, sortField, sortOrder);
-  const paginatedEmployees = paginate(sortedEmployees, currentPage, itemsPerPage);
-  const totalPages = Math.ceil(assignedEmployees.length / itemsPerPage);
+  const filteredEntities = filterData(assignedEntities, globalFilter, ['name', 'first_name', 'last_name', 'department', 'role']);
+  const sortedEntities = sortData(filteredEntities, sortField, sortOrder);
+  const paginatedEntities = paginate(sortedEntities, currentPage, itemsPerPage);
+  const totalPages = Math.ceil(filteredEntities.length / itemsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  if (loading || assetsLoading || employeesLoading) {
+  if (isLoading || employeesLoading || assetsLoading || categoriesLoading) {
     return <div className="p-6 text-gray-600">Loading...</div>;
   }
 
-  if (error || assetsError || employeesError) {
-    const errorMessage = error || assetsError || employeesError;
+  if (employeesError || assetsError || categoriesError) {
+    const errorMessage = employeesError || assetsError || categoriesError;
     logger.error('EmployeeUnassignment error', { error: errorMessage });
     return (
       <div className="p-6 text-red-600">
-        {errorMessage}{' '}
-        <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-blue-600 underline hover:text-blue-800">
-          Back to Unassignment
+        <span className="flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          Error: {errorMessage}
+        </span>
+        <Link to="/asset-inventory" className="text-blue-600 underline hover:text-blue-800 ml-2">
+          Back to Inventory
         </Link>
       </div>
     );
   }
 
-  if (!asset) {
+  if (!currentCategory.name) {
+    logger.warn('Category not found', { categoryId });
+    return (
+      <div className="p-6 text-gray-600">
+        Category not found.{' '}
+        <Link to="/asset-inventory" className="text-blue-600 underline hover:text-blue-800">
+          Back to Inventory
+        </Link>
+      </div>
+    );
+  }
+
+  if (!currentAsset) {
     logger.warn('Asset not found', { assetId });
     return (
       <div className="p-6 text-gray-600">
         Asset not found.{' '}
         <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-blue-600 underline hover:text-blue-800">
-          Back to Unassignment
+          Back to Unassign Assets
+        </Link>
+      </div>
+    );
+  }
+
+  if (!assignedEntities.length) {
+    logger.info('No entities with this asset assigned');
+    return (
+      <div className="p-6 text-gray-600">
+        No {currentCategory.assignable_to}s currently assigned to this asset.{' '}
+        <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-blue-600 underline hover:text-blue-800">
+          Back to Unassign Assets
         </Link>
       </div>
     );
@@ -148,10 +183,7 @@ const EmployeeUnassignment = () => {
           }`}
         >
           {notification.message}
-          <button
-            className="ml-4 text-white"
-            onClick={() => setNotification(null)}
-          >
+          <button className="ml-4 text-white" onClick={() => setNotification(null)}>
             ✕
           </button>
         </div>
@@ -161,33 +193,30 @@ const EmployeeUnassignment = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-gray-800">Confirm Unassignment</h3>
             <p className="text-gray-600 mt-2">
-              Are you sure you want to unassign the following employee from this asset?
+              Are you sure you want to unassign this asset from the {currentCategory.assignable_to}?
             </p>
             <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800">Employee Details</h4>
+              <h4 className="text-md font-semibold text-gray-800">{currentCategory.assignable_to} Details</h4>
               <p className="text-gray-600">
-                <strong>Name:</strong> {selectedEmployee?.first_name || 'N/A'} {selectedEmployee?.last_name || ''}
+                <strong>Name:</strong> {selectedEntity?.name || `${selectedEntity?.first_name} ${selectedEntity?.last_name}`}
               </p>
               <p className="text-gray-600">
-                <strong>Employee ID:</strong> {selectedEmployee?.employee_id || 'N/A'}
+                <strong>ID:</strong> {selectedEntity?.employee_id || selectedEntity?._id}
               </p>
               <p className="text-gray-600">
-                <strong>Department:</strong> {selectedEmployee?.department || 'N/A'}
-              </p>
-              <p className="text-gray-600">
-                <strong>Email:</strong> {selectedEmployee?.email || 'N/A'}
+                <strong>Department:</strong> {selectedEntity?.department || 'N/A'}
               </p>
             </div>
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Asset Details</h4>
               <p className="text-gray-600">
-                <strong>Name:</strong> {asset?.name || 'N/A'}
+                <strong>Name:</strong> {currentAsset?.name || 'N/A'}
               </p>
               <p className="text-gray-600">
-                <strong>Category ID:</strong> {categoryId}
+                <strong>Category:</strong> {currentCategory.name || 'N/A'}
               </p>
               <p className="text-gray-600">
-                <strong>Condition:</strong> {asset?.condition || 'Unknown'}
+                <strong>Status:</strong> {currentAsset?.status || 'N/A'}
               </p>
             </div>
             <div className="mt-6 flex justify-end gap-2">
@@ -195,123 +224,139 @@ const EmployeeUnassignment = () => {
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
                 onClick={() => {
                   setShowConfirmModal(false);
-                  setSelectedEmployee(null);
+                  setSelectedEntity(null);
                 }}
               >
                 Cancel
               </button>
               <button
+                className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                onClick={() => {
+                  setActionType('unassign');
+                  confirmUnassignment();
+                }}
+              >
+                Unassign
+              </button>
+              <button
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                onClick={confirmUnassignment}
+                onClick={() => {
+                  setActionType('unassign_and_reassign');
+                  confirmUnassignment();
+                }}
               >
-                Confirm
+                Unassign & Reassign
               </button>
             </div>
           </div>
         </div>
       )}
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Unassign Employees from {asset.name || 'asset'}</h2>
-      {assignedEmployees.length === 0 ? (
-        <div className="text-gray-600">
-          No employees assigned to this asset.{' '}
-          <Link to={`/asset-inventory/${categoryId}/unassign`} className="text-blue-600 underline hover:text-blue-800">
-            Back to Unassignment
-          </Link>
+      <div className="flex justify-between items-center mb-5">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Unassign Asset - {currentCategory.name}
+          </h2>
+          <span className="text-gray-600 text-sm">
+            Unassign asset from a {currentCategory.assignable_to}
+          </span>
         </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('employee_id')}
-                  >
-                    Employee ID {sortField === 'employee_id' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('first_name')}
-                  >
-                    Name {sortField === 'first_name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('email')}
-                  >
-                    Email {sortField === 'email' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('department')}
-                  >
-                    Department {sortField === 'department' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {paginatedEmployees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.employee_id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{`${employee.first_name} ${employee.last_name}`}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.email || 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-                        onClick={() => handleUnassign(employee)}
-                      >
-                        Unassign
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-              {Math.min(currentPage * itemsPerPage, assignedEmployees.length)} of {assignedEmployees.length} employees
-            </div>
-            <div className="flex gap-2">
-              <button
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(currentPage - 1)}
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`px-3 py-1 rounded ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-                  onClick={() => handlePageChange(page)}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-      <div className="mt-4">
         <Link to={`/asset-inventory/${categoryId}/unassign`}>
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-            Back
+            Back to Unassign Assets
           </button>
         </Link>
+      </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder={`Search ${currentCategory.assignable_to}s...`}
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="p-2 border border-gray-300 rounded-lg w-full max-w-md text-gray-700"
+        />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSort('name')}
+              >
+                Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Department
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {paginatedEntities.map((entity) => (
+              <tr key={entity._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {entity.name || `${entity.first_name} ${entity.last_name}`}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {entity.employee_id || entity._id}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {entity.department || 'N/A'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm flex gap-2">
+                  <button
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+                    onClick={() => handleUnassignClick(entity, 'unassign')}
+                  >
+                    Unassign
+                  </button>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
+                    onClick={() => handleUnassignClick(entity, 'unassign_and_reassign')}
+                  >
+                    Unassign & Reassign
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-4 flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+          {Math.min(currentPage * itemsPerPage, filteredEntities.length)} of {filteredEntities.length} {currentCategory.assignable_to}s
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              className={`px-3 py-1 rounded ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
