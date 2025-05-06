@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import logger from "../../../utils/logger";
 
 const AssetTable = ({
-  data,
+  data = [],
   header,
   globalFilter,
   columns,
@@ -32,7 +32,7 @@ const AssetTable = ({
     return specsString;
   };
 
-  const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id); // Inline validation
+  const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
   const getSafeId = (item) => item._id && isValidObjectId(item._id) ? item._id : item.asset_tag || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   return (
@@ -84,24 +84,8 @@ const AssetTable = ({
                     renderSpecifications(item)
                   ) : col === "actions" ? (
                     <div className="flex gap-2">
-                      {item.status === "available" && (
-                        <Link
-                          to={`/asset-inventory/${categoryId}/assign/${getSafeId(item)}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          Assign
-                        </Link>
-                      )}
-                      {item.status === "assigned" && !category.is_allotment && (
-                        <Link
-                          to={`/asset-inventory/${categoryId}/unassign/${getSafeId(item)}`}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Unassign
-                        </Link>
-                      )}
                       <Link
-                        to={`/asset/${getSafeId(item)}`} // Updated to match the route
+                        to={`/asset/${getSafeId(item)}`}
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() =>
                           logger.info("Navigating to asset detail", {

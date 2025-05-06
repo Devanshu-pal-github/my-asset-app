@@ -1,61 +1,160 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import logger from '../../utils/logger';
-import { fetchEmployeeDetails } from '../../store/slices/employeeSlice';
+
+// Hardcoded employee data
+const mockEmployeeData = {
+  EMP001: {
+    employee: {
+      id: 'EMP001',
+      first_name: 'John',
+      last_name: 'Doe',
+      employee_id: 'EMP001',
+      email: 'john.doe@example.com',
+      department: 'Engineering',
+      job_title: 'Software Engineer',
+      phone: '123-456-7890',
+      is_active: true,
+      created_at: '2023-01-15',
+    },
+    current_assets: [
+      {
+        id: 'ASSET001',
+        name: 'Laptop',
+        asset_tag: 'LP001',
+        category_name: 'Electronics',
+        status: 'Assigned',
+        condition: 'Good',
+        current_assignment_date: '2024-06-01',
+      },
+      {
+        id: 'ASSET002',
+        name: 'Monitor',
+        asset_tag: 'MN001',
+        category_name: 'Electronics',
+        status: 'Assigned',
+        condition: 'Excellent',
+        current_assignment_date: '2024-07-15',
+      },
+    ],
+    assignment_history: [
+      {
+        id: 'ASSIGN001',
+        asset_name: 'Laptop',
+        assignment_date: '2024-06-01',
+        return_date: null,
+        assignment_type: 'Permanent',
+        is_active: true,
+        notes: 'Assigned for remote work',
+      },
+      {
+        id: 'ASSIGN002',
+        asset_name: 'Old Monitor',
+        assignment_date: '2023-03-10',
+        return_date: '2024-07-14',
+        assignment_type: 'Temporary',
+        is_active: false,
+        notes: 'Returned due to upgrade',
+      },
+    ],
+    maintenance_history: [
+      {
+        id: 'MAINT001',
+        asset_name: 'Laptop',
+        maintenance_date: '2024-08-01',
+        maintenance_type: 'Repair',
+        cost: 150.00,
+        performed_by: 'Tech Service Inc.',
+        next_scheduled_maintenance: '2025-02-01',
+      },
+      {
+        id: 'MAINT002',
+        asset_name: 'Monitor',
+        maintenance_date: '2024-09-10',
+        maintenance_type: 'Inspection',
+        cost: 50.00,
+        performed_by: 'IT Crew',
+        next_scheduled_maintenance: '2025-03-10',
+      },
+    ],
+  },
+};
 
 const EmployeeDetails = () => {
   const { id } = useParams();
-  const dispatch = useDispatch();
-  const { employeeDetails, loading, error } = useSelector((state) => state.employees);
 
-  useEffect(() => {
-    logger.debug(`Fetching details for employee ID: ${id}`);
-    dispatch(fetchEmployeeDetails(id)).catch(err => {
-      logger.error(`Failed to fetch employee details for ID: ${id}`, { error: err.message });
-    });
-  }, [dispatch, id]);
+  // Fetch mock data based on employee ID
+  const employeeDetails = mockEmployeeData[id] || null;
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
-  if (!employeeDetails || !employeeDetails.employee) return <div className="p-6">No employee data found</div>;
+  if (!employeeDetails) {
+    return <div className="p-6 text-gray-500">Employee not found</div>;
+  }
 
-  const { employee, current_assets, assignment_history, maintenance_history, documents } = employeeDetails;
+  const { employee, current_assets, assignment_history, maintenance_history } = employeeDetails;
+
+  // Utility function to format dates
+  const formatDate = (date) => date ? new Date(date).toLocaleDateString() : 'N/A';
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background-offwhite min-h-screen mt-20 text-gray-900">
+      {/* Header with Back Link */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Employee Details</h1>
-        <Link to="/employee-assets" className="text-blue-600 hover:text-blue-800">Back to Employees</Link>
+        <h1 className="text-2xl font-bold text-gray-800">Employee Profile</h1>
+        <Link to="/employee-assets" className="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+          <i className="pi pi-arrow-left mr-2"></i> Back to Employees
+        </Link>
       </div>
 
-      {/* Employee Information */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">Employee Information</h2>
+      {/* Employee Information Card */}
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Employee Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p><strong>Name:</strong> {employee.first_name} {employee.last_name}</p>
-            <p><strong>Employee ID:</strong> {employee.employee_id}</p>
-            <p><strong>Email:</strong> {employee.email}</p>
-            <p><strong>Department:</strong> {employee.department}</p>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Name:</span>
+              <span className="font-medium">{employee.first_name} {employee.last_name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Employee ID:</span>
+              <span className="font-medium">{employee.employee_id}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Email:</span>
+              <span className="font-medium">{employee.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Department:</span>
+              <span className="font-medium">{employee.department}</span>
+            </div>
           </div>
-          <div>
-            <p><strong>Job Title:</strong> {employee.job_title || 'N/A'}</p>
-            <p><strong>Phone:</strong> {employee.phone || 'N/A'}</p>
-            <p><strong>Status:</strong> {employee.is_active ? 'Active' : 'Inactive'}</p>
-            <p><strong>Joined:</strong> {new Date(employee.created_at).toLocaleDateString()}</p>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Job Title:</span>
+              <span className="font-medium">{employee.job_title || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Phone:</span>
+              <span className="font-medium">{employee.phone || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Status:</span>
+              <span className="font-medium">{employee.is_active ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Joined:</span>
+              <span className="font-medium">{formatDate(employee.created_at)}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Current Assets */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">Current Assets</h2>
+      {/* Current Assets Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Current Assigned Assets</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -71,21 +170,21 @@ const EmployeeDetails = () => {
                   <td className="px-6 py-4 whitespace-nowrap">{asset.category_name || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{asset.status}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{asset.condition}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {asset.current_assignment_date ? new Date(asset.current_assignment_date).toLocaleDateString() : 'N/A'}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{formatDate(asset.current_assignment_date)}</td>
                 </tr>
               )) : (
-                <tr><td colSpan="6" className="px-6 py-4 text-center text-gray-500">No assets assigned</td></tr>
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No assets currently assigned</td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Assignment History */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">Assignment History</h2>
+      {/* Assignment History Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Assignment History</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -102,23 +201,25 @@ const EmployeeDetails = () => {
               {assignment_history.length > 0 ? assignment_history.map(record => (
                 <tr key={record.id}>
                   <td className="px-6 py-4 whitespace-nowrap">{record.asset_name || 'Unknown'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{record.assignment_date ? new Date(record.assignment_date).toLocaleDateString() : 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{record.return_date ? new Date(record.return_date).toLocaleDateString() : 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.assignment_date)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.return_date)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.assignment_type || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.is_active ? 'Active' : 'Inactive'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.notes || 'N/A'}</td>
                 </tr>
               )) : (
-                <tr><td colSpan="6" className="px-6 py-4 text-center text-gray-500">No assignment history</td></tr>
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No assignment history available</td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Maintenance History */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">Maintenance History</h2>
+      {/* Maintenance History Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Maintenance History</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -135,51 +236,16 @@ const EmployeeDetails = () => {
               {maintenance_history.length > 0 ? maintenance_history.map(record => (
                 <tr key={record.id}>
                   <td className="px-6 py-4 whitespace-nowrap">{record.asset_name || 'Unknown'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{record.maintenance_date ? new Date(record.maintenance_date).toLocaleDateString() : 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.maintenance_date)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.maintenance_type || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.cost ? `$${record.cost.toFixed(2)}` : 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.performed_by || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{record.next_scheduled_maintenance ? new Date(record.next_scheduled_maintenance).toLocaleDateString() : 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.next_scheduled_maintenance)}</td>
                 </tr>
               )) : (
-                <tr><td colSpan="6" className="px-6 py-4 text-center text-gray-500">No maintenance history</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Documents */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Documents</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Related To</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {documents.length > 0 ? documents.map(doc => (
-                <tr key={doc.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{doc.document_name || 'Unnamed'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{doc.document_type || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{doc.asset_name || (doc.employee_id ? 'Employee' : 'N/A')}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {doc.document_url ? (
-                      <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View</a>
-                    ) : (
-                      <span className="text-gray-500">No URL</span>
-                    )}
-                  </td>
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No maintenance history available</td>
                 </tr>
-              )) : (
-                <tr><td colSpan="5" className="px-6 py-4 text-center text-gray-500">No documents found</td></tr>
               )}
             </tbody>
           </table>

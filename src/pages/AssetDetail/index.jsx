@@ -24,6 +24,14 @@ import {
   clearDocuments,
 } from "../../store/slices/documentSlice";
 import logger from "../../utils/logger";
+import {
+  mockAssets,
+  mockCategories,
+  mockAssignmentHistory,
+  mockMaintenanceHistory,
+  mockDocuments,
+  mockEmployees,
+} from "../../components/mockData";
 
 // Constants
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
@@ -96,7 +104,7 @@ const Breadcrumb = ({ assetData, categoryId }) => (
       {assetData.categoryName}
     </Link>
     <span className="mx-2 text-gray-400">›</span>
-    <span className="text-gray-800 font-medium">{assetData.assetTag}</span>
+    <span className="text-gray-800 font-medium">{assetData.assetId}</span>
   </div>
 );
 
@@ -154,12 +162,8 @@ const TabNavigation = ({ activeTab, onTabChange }) => (
 const SpecificationsTab = ({ assetData, onEdit }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
     <div>
-      <h3 className="text-lg font-semibold mb-4">Technical Specifications</h3>
+      <h3 className="text-lg font-semibold mb-4">Technical Details</h3>
       <div className="space-y-4">
-        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-          <span className="text-gray-600">Specifications</span>
-          <span className="font-medium">{assetData.specifications}</span>
-        </div>
         <div className="flex justify-between items-center pb-2 border-b border-gray-100">
           <span className="text-gray-600">Model</span>
           <span className="font-medium">{assetData.model}</span>
@@ -193,7 +197,7 @@ const SpecificationsTab = ({ assetData, onEdit }) => (
           { label: "Vendor", value: assetData.vendor },
           { label: "Purchase Cost", value: assetData.purchaseCost },
           { label: "Purchase Date", value: assetData.purchaseDate },
-          { label: "Warranty Until", value: assetData.warrantyExpiration },
+          { label: "Warranty Until", value: assetData.warrantyUntil },
           { label: "Current Value", value: assetData.currentValue },
           { label: "Insurance Policy", value: assetData.insurancePolicy },
         ].map(({ label, value }) => (
@@ -225,7 +229,7 @@ const AssignmentHistoryTab = ({
     return (
       <p className="text-red-500">
         {error.includes("404")
-          ? "No assignment history found"
+          ? "No assignment history found. Using mock data."
           : "Failed to fetch assignment history"}
       </p>
     );
@@ -325,7 +329,7 @@ const MaintenanceHistoryTab = ({
     return (
       <p className="text-red-500">
         {error.includes("404")
-          ? "No maintenance history found"
+          ? "No maintenance history found. Using mock data."
           : "Failed to fetch maintenance history"}
       </p>
     );
@@ -413,16 +417,26 @@ const MaintenanceHistoryTab = ({
 
 const DocumentList = ({ assetId }) => {
   const { documents, loading, error } = useSelector((state) => state.documents);
+  const effectiveDocuments =
+    documents.length > 0
+      ? documents
+      : mockDocuments.filter((doc) => doc.asset_id === assetId);
   useEffect(
-    () => logger.debug("DocumentList useEffect", { assetId, documents }),
-    [assetId, documents]
+    () =>
+      logger.debug("DocumentList useEffect", {
+        assetId,
+        documents: effectiveDocuments,
+      }),
+    [assetId, effectiveDocuments]
   );
-  if (loading) return <p>Loading documents...</p>;
-  if (error)
+  if (loading && documents.length === 0) return <p>Loading documents...</p>;
+  if (error && documents.length === 0)
     return (
       <div className="text-red-500">
         <p>
-          {error.includes("404") ? "No documents found" : `Error: ${error}`}
+          {error.includes("404")
+            ? "No documents found. Using mock data."
+            : `Error: ${error}`}
         </p>
         <button
           onClick={() => dispatch(fetchDocuments(assetId))}
@@ -435,8 +449,8 @@ const DocumentList = ({ assetId }) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-md p-6 mt-6">
       <h3 className="text-lg font-semibold mb-4">Documents</h3>
-      {documents.length > 0 ? (
-        documents.map((doc) => (
+      {effectiveDocuments.length > 0 ? (
+        effectiveDocuments.map((doc) => (
           <div key={doc.id} className="p-4 border rounded-lg mb-2">
             <p>
               <strong>{doc.file_url.split("/").pop()}</strong>
@@ -487,15 +501,29 @@ const AssetDetail = () => {
   const [showUnassignModal, setShowUnassignModal] = useState(false);
   const [currentAssigneeName, setCurrentAssigneeName] = useState("Unassigned");
 
-  const memoizedAsset = useMemo(() => asset, [asset]);
+  // Use mock data as fallback
+  const effectiveAsset =
+    asset || mockAssets.find((a) => a._id === assetId) || mockAssets[0];
+  const effectiveCategories =
+    categories.length > 0 ? categories : mockCategories;
+  const effectiveAssignmentHistory =
+    assignmentHistory.length > 0
+      ? assignmentHistory
+      : mockAssignmentHistory.filter((h) => h.asset_id === assetId);
+  const effectiveMaintenanceHistory =
+    maintenanceHistory.length > 0
+      ? maintenanceHistory
+      : mockMaintenanceHistory.filter((h) => h.asset_id === assetId);
+
+  const memoizedAsset = useMemo(() => effectiveAsset, [effectiveAsset]);
 
   logger.debug("AssetDetail rendering", {
     assetId,
     asset: memoizedAsset,
     assetError,
+    assetLoading,
   });
 
-  // Only redirect if assetId is completely missing
   if (!assetId) {
     logger.error("Missing assetId in AssetDetail", {
       url: window.location.href,
@@ -503,10 +531,10 @@ const AssetDetail = () => {
     return <Navigate to="/asset-inventory" replace />;
   }
 
-  // Handle invalid ObjectId gracefully
   if (!isValidObjectId(assetId)) {
-    logger.warn("Using fallback assetId, not a valid ObjectId", { assetId });
-    // Proceed with rendering, fetch will likely fail but we handle it below
+    logger.warn("Not a valid ObjectId, attempting to use mock data", {
+      assetId,
+    });
   }
 
   useEffect(() => {
@@ -520,7 +548,7 @@ const AssetDetail = () => {
         logger.info("Successfully fetched asset item", { assetId, result })
       )
       .catch((err) =>
-        logger.error("Failed to fetch asset item", {
+        logger.error("Failed to fetch asset item, using mock data", {
           error: err.message,
           assetId,
         })
@@ -529,7 +557,9 @@ const AssetDetail = () => {
       .unwrap()
       .then(() => logger.info("Successfully fetched documents", { assetId }))
       .catch((err) =>
-        logger.error("Failed to fetch documents", { error: err.message })
+        logger.error("Failed to fetch documents, using mock data", {
+          error: err.message,
+        })
       );
     return () => {
       dispatch(clearCurrentItem());
@@ -546,12 +576,21 @@ const AssetDetail = () => {
       assetId,
       asset: memoizedAsset,
     });
-    if (assetLoading) logger.info("AssetDetail is loading", { assetId });
-  }, [assetLoading, assetId]);
+    if (assetLoading && !asset)
+      logger.info("AssetDetail is loading", { assetId });
+  }, [assetLoading, assetId, asset]);
 
   useEffect(() => {
     const fetchEmployeeName = async (employeeId) => {
       logger.debug("Fetching employee name", { employeeId });
+      // Mock employee fetch for testing
+      const mockEmployee = mockEmployees.find((emp) => emp._id === employeeId);
+      if (mockEmployee) {
+        const fullName = `${mockEmployee.first_name} ${mockEmployee.last_name}`;
+        setCurrentAssigneeName(fullName);
+        logger.info("Using mock employee name", { employeeId, fullName });
+        return;
+      }
       try {
         const response = await axiosInstance.get(
           `${API_URL}/employees/${employeeId}`
@@ -569,15 +608,13 @@ const AssetDetail = () => {
         setCurrentAssigneeName("Unknown");
       }
     };
-    const assigneeId = memoizedAsset?.current_assignee_id;
+    const assigneeId = memoizedAsset?.assigned_to;
     if (assigneeId) fetchEmployeeName(assigneeId);
     else {
       setCurrentAssigneeName("Unassigned");
-      logger.debug(
-        "No current_assignee_id, setting currentAssigneeName to Unassigned"
-      );
+      logger.debug("No assigned_to, setting currentAssigneeName to Unassigned");
     }
-  }, [memoizedAsset?.current_assignee_id]);
+  }, [memoizedAsset?.assigned_to]);
 
   const assignmentCategoryId = memoizedAsset?.category_id;
   if (assignmentCategoryId && !isValidObjectId(assignmentCategoryId))
@@ -601,7 +638,7 @@ const AssetDetail = () => {
           logger.info("Successfully fetched assignment history", { assetId })
         )
         .catch((err) =>
-          logger.error("Failed to fetch assignment history", {
+          logger.error("Failed to fetch assignment history, using mock data", {
             error: err.message,
           })
         );
@@ -612,7 +649,7 @@ const AssetDetail = () => {
           logger.info("Successfully fetched maintenance history", { assetId })
         )
         .catch((err) =>
-          logger.error("Failed to fetch maintenance history", {
+          logger.error("Failed to fetch maintenance history, using mock data", {
             error: err.message,
           })
         );
@@ -686,93 +723,62 @@ const AssetDetail = () => {
       );
   };
 
-  if (assetLoading)
+  // Always render with effectiveAsset, show warning if no data
+  if (!memoizedAsset) {
+    logger.error("No asset data available, neither from backend nor mock", {
+      assetId,
+    });
     return (
-      <div className="px-6 py-5 flex justify-center items-center h-64">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3" />
-          <p className="text-gray-600">Loading asset details...</p>
+      <div className="p-6 text-red-600">
+        Error: Asset not found for ID {assetId}. Please check the URL or contact
+        support.
+        <div className="flex justify-end mt-4">
+          <Link
+            to="/asset-inventory"
+            className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50"
+          >
+            <i className="pi pi-arrow-left mr-2"></i>Return to Asset Inventory
+          </Link>
         </div>
       </div>
     );
+  }
 
-  // Display fallback data or error message if asset fetch fails
-  const assetData = memoizedAsset
-    ? {
-        assetId: memoizedAsset._id || assetId,
-        assetTag: memoizedAsset.asset_tag || assetId,
-        categoryId: memoizedAsset.category_id || "N/A",
-        categoryName:
-          (categories.find(
-            (cat) => (cat.id || cat._id) === memoizedAsset.category_id
-          ) || {}).name || "Unknown",
-        assetName: memoizedAsset.name || "N/A",
-        serialNumber: memoizedAsset.serial_number || "N/A",
-        model: memoizedAsset.model || "N/A",
-        status: memoizedAsset.status || "available",
-        isOperational: memoizedAsset.is_operational
-          ? "Operational"
-          : "Non-Operational",
-        condition: memoizedAsset.condition || "N/A",
-        createdAt: formatDate(memoizedAsset.created_at),
-        lastUpdated: formatDate(memoizedAsset.updated_at),
-        currentAssigneeId: memoizedAsset.current_assignee_id || "",
-        currentAssigneeName,
-        hasActiveAssignment: memoizedAsset.has_active_assignment
-          ? "Assigned"
-          : "Not Assigned",
-        department: memoizedAsset.department || "N/A",
-        location: memoizedAsset.location || "N/A",
-        specifications: memoizedAsset.specifications
-          ? Object.entries(memoizedAsset.specifications)
-              .map(([k, v]) => `${k}: ${v}`)
-              .join(", ")
-          : "N/A",
-        vendor: memoizedAsset.vendor || "N/A",
-        purchaseCost: formatCurrency(memoizedAsset.purchase_cost),
-        purchaseDate: formatDate(memoizedAsset.purchase_date),
-        warrantyExpiration: formatDate(memoizedAsset.warranty_until),
-        currentValue: formatCurrency(memoizedAsset.current_value),
-        notes: memoizedAsset.notes || "N/A",
-        insurancePolicy: memoizedAsset.insurance_policy || "N/A",
-        disposalDate: formatDate(memoizedAsset.disposal_date),
-        currentAssignmentDate: formatDate(memoizedAsset.current_assignment_date),
-        maintenanceDueDate: formatDate(memoizedAsset.maintenance_due_date),
-      }
-    : {
-        // Fallback data if asset is not fetched
-        assetId: assetId,
-        assetTag: assetId,
-        categoryId: "N/A",
-        categoryName: "Unknown",
-        assetName: "N/A",
-        serialNumber: "N/A",
-        model: "N/A",
-        status: "available",
-        isOperational: "N/A",
-        condition: "N/A",
-        createdAt: "N/A",
-        lastUpdated: "N/A",
-        currentAssigneeId: "",
-        currentAssigneeName: "Unassigned",
-        hasActiveAssignment: "Not Assigned",
-        department: "N/A",
-        location: "N/A",
-        specifications: "N/A",
-        vendor: "N/A",
-        purchaseCost: "N/A",
-        purchaseDate: "N/A",
-        warrantyExpiration: "N/A",
-        currentValue: "N/A",
-        notes: "N/A",
-        insurancePolicy: "N/A",
-        disposalDate: "N/A",
-        currentAssignmentDate: "N/A",
-        maintenanceDueDate: "N/A",
-      };
+  const assetData = {
+    assetId: memoizedAsset._id || assetId,
+    asset_id: memoizedAsset.asset_id || assetId,
+    categoryId: memoizedAsset.category_id || "N/A",
+    categoryName:
+      (
+        effectiveCategories.find(
+          (cat) => (cat.id || cat._id) === memoizedAsset.category_id
+        ) || {}
+      ).name || "Unknown",
+    assetName: memoizedAsset.name || "N/A",
+    serialNumber: memoizedAsset.serial_number || "N/A",
+    model: memoizedAsset.model || "N/A",
+    status: memoizedAsset.status || "available",
+    isOperational: memoizedAsset.is_operational ? "Yes" : "No",
+    condition: memoizedAsset.condition || "N/A",
+    createdAt: formatDate(memoizedAsset.created_at),
+    lastUpdated: formatDate(memoizedAsset.updated_at),
+    assignedTo: memoizedAsset.assigned_to || "Unassigned",
+    department: memoizedAsset.department || "N/A",
+    location: memoizedAsset.location || "N/A",
+    vendor: memoizedAsset.vendor || "N/A",
+    purchaseCost: formatCurrency(memoizedAsset.purchase_cost),
+    purchaseDate: formatDate(memoizedAsset.purchase_date),
+    warrantyUntil: formatDate(memoizedAsset.warranty_until),
+    currentValue: formatCurrency(memoizedAsset.current_value),
+    notes: memoizedAsset.notes || "N/A",
+    insurancePolicy: memoizedAsset.insurance_policy || "N/A",
+    disposalDate: formatDate(memoizedAsset.disposal_date),
+    currentAssignmentDate: formatDate(memoizedAsset.current_assignment_date),
+    maintenanceDueDate: formatDate(memoizedAsset.maintenance_due_date),
+  };
 
   return (
-    <div className="p-6 bg-background-offwhite min-h-screen text-gray-900">
+    <div className="p-6 bg-background-offwhite min-h-screen mt-20 text-gray-900">
       <Breadcrumb assetData={assetData} categoryId={assetData.categoryId} />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Asset Details</h1>
@@ -824,7 +830,7 @@ const AssetDetail = () => {
           title="Asset Information"
           data={[
             { label: "Asset Name", value: assetData.assetName },
-            { label: "Asset Tag", value: assetData.assetTag },
+            { label: "Asset ID", value: assetData.asset_id },
             { label: "Serial Number", value: assetData.serialNumber },
             { label: "Model", value: assetData.model },
             { label: "Category", value: assetData.categoryName },
@@ -834,13 +840,9 @@ const AssetDetail = () => {
         <AssetInfoCard
           title="Assignment Details"
           data={[
-            { label: "Current Assignee", value: assetData.currentAssigneeName },
+            { label: "Assigned To", value: assetData.assignedTo },
             { label: "Department", value: assetData.department },
             { label: "Location", value: assetData.location },
-            {
-              label: "Assignment Status",
-              value: assetData.hasActiveAssignment,
-            },
             {
               label: "Assignment Date",
               value: assetData.currentAssignmentDate,
@@ -863,11 +865,11 @@ const AssetDetail = () => {
             {activeTab === TABS.ASSIGNMENT_HISTORY && (
               <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                 <AssignmentHistoryTab
-                  history={assignmentHistory}
+                  history={effectiveAssignmentHistory}
                   loading={assignmentLoading}
                   error={assignmentError}
-                  currentAssigneeName={assetData.currentAssigneeName}
-                  currentAssigneeId={assetData.currentAssigneeId}
+                  currentAssigneeName={assetData.assignedTo}
+                  currentAssigneeId={assetData.assignedTo}
                   onAssign={handleAssign}
                   onUnassign={handleUnassign}
                 />
@@ -876,7 +878,7 @@ const AssetDetail = () => {
             {activeTab === TABS.MAINTENANCE_HISTORY && (
               <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                 <MaintenanceHistoryTab
-                  history={maintenanceHistory}
+                  history={effectiveMaintenanceHistory}
                   loading={maintenanceLoading}
                   error={maintenanceError}
                   onLogMaintenance={handleLogMaintenance}

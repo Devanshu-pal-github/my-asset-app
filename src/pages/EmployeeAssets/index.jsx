@@ -1,21 +1,27 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import logger from '../../utils/logger';
-import { fetchEmployees } from '../../store/slices/employeeSlice';
+
+// Hardcoded employee data
+const mockEmployees = [
+  {
+    id: 'EMP001',
+    first_name: 'John',
+    last_name: 'Doe',
+    employee_id: 'EMP001',
+    department: 'Engineering',
+    assigned_assets: ['Laptop', 'Monitor'],
+  },
+  {
+    id: 'EMP002',
+    first_name: 'Jane',
+    last_name: 'Smith',
+    employee_id: 'EMP002',
+    department: 'HR',
+    assigned_assets: ['Tablet'],
+  },
+];
 
 const EmployeeAssets = () => {
-  const dispatch = useDispatch();
-  const { employees, loading, error } = useSelector((state) => state.employees);
-
-  useEffect(() => {
-    logger.debug('Fetching employees for EmployeeAssets');
-    dispatch(fetchEmployees());
-  }, [dispatch]);
-
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
-
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Employee Assets</h1>
@@ -32,7 +38,7 @@ const EmployeeAssets = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {employees.length > 0 ? employees.map(employee => (
+              {mockEmployees.length > 0 ? mockEmployees.map(employee => (
                 <tr key={employee.id}>
                   <td className="px-6 py-4 whitespace-nowrap">{employee.first_name} {employee.last_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{employee.employee_id}</td>

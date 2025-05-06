@@ -5,19 +5,19 @@ import logger from "../../../utils/logger";
 const AddCategory = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
+    category_name: "",
     category_type: "hardware",
     description: "",
-    is_assignable: false,
+    can_be_assigned_reassigned: false,
     is_consumable: false,
-    is_allotment: false,
-    requires_maintenance: false,
-    is_recurring: false,
-    maintenance_frequency: "1_month",
+    is_allotted: false,
+    maintenance_required: false,
+    is_recurring_maintenance: false,
+    maintenance_frequency: "1month",
     alert_before_due: "",
     has_specifications: false,
     specifications: [{ key: "", value: "" }],
-    requires_documents: false,
+    required_documents: false,
     documents: {
       purchase: false,
       warranty: false,
@@ -26,14 +26,19 @@ const AddCategory = () => {
     },
     cost_per_unit: "",
     expected_life: "",
-    expected_life_unit: "years",
+    life_unit: "years",
     depreciation_method: "straight_line",
     residual_value: "",
     default_assignment_duration: "",
     assignment_duration_unit: "days",
-    assignable_to: "employee",
+    can_be_assigned_to: "single_employee",
     allow_multiple_assignments: false,
+    is_enabled: true,
     save_as_template: false,
+    total_assets: 0, // Added for card display
+    assigned_assets: 0, // Added for card display
+    under_maintenance: 0, // Added for card display
+    total_cost: 0, // Added for card display
   });
 
   const handleInputChange = (e) => {
@@ -86,16 +91,16 @@ const AddCategory = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation: Ensure is_consumable and is_allotment are not both true
-    if (formData.is_consumable && formData.is_allotment) {
-      alert("A category cannot be both consumable and allotment.");
+    // Validation: Ensure is_consumable and is_allotted are not both true
+    if (formData.is_consumable && formData.is_allotted) {
+      alert("A category cannot be both consumable and allotted.");
       return;
     }
 
     try {
       logger.info("Submitting new category", { formData });
-      // TODO: API call to save category
-      navigate("/asset-inventory");
+      // Instead of API call, navigate back with the new category data
+      navigate("/asset-inventory", { state: { newCategory: formData } });
     } catch (err) {
       logger.error("Failed to create category", { error: err.message });
     }
@@ -113,8 +118,8 @@ const AddCategory = () => {
               <label className="block text-sm font-medium text-gray-700">Category Name</label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="category_name"
+                value={formData.category_name}
                 onChange={handleInputChange}
                 className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
                 required
@@ -131,7 +136,6 @@ const AddCategory = () => {
                 <option value="hardware">Hardware</option>
                 <option value="software">Software</option>
                 <option value="stationery">Stationery</option>
-                <option value="other">Other</option>
               </select>
             </div>
             <div className="col-span-2">
@@ -154,8 +158,8 @@ const AddCategory = () => {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                name="is_assignable"
-                checked={formData.is_assignable}
+                name="can_be_assigned_reassigned"
+                checked={formData.can_be_assigned_reassigned}
                 onChange={handleInputChange}
                 className="mr-2"
               />
@@ -174,12 +178,12 @@ const AddCategory = () => {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                name="is_allotment"
-                checked={formData.is_allotment}
+                name="is_allotted"
+                checked={formData.is_allotted}
                 onChange={handleInputChange}
                 className="mr-2"
               />
-              Is allotment (one-time assignment, no asset ID tracking)
+              Is allotted (one-time assignment, no asset ID tracking)
             </label>
           </div>
         </div>
@@ -191,20 +195,20 @@ const AddCategory = () => {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                name="requires_maintenance"
-                checked={formData.requires_maintenance}
+                name="maintenance_required"
+                checked={formData.maintenance_required}
                 onChange={handleInputChange}
                 className="mr-2"
               />
               Requires Maintenance
             </label>
-            {formData.requires_maintenance && (
+            {formData.maintenance_required && (
               <>
                 <label className="flex items-center">
                   <input
                     type="checkbox"
-                    name="is_recurring"
-                    checked={formData.is_recurring}
+                    name="is_recurring_maintenance"
+                    checked={formData.is_recurring_maintenance}
                     onChange={handleInputChange}
                     className="mr-2"
                   />
@@ -218,10 +222,10 @@ const AddCategory = () => {
                     onChange={handleInputChange}
                     className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
                   >
-                    <option value="1_month">1 Month</option>
-                    <option value="3_months">3 Months</option>
-                    <option value="6_months">6 Months</option>
-                    <option value="1_year">1 Year</option>
+                    <option value="1month">1 Month</option>
+                    <option value="3months">3 Months</option>
+                    <option value="6months">6 Months</option>
+                    <option value="1year">1 Year</option>
                   </select>
                 </div>
                 <div>
@@ -289,14 +293,14 @@ const AddCategory = () => {
           <label className="flex items-center">
             <input
               type="checkbox"
-              name="requires_documents"
-              checked={formData.requires_documents}
+              name="required_documents"
+              checked={formData.required_documents}
               onChange={handleInputChange}
               className="mr-2"
             />
             Requires Documents
           </label>
-          {formData.requires_documents && (
+          {formData.required_documents && (
             <div className="mt-4 space-y-4">
               <label className="flex items-center">
                 <input
@@ -373,8 +377,8 @@ const AddCategory = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700">Expected Life Unit</label>
               <select
-                name="expected_life_unit"
-                value={formData.expected_life_unit}
+                name="life_unit"
+                value={formData.life_unit}
                 onChange={handleInputChange}
                 className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
               >
@@ -392,7 +396,6 @@ const AddCategory = () => {
                 className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
               >
                 <option value="straight_line">Straight Line</option>
-                <option value="declining_balance">Declining Balance</option>
               </select>
             </div>
             <div>
@@ -436,14 +439,14 @@ const AddCategory = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Assignable To</label>
+              <label className="block text-sm font-medium text-gray-700">Can Be Assigned To</label>
               <select
-                name="assignable_to"
-                value={formData.assignable_to}
+                name="can_be_assigned_to"
+                value={formData.can_be_assigned_to}
                 onChange={handleInputChange}
                 className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
               >
-                <option value="employee">Employee</option>
+                <option value="single_employee">Single Employee</option>
                 <option value="team">Team</option>
                 <option value="department">Department</option>
                 <option value="floor">Floor</option>
@@ -469,6 +472,16 @@ const AddCategory = () => {
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-lg font-semibold mb-4">Final Options</h3>
           <label className="flex items-center">
+            <input
+              type="checkbox"
+              name="is_enabled"
+              checked={formData.is_enabled}
+              onChange={handleInputChange}
+              className="mr-2"
+            />
+            Enable Asset Category
+          </label>
+          <label className="flex items-center mt-2">
             <input
               type="checkbox"
               name="save_as_template"

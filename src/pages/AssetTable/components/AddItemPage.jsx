@@ -13,7 +13,7 @@ const AddItemPage = () => {
   const from = location.state?.from || "table";
 
   const [formData, setFormData] = useState({
-    asset_tag: "",
+    asset_id: "", // Changed from asset_tag to asset_id
     serial_number: "",
     model: "",
     status: "available",
@@ -29,7 +29,6 @@ const AddItemPage = () => {
     purchase_date: "",
     department: "",
     location: "",
-    specifications: {},
     maintenance_due_date: "",
     insurance_policy: "",
     disposal_date: "",
@@ -41,34 +40,102 @@ const AddItemPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
+    const updatedFormData = {
       ...formData,
-      [name]: value,
-    });
+      [name]: name === "is_operational" ? value === "true" : value,
+    };
+    setFormData(updatedFormData);
+    logger.debug("Form input changed", { field: name, value, updatedFormData });
+  };
+
+  const validateForm = () => {
+    if (!formData.asset_id) {
+      logger.warn("Validation failed: Asset ID is required", { formData });
+      return "Asset ID is required.";
+    }
+    if (!formData.name) {
+      logger.warn("Validation failed: Asset Name is required", { formData });
+      return "Asset Name is required.";
+    }
+    if (!formData.purchase_cost || Number(formData.purchase_cost) <= 0) {
+      logger.warn("Validation failed: Purchase Cost must be a positive number", { formData });
+      return "Purchase Cost must be a positive number.";
+    }
+    if (!formData.purchase_date) {
+      logger.warn("Validation failed: Purchase Date is required", { formData });
+      return "Purchase Date is required.";
+    }
+    logger.info("Form validation passed", { formData });
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+    logger.debug("Form submission initiated", { formData });
+
+    const validationError = validateForm();
+    if (validationError) {
+      setErrorMessage(validationError);
+      logger.error("Form submission aborted due to validation error", { validationError });
+      return;
+    }
+
     try {
-      logger.info("Submitting new asset item", { formData });
-      await dispatch(createAssetItem(formData)).unwrap();
-      logger.info("Successfully created asset item");
+      // Prepare the form data for submission
+      const assetData = {
+        asset_id: formData.asset_id, // Changed from asset_tag to asset_id
+        serial_number: formData.serial_number || undefined,
+        model: formData.model || undefined,
+        status: formData.status,
+        condition: formData.condition || undefined,
+        assigned_to: formData.assigned_to || undefined,
+        purchase_cost: Number(formData.purchase_cost),
+        current_value: formData.current_value ? Number(formData.current_value) : undefined,
+        vendor: formData.vendor || undefined,
+        warranty_until: formData.warranty_until || undefined,
+        notes: formData.notes || undefined,
+        category_id: formData.category_id,
+        name: formData.name,
+        purchase_date: formData.purchase_date,
+        department: formData.department || undefined,
+        location: formData.location || undefined,
+        maintenance_due_date: formData.maintenance_due_date || undefined,
+        insurance_policy: formData.insurance_policy || undefined,
+        disposal_date: formData.disposal_date || undefined,
+        is_operational: Boolean(formData.is_operational),
+      };
+
+      logger.info("Submitting new asset item to Redux action", { assetData });
+      const result = await dispatch(createAssetItem(assetData)).unwrap();
+      logger.info("Successfully created asset item", { result });
+
       setSuccessMessage("Asset created successfully!");
       setErrorMessage("");
+
+      // Navigate with a flag to indicate a new asset was added
+      logger.debug("Navigating after successful asset creation", { from, categoryId });
       setTimeout(() => {
-        navigate(from === "assign" ? `/asset-inventory/${categoryId}/assign` : `/asset-inventory/${categoryId}`);
+        navigate(
+          from === "assign" ? `/asset-inventory/${categoryId}/assign` : `/asset-inventory/${categoryId}`,
+          { state: { from: "add-item", assetAdded: true } }
+        );
       }, 1500);
     } catch (error) {
-      logger.error("Failed to create asset item", { error });
-      setErrorMessage(error.message || "Failed to create asset. Please try again.");
+      const errorDetails = error.message || "Unknown error occurred";
+      logger.error("Failed to create asset item", { error: errorDetails, stack: error.stack });
+      setErrorMessage(`Failed to create asset: ${errorDetails}. Please try again.`);
       setSuccessMessage("");
     }
   };
 
   const handleCancel = () => {
-    logger.info("Cancel button clicked");
+    logger.info("Cancel button clicked, navigating back", { from, categoryId });
     navigate(from === "assign" ? `/asset-inventory/${categoryId}/assign` : `/asset-inventory/${categoryId}`);
   };
+
+  logger.debug("Rendering AddItemPage", { formData, categoryId, from });
 
   return (
     <div className="p-6 bg-background-offwhite min-h-screen text-gray-900">
@@ -97,7 +164,7 @@ const AddItemPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Asset Name
+                  Asset Name <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"
@@ -111,14 +178,14 @@ const AddItemPage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Asset Tag
+                  Asset ID <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"
-                  name="asset_tag"
-                  value={formData.asset_tag}
+                  name="asset_id"
+                  value={formData.asset_id}
                   onChange={handleInputChange}
-                  placeholder="Enter asset tag"
+                  placeholder="Enter asset ID"
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -231,7 +298,7 @@ const AddItemPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Purchase Cost
+                  Purchase Cost <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="number"
@@ -241,11 +308,12 @@ const AddItemPage = () => {
                   placeholder="Enter cost"
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
+                  min="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Purchase Date
+                  Purchase Date <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="date"
@@ -267,6 +335,7 @@ const AddItemPage = () => {
                   onChange={handleInputChange}
                   placeholder="Enter value"
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
                 />
               </div>
               <div>
@@ -331,12 +400,12 @@ const AddItemPage = () => {
                 </label>
                 <select
                   name="is_operational"
-                  value={formData.is_operational}
+                  value={formData.is_operational.toString()}
                   onChange={handleInputChange}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value={true}>Yes</option>
-                  <option value={false}>No</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
                 </select>
               </div>
               <div>

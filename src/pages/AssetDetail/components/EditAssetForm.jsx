@@ -7,13 +7,14 @@ import logger from '../../../utils/logger';
 const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
   const [formData, setFormData] = useState({
     name: '',
-    asset_tag: '',
+    asset_id: '',
     serial_number: '',
     status: '',
     condition: '',
-    is_operational: '',
+    is_operational: true,
     department: '',
     location: '',
+    assigned_to: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -24,23 +25,24 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
   useEffect(() => {
     if (asset) {
       setFormData({
-        name: asset.name || '',
-        asset_tag: asset.asset_tag || '',
-        serial_number: asset.serial_number || '',
+        name: asset.assetName || '',
+        asset_id: asset.asset_id || '',
+        serial_number: asset.serialNumber || '',
         status: asset.status || '',
         condition: asset.condition || '',
-        is_operational: asset.is_operational === 1 ? true : false,
+        is_operational: asset.isOperational === "Yes",
         department: asset.department || '',
         location: asset.location || '',
+        assigned_to: asset.assignedTo || '',
       });
-      logger.debug('Loaded asset data into form (basic fields)', { assetId: asset.id });
+      logger.debug('Loaded asset data into form (basic fields)', { assetId: asset.assetId });
     }
   }, [asset]);
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.asset_tag) newErrors.asset_tag = 'Asset Tag is required';
+    if (!formData.name) newErrors.name = 'Asset Name is required';
+    if (!formData.asset_id) newErrors.asset_id = 'Asset ID is required';
     if (!formData.status) newErrors.status = 'Status is required';
     if (!formData.condition) newErrors.condition = 'Condition is required';
     setErrors(newErrors);
@@ -79,18 +81,19 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
     try {
       const finalData = {
         name: formData.name,
-        asset_tag: formData.asset_tag,
-        serial_number: formData.serial_number,
+        asset_id: formData.asset_id,
+        serial_number: formData.serial_number || null,
         status: formData.status,
         condition: formData.condition,
-        is_operational: formData.is_operational ? 1 : 0,
+        is_operational: formData.is_operational,
         department: formData.department || null,
         location: formData.location || null,
+        assigned_to: formData.assigned_to || null,
       };
 
       logger.debug('Submitting updated asset data (basic fields)', { finalData });
       await onUpdateAsset(finalData);
-      logger.info('Asset basic fields updated successfully', { assetId: asset.id });
+      logger.info('Asset basic fields updated successfully', { assetId: asset.assetId });
       onClose();
     } catch (error) {
       setApiError(error.message || 'Failed to update asset');
@@ -100,12 +103,8 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
     }
   };
 
-  const statusOptions = ['In Use', 'Under Maintenance', 'Available', 'Retired', 'Lost'];
-  const conditionOptions = ['Excellent', 'Good', 'Fair', 'Poor', 'Broken'];
-  const departments = [
-    'IT', 'HR', 'Finance', 'Marketing', 'Sales',
-    'Design', 'Operations', 'Administration', 'Legal', 'Customer Support'
-  ];
+  const statusOptions = ['available', 'assigned', 'under_maintenance', 'retired'];
+  const conditionOptions = ['', 'new', 'good', 'fair', 'poor'];
 
   return (
     <div className="bg-white p-6 max-w-3xl mx-auto rounded-lg shadow-md border border-gray-200">
@@ -124,7 +123,7 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Name <span className="text-red-500">*</span>
+                  Asset Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -138,19 +137,19 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label htmlFor="asset_tag" className="block text-sm font-medium text-gray-700">
-                  Asset Tag <span className="text-red-500">*</span>
+                <label htmlFor="asset_id" className="block text-sm font-medium text-gray-700">
+                  Asset ID <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="asset_tag"
-                  name="asset_tag"
-                  value={formData.asset_tag}
+                  id="asset_id"
+                  name="asset_id"
+                  value={formData.asset_id}
                   onChange={handleChange}
-                  className={`mt-1 block w-full rounded-md border ${errors.asset_tag ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder="e.g., LAP001"
+                  className={`mt-1 block w-full rounded-md border ${errors.asset_id ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="e.g., ID123"
                 />
-                {errors.asset_tag && <p className="text-red-500 text-xs mt-1">{errors.asset_tag}</p>}
+                {errors.asset_id && <p className="text-red-500 text-xs mt-1">{errors.asset_id}</p>}
               </div>
               <div>
                 <label htmlFor="serial_number" className="block text-sm font-medium text-gray-700">
@@ -186,7 +185,6 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
                   onChange={handleChange}
                   className={`mt-1 block w-full rounded-md border ${errors.status ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 >
-                  <option value="" disabled>Select Status</option>
                   {statusOptions.map((status) => (
                     <option key={status} value={status}>{status}</option>
                   ))}
@@ -204,16 +202,15 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
                   onChange={handleChange}
                   className={`mt-1 block w-full rounded-md border ${errors.condition ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 >
-                  <option value="" disabled>Select Condition</option>
                   {conditionOptions.map((condition) => (
-                    <option key={condition} value={condition}>{condition}</option>
+                    <option key={condition || "none"} value={condition}>{condition || "Select Condition"}</option>
                   ))}
                 </select>
                 {errors.condition && <p className="text-red-500 text-xs mt-1">{errors.condition}</p>}
               </div>
               <div>
                 <label htmlFor="is_operational" className="block text-sm font-medium text-gray-700">
-                  Operational Status
+                  Is Operational
                 </label>
                 <div className="mt-1 flex items-center">
                   <input
@@ -225,7 +222,7 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="is_operational" className="ml-2 text-sm text-gray-700">
-                    Operational
+                    Yes
                   </label>
                 </div>
               </div>
@@ -237,23 +234,34 @@ const EditAssetForm = ({ asset, onClose, onUpdateAsset }) => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
               Assignment Details
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
+                  Assigned To
+                </label>
+                <input
+                  type="text"
+                  id="assigned_to"
+                  name="assigned_to"
+                  value={formData.assigned_to}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., John Doe"
+                />
+              </div>
               <div>
                 <label htmlFor="department" className="block text-sm font-medium text-gray-700">
                   Department
                 </label>
-                <select
+                <input
+                  type="text"
                   id="department"
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
+                  placeholder="e.g., IT"
+                />
               </div>
               <div>
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700">

@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams, Link } from 'react-router-dom';
-import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
-import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
 import logger from '../../../utils/logger';
 import { paginate, sortData } from './tableUtils';
 
+// Mock data
+const mockCategories = [
+  { _id: 'cat1', name: 'Laptops', can_be_assigned_to: 'single_employee' },
+];
+
+const mockAssets = [
+  { _id: 'asset1', name: 'MacBook Pro', asset_tag: 'LT001', status: 'assigned', category_id: 'cat1' },
+];
+
 const AssetUnassignmentTable = () => {
   const { categoryId } = useParams();
-  const dispatch = useDispatch();
-  const { items: assets, loading: assetsLoading, error: assetsError } = useSelector((state) => state.assetItems);
-  const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -19,13 +22,11 @@ const AssetUnassignmentTable = () => {
 
   useEffect(() => {
     logger.debug('AssetUnassignmentTable useEffect triggered', { categoryId });
-    dispatch(fetchAssetItemsByCategory(categoryId));
-    dispatch(fetchAssetCategories());
-  }, [dispatch, categoryId]);
+    logger.info('Simulating fetch with mock data', { categoryId });
+  }, [categoryId]);
 
-  const filteredAssets = assets.filter((asset) => asset.status === 'assigned');
-
-  const currentCategory = categories.find((cat) => cat._id === categoryId);
+  const filteredAssets = mockAssets.filter((asset) => asset.status === 'assigned' && asset.category_id === categoryId);
+  const currentCategory = mockCategories.find((cat) => cat._id === categoryId);
 
   const handleSort = (field) => {
     const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
@@ -46,23 +47,6 @@ const AssetUnassignmentTable = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-
-  if (assetsLoading || categoriesLoading) {
-    return <div className="p-6 text-gray-600">Loading...</div>;
-  }
-
-  if (assetsError || categoriesError) {
-    const errorMessage = assetsError || categoriesError;
-    logger.error('AssetUnassignmentTable error', { error: errorMessage });
-    return (
-      <div className="p-6 text-red-600">
-        {errorMessage}{' '}
-        <Link to="/asset-inventory" className="text-blue-600 underline hover:text-blue-800">
-          Back to Inventory
-        </Link>
-      </div>
-    );
-  }
 
   if (!currentCategory) {
     logger.info('Category not found', { categoryId });
@@ -117,9 +101,7 @@ const AssetUnassignmentTable = () => {
         <table className="min-w-full bg-white border border-gray-200">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Select
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Select</th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort('name')}
@@ -132,12 +114,8 @@ const AssetUnassignmentTable = () => {
               >
                 Asset Tag {sortField === 'asset_tag' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Action
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

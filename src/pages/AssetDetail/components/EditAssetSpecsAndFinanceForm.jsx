@@ -6,15 +6,16 @@ import logger from '../../../utils/logger';
  */
 const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
   const [formData, setFormData] = useState({
-    specifications: '',
+    model: '',
     notes: '',
     purchase_cost: '',
     current_value: '',
     purchase_date: '',
-    warranty_expiration: '',
+    warranty_until: '',
     vendor: '',
     insurance_policy: '',
     disposal_date: '',
+    maintenance_due_date: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -25,24 +26,32 @@ const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
   useEffect(() => {
     if (asset) {
       setFormData({
-        specifications: asset.specifications ? JSON.stringify(asset.specifications) : '',
+        model: asset.model || '',
         notes: asset.notes || '',
-        purchase_cost: asset.purchase_cost ? String(asset.purchase_cost) : '',
-        current_value: asset.current_value ? String(asset.current_value) : '',
-        purchase_date: asset.purchase_date && asset.purchase_date !== 'N/A' ? asset.purchase_date.split('T')[0] : '',
-        warranty_expiration: asset.warranty_expiration && asset.warranty_expiration !== 'N/A' ? asset.warranty_expiration.split('T')[0] : '',
+        purchase_cost: asset.purchaseCost ? asset.purchaseCost.replace(/[^0-9.-]+/g, '') : '',
+        current_value: asset.currentValue ? asset.currentValue.replace(/[^0-9.-]+/g, '') : '',
+        purchase_date: asset.purchaseDate && asset.purchaseDate !== 'N/A' ? asset.purchaseDate : '',
+        warranty_until: asset.warrantyUntil && asset.warrantyUntil !== 'N/A' ? asset.warrantyUntil : '',
         vendor: asset.vendor || '',
-        insurance_policy: asset.insurance_policy || '',
-        disposal_date: asset.disposal_date && asset.disposal_date !== 'N/A' ? asset.disposal_date.split('T')[0] : '',
+        insurance_policy: asset.insurancePolicy || '',
+        disposal_date: asset.disposalDate && asset.disposalDate !== 'N/A' ? asset.disposalDate : '',
+        maintenance_due_date: asset.maintenanceDueDate && asset.maintenanceDueDate !== 'N/A' ? asset.maintenanceDueDate : '',
       });
-      logger.debug('Loaded asset data into form (specs and finance)', { assetId: asset.id });
+      logger.debug('Loaded asset data into form (specs and finance)', { assetId: asset.assetId });
     }
   }, [asset]);
 
   const validateForm = () => {
     const newErrors = {};
-    if (formData.purchase_cost && isNaN(formData.purchase_cost)) newErrors.purchase_cost = 'Purchase Cost must be a number';
-    if (formData.current_value && isNaN(formData.current_value)) newErrors.current_value = 'Current Value must be a number';
+    if (formData.purchase_cost && (isNaN(formData.purchase_cost) || Number(formData.purchase_cost) <= 0)) {
+      newErrors.purchase_cost = 'Purchase Cost must be a positive number';
+    }
+    if (formData.current_value && (isNaN(formData.current_value) || Number(formData.current_value) < 0)) {
+      newErrors.current_value = 'Current Value must be a non-negative number';
+    }
+    if (!formData.purchase_date) {
+      newErrors.purchase_date = 'Purchase Date is required';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,20 +78,21 @@ const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
     setIsSubmitting(true);
     try {
       const finalData = {
-        specifications: formData.specifications ? JSON.parse(formData.specifications) : {},
+        model: formData.model || null,
         notes: formData.notes || null,
         purchase_cost: formData.purchase_cost ? Number(formData.purchase_cost) : null,
         current_value: formData.current_value ? Number(formData.current_value) : null,
         purchase_date: formData.purchase_date || null,
-        warranty_expiration: formData.warranty_expiration || null,
+        warranty_until: formData.warranty_until || null,
         vendor: formData.vendor || null,
         insurance_policy: formData.insurance_policy || null,
         disposal_date: formData.disposal_date || null,
+        maintenance_due_date: formData.maintenance_due_date || null,
       };
 
       logger.debug('Submitting updated asset data (specs and finance)', { finalData });
       await onUpdateAsset(finalData);
-      logger.info('Asset specs and finance updated successfully', { assetId: asset.id });
+      logger.info('Asset specs and finance updated successfully', { assetId: asset.assetId });
       onClose();
     } catch (error) {
       setApiError(error.message || 'Failed to update asset');
@@ -101,27 +111,40 @@ const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
       )}
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Specifications */}
+          {/* Technical Details */}
           <div className="col-span-2">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
-              Specifications
+              Technical Details
             </h3>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="specifications" className="block text-sm font-medium text-gray-700">
-                  Specifications
+                <label htmlFor="model" className="block text-sm font-medium text-gray-700">
+                  Model
                 </label>
-                <textarea
-                  id="specifications"
-                  name="specifications"
-                  value={formData.specifications}
+                <input
+                  type="text"
+                  id="model"
+                  name="model"
+                  value={formData.model}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder='e.g., {"processor": "Intel i7", "ram": "16GB"}'
-                  rows="3"
+                  placeholder="e.g., XPS 13"
                 />
               </div>
               <div>
+                <label htmlFor="maintenance_due_date" className="block text-sm font-medium text-gray-700">
+                  Maintenance Due Date
+                </label>
+                <input
+                  type="date"
+                  id="maintenance_due_date"
+                  name="maintenance_due_date"
+                  value={formData.maintenance_due_date}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="col-span-2">
                 <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
                   Notes
                 </label>
@@ -160,16 +183,17 @@ const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
               </div>
               <div>
                 <label htmlFor="purchase_cost" className="block text-sm font-medium text-gray-700">
-                  Purchase Cost
+                  Purchase Cost <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   id="purchase_cost"
                   name="purchase_cost"
                   value={formData.purchase_cost}
                   onChange={handleChange}
                   className={`mt-1 block w-full rounded-md border ${errors.purchase_cost ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                   placeholder="e.g., 80000"
+                  min="0"
                 />
                 {errors.purchase_cost && <p className="text-red-500 text-xs mt-1">{errors.purchase_cost}</p>}
               </div>
@@ -178,19 +202,20 @@ const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
                   Current Value
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   id="current_value"
                   name="current_value"
                   value={formData.current_value}
                   onChange={handleChange}
                   className={`mt-1 block w-full rounded-md border ${errors.current_value ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                   placeholder="e.g., 75000"
+                  min="0"
                 />
                 {errors.current_value && <p className="text-red-500 text-xs mt-1">{errors.current_value}</p>}
               </div>
               <div>
                 <label htmlFor="purchase_date" className="block text-sm font-medium text-gray-700">
-                  Purchase Date
+                  Purchase Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -198,18 +223,19 @@ const EditAssetSpecsAndFinanceForm = ({ asset, onClose, onUpdateAsset }) => {
                   name="purchase_date"
                   value={formData.purchase_date}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`mt-1 block w-full rounded-md border ${errors.purchase_date ? 'border-red-500' : 'border-gray-300'} p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
+                {errors.purchase_date && <p className="text-red-500 text-xs mt-1">{errors.purchase_date}</p>}
               </div>
               <div>
-                <label htmlFor="warranty_expiration" className="block text-sm font-medium text-gray-700">
-                  Warranty Expiration
+                <label htmlFor="warranty_until" className="block text-sm font-medium text-gray-700">
+                  Warranty Until
                 </label>
                 <input
                   type="date"
-                  id="warranty_expiration"
-                  name="warranty_expiration"
-                  value={formData.warranty_expiration}
+                  id="warranty_until"
+                  name="warranty_until"
+                  value={formData.warranty_until}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
