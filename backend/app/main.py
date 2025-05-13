@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from app.dependencies import db
+from app.dependencies import db, get_db
 from app.routers import (
     asset_categories,
     asset_items,
@@ -11,7 +11,7 @@ from app.routers import (
 )
 import logging
 import logging.handlers
-from pymongo import ASCENDING
+from pymongo.database import Database
 from starlette.responses import JSONResponse
 
 # Configure logging
@@ -68,24 +68,11 @@ async def startup_event():
         db.command("ping")
         logger.info("MongoDB connection verified during startup")
         
-        # Ensure indexes
-        category_indexes = db.asset_categories.index_information()
-        if "name_1" not in category_indexes or category_indexes["name_1"].get("unique") != True:
-            if "name_1" in category_indexes:
-                db.asset_categories.drop_index("name_1")
-                logger.info("Dropped non-unique index name_1 on asset_categories")
-            db.asset_categories.create_index([("name", ASCENDING)], unique=True)
-            logger.info("Created unique index on asset_categories.name")
-
+        # Ensure text index on asset_items
         asset_indexes = db.asset_items.index_information()
         if "asset_tag_text_category_id_1" not in asset_indexes:
             db.asset_items.create_index([("asset_tag", "text"), ("category_id", ASCENDING)])
             logger.info("Created text index on asset_items.asset_tag and category_id")
-
-        db.employees.create_index([("employee_id", ASCENDING), ("email", ASCENDING)], unique=True)
-        db.documents.create_index([("asset_id", ASCENDING), ("employee_id", ASCENDING)])
-        
-        logger.info("Indexes ensured for all collections")
         
         collections = db.list_collection_names()
         required_collections = ["asset_categories", "asset_items", "employees", "documents"]
@@ -146,3 +133,15 @@ async def debug_request(request: Request):
         "url": str(request.url),
         "client": request.client.host
     }
+
+# Temporary endpoint to clear asset_categories collection
+@app.delete("/debug/clear-asset-categories")
+async def clear_asset_categories(db: Database = Depends(get_db)):
+    logger.info("Clearing asset_categories collection")
+    try:
+        result = db.asset_categories.delete_many({})
+        logger.info(f"Deleted {result.deleted_count} documents from asset_categories")
+        return {"message": f"Deleted {result.deleted_count} documents from asset_categories"}
+    except Exception as e:
+        logger.error(f"Failed to clear asset_categories: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to clear asset_categories: {str(e)}")

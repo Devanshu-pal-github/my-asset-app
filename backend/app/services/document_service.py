@@ -73,7 +73,7 @@ def create_document(db: Database, document: DocumentCreate) -> DocumentEntry:
         logger.debug(f"Inserted document with ID: {result.inserted_id}")
         
         response_dict = {**doc_dict, "id": str(result.inserted_id)}
-        response_dict.pop("_id", None)  # Remove raw _id to prevent ObjectId type conflict
+        response_dict.pop("_id", None)
         if document.asset_id:
             db.asset_items.update_one(
                 {"_id": ObjectId(document.asset_id)},

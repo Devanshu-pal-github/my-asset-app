@@ -2,18 +2,20 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from pymongo.database import Database
 from typing import List, Optional
+from bson import ObjectId
 from app.dependencies import get_db
 from app.models.employee import Employee, EmployeeCreate
 from app.models.asset_item import AssetItem
+from app.models.assignment_history import AssignmentHistoryEntry
+from app.models.maintenance_history import MaintenanceHistoryEntry
 from app.models.document import DocumentEntry
 from app.services.employee_service import (
     create_employee,
     get_employees,
     get_employee_by_id,
+    get_employee_details,  # Moved the details logic to the service
     update_employee,
-    delete_employee,
-    get_employee_details,
-    get_employee_statistics
+    delete_employee
 )
 import logging
 
@@ -21,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 class EmployeeDetailsResponse(BaseModel):
     employee: Employee
-    assets: List[AssetItem]
+    current_assets: List[AssetItem]
+    assignment_history: List[AssignmentHistoryEntry]
+    maintenance_history: List[MaintenanceHistoryEntry]
     documents: List[DocumentEntry]
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
@@ -50,20 +54,6 @@ async def read_employees(
         logger.error(f"Failed to fetch employees: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to fetch employees: {str(e)}")
 
-@router.get("/statistics", response_model=dict)
-async def read_employee_statistics(db: Database = Depends(get_db)):
-    """
-    Retrieve statistics for employees (total, with assets, without assets).
-    """
-    logger.info("Fetching employee statistics")
-    try:
-        stats = get_employee_statistics(db)
-        logger.debug(f"Employee statistics: {stats}")
-        return stats
-    except Exception as e:
-        logger.error(f"Failed to fetch employee statistics: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch employee statistics: {str(e)}")
-
 @router.get("/{id}", response_model=Employee)
 async def read_employee(id: str, db: Database = Depends(get_db)):
     """
@@ -75,7 +65,7 @@ async def read_employee(id: str, db: Database = Depends(get_db)):
         if not employee:
             logger.warning(f"Employee not found: {id}")
             raise HTTPException(status_code=404, detail="Employee not found")
-        logger.debug(f"Found employee: {employee.name}")
+        logger.debug(f"Found employee: {employee.employee_id}")
         return employee
     except ValueError as ve:
         logger.warning(f"Invalid employee ID: {str(ve)}")
@@ -87,16 +77,35 @@ async def read_employee(id: str, db: Database = Depends(get_db)):
 @router.get("/{id}/details", response_model=EmployeeDetailsResponse)
 async def read_employee_details(id: str, db: Database = Depends(get_db)):
     """
-    Retrieve detailed employee information including assets, history, and documents.
+    Retrieve detailed employee information including current assets, assignment history, maintenance history, and documents.
     """
     logger.info(f"Fetching employee details for ID: {id}")
     try:
+        if not ObjectId.is_valid(id):
+            logger.warning(f"Invalid employee ID: {id}")
+            raise HTTPException(status_code=400, detail="Invalid employee ID")
+        
         details = get_employee_details(db, id)
+        if not details:
+            logger.warning(f"Employee not found: {id}")
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        employee = Employee(**details["employee"])
+        current_assets = [AssetItem(**asset) for asset in details["current_assets"]]
+        assignment_history = [AssignmentHistoryEntry(**entry) for entry in details["assignment_history"]]
+        maintenance_history = [MaintenanceHistoryEntry(**entry) for entry in details["maintenance_history"]]
+        documents = [DocumentEntry(**doc) for doc in details["documents"]]
+        
+        response = EmployeeDetailsResponse(
+            employee=employee,
+            current_assets=current_assets,
+            assignment_history=assignment_history,
+            maintenance_history=maintenance_history,
+            documents=documents
+        )
+        
         logger.debug(f"Fetched employee details for ID: {id}")
-        return details
-    except ValueError as ve:
-        logger.warning(f"Invalid employee ID or not found: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
+        return response
     except Exception as e:
         logger.error(f"Failed to fetch employee details {id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to fetch employee details: {str(e)}")
@@ -106,7 +115,7 @@ async def create_new_employee(employee: EmployeeCreate, db: Database = Depends(g
     """
     Create a new employee.
     """
-    logger.info(f"Creating employee: {employee.name}")
+    logger.info(f"Creating employee: {employee.employee_id}")
     try:
         created_employee = create_employee(db, employee)
         logger.debug(f"Created employee with ID: {created_employee.id}")
@@ -129,7 +138,7 @@ async def update_existing_employee(id: str, employee: EmployeeCreate, db: Databa
         if not updated_employee:
             logger.warning(f"Employee not found: {id}")
             raise HTTPException(status_code=404, detail="Employee not found")
-        logger.debug(f"Updated employee: {updated_employee.name}")
+        logger.debug(f"Updated employee: {updated_employee.employee_id}")
         return updated_employee
     except ValueError as ve:
         logger.warning(f"Failed to update employee: {str(ve)}")

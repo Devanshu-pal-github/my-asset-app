@@ -12,12 +12,15 @@ class MaintenanceStatus(str, Enum):
 
 class MaintenanceHistoryEntry(BaseModel):
     id: Optional[str] = Field(None, alias="_id", description="Unique maintenance ID")
-    maintenance_type: str = Field(..., description="Type of maintenance, e.g., 'Repair', 'Inspection'")
+    asset_id: str = Field(..., description="ID of the asset")
+    asset_name: Optional[str] = Field(None, description="Name of the asset at time of maintenance")
+    maintenance_type: str = Field(..., description="Type of maintenance, e.g., 'Repair'")
     technician: str = Field(..., description="Technician or service provider")
     condition_before: str = Field(..., description="Asset condition before maintenance")
     condition_after: Optional[str] = Field(None, description="Asset condition after maintenance")
     maintenance_date: datetime = Field(..., description="Date maintenance was requested")
     completed_date: Optional[datetime] = Field(None, description="Date maintenance was completed")
+    next_scheduled_maintenance: Optional[datetime] = Field(None, description="Next scheduled maintenance date")
     status: MaintenanceStatus = Field(..., description="Current maintenance status")
     cost: Optional[float] = Field(None, description="Cost of maintenance")
     notes: Optional[str] = Field(None, description="Additional notes")

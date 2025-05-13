@@ -14,12 +14,15 @@ class AssignedAsset(BaseModel):
 class Employee(BaseModel):
     id: Optional[str] = Field(None, alias="_id", description="Unique employee ID")
     employee_id: str = Field(..., description="Unique employee identifier, e.g., 'EMP001'")
-    name: str = Field(..., description="Employee's full name")
-    email: str = Field(..., description="Employee's email address")
+    first_name: str = Field(..., description="Employee's first name")
+    last_name: str = Field(..., description="Employee's last name")
     department: Optional[str] = Field(None, description="Employee's department")
-    role: Optional[str] = Field(None, description="Employee's role or job title")
-    is_active: bool = Field(True, description="Whether the employee is active")
+    status: Optional[str] = Field(None, description="Employee status, e.g., 'Active'")
     assigned_assets: List[AssignedAsset] = Field(default_factory=list, description="List of assigned assets")
+    email: str = Field(..., description="Employee's email address")
+    role: Optional[str] = Field(None, description="Employee's role or job title")
+    phone: Optional[str] = Field(None, description="Employee's phone number")
+    is_active: bool = Field(True, description="Indicates if the employee is active")
     documents: List[dict] = Field(default_factory=list, description="List of associated documents")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
@@ -27,15 +30,18 @@ class Employee(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-        allow_population_by_field_name = True  # Allow population by alias (_id)
+        populate_by_name = True  # Updated from allow_population_by_field_name
 
 class EmployeeCreate(BaseModel):
     employee_id: str
-    name: str
-    email: str
+    first_name: str
+    last_name: str
     department: Optional[str] = None
+    status: Optional[str] = None
+    email: str
     role: Optional[str] = None
-    is_active: bool = True
+    phone: Optional[str] = None
+    is_active: bool = Field(True)
 
     class Config:
         arbitrary_types_allowed = True

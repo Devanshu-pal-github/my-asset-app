@@ -55,6 +55,9 @@ async def assign_asset(
     asset_id: str,
     employee_ids: List[str],
     condition: str,
+    department: Optional[str] = None,
+    assignment_type: Optional[str] = None,
+    entity_type: Optional[str] = "Employee",
     notes: Optional[str] = None,
     db: Collection = Depends(get_db)
 ):
@@ -63,7 +66,16 @@ async def assign_asset(
     """
     logger.info(f"Assigning asset {asset_id} to employees {employee_ids}")
     try:
-        updated_asset = assign_asset_to_employee(db, asset_id, employee_ids, condition, notes)
+        updated_asset = assign_asset_to_employee(
+            db, 
+            asset_id, 
+            employee_ids, 
+            condition, 
+            department=department,
+            assignment_type=assignment_type,
+            entity_type=entity_type,
+            notes=notes
+        )
         logger.debug(f"Assigned asset {asset_id} to {len(employee_ids)} employees")
         return updated_asset
     except ValueError as ve:

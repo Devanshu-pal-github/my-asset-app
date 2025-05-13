@@ -1,67 +1,57 @@
 from pymongo import MongoClient, ASCENDING
-from pymongo.errors import ServerSelectionTimeoutError, DuplicateKeyError
+from pymongo.collection import Collection
+from pymongo.database import Database
+from pymongo.errors import ServerSelectionTimeoutError
+from fastapi import Depends, HTTPException, status
 from dotenv import load_dotenv
 import os
 import logging
 
-# Configure logging for MongoDB connection and index creation
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 mongodb_url = os.getenv("MONGODB_URL")
-logger.debug(f"Attempting to connect to MongoDB Atlas: {mongodb_url}")
 
-# Validate MongoDB URL
 if not mongodb_url:
     logger.error("MONGODB_URL not found in environment variables")
     raise ValueError("MONGODB_URL not found in environment variables")
 
-try:
-    # Initialize MongoDB client with connection settings
-    client = MongoClient(
-        mongodb_url,
-        serverSelectionTimeoutMS=30000,
-        connectTimeoutMS=30000,
-        socketTimeoutMS=30000,
-        tls=True,
-        tlsAllowInvalidCertificates=True
-    )
-    # Select the asset_management database
-    db = client["asset_management"]
-    # Test connection with a ping command
-    ping_result = db.command("ping")
-    logger.info(f"Ping successful - Connected to MongoDB Atlas! Result: {ping_result}")
-    
-    logger.debug("Checking and creating indexes...")
-    # Ensure unique indexes for efficient queries and data integrity
-    category_indexes = db.asset_categories.index_information()
-    if "name_1" not in category_indexes or category_indexes["name_1"].get("unique") != True:
-        if "name_1" in category_indexes:
-            db.asset_categories.drop_index("name_1")
-            logger.info("Dropped non-unique index name_1 on asset_categories")
-        try:
-            db.asset_categories.create_index([("name", ASCENDING)], unique=True, name="name_1")
-            logger.info("Created unique index on asset_categories.name")
-        except Exception as e:
-            logger.error(f"Failed to create unique index on asset_categories.name: {str(e)}")
-            raise
+# Initialize MongoDB client
+client = MongoClient(
+    mongodb_url,
+    serverSelectionTimeoutMS=30000,
+    connectTimeoutMS=30000,
+    socketTimeoutMS=30000,
+    tls=True,
+    tlsAllowInvalidCertificates=True
+)
 
-    db.asset_items.create_index([("asset_tag", ASCENDING)], unique=True)
-    db.employees.create_index([("employee_id", ASCENDING), ("email", ASCENDING)], unique=True)
-    db.asset_items.create_index([("category_id", ASCENDING)])
-    db.documents.create_index([("asset_id", ASCENDING), ("employee_id", ASCENDING)])
-    logger.info("Indexes created successfully")
+# Select the database
+db: Database = client["asset_management"]
 
-except ServerSelectionTimeoutError as e:
-    logger.error(f"Connection timeout: {str(e)}")
-    raise
-except Exception as e:
-    logger.error(f"Unexpected error: {str(e)}")
-    raise
+# Fix the unique index on asset_categories
+logger.debug("Checking and creating indexes for asset_categories...")
+category_indexes = db.asset_categories.index_information()
+if "name_1" in category_indexes:
+    db.asset_categories.drop_index("name_1")
+    logger.info("Dropped incorrect unique index name_1 on asset_categories")
+if "category_name_1" not in category_indexes:
+    db.asset_categories.create_index([("category_name", ASCENDING)], unique=True, name="category_name_1")
+    logger.info("Created unique index on asset_categories.category_name")
 
-# Dependency to provide MongoDB database instance to routers
-def get_db():
+# Create other indexes
+db.asset_items.create_index([("asset_tag", ASCENDING)], unique=True)
+db.asset_items.create_index([("serial_number", ASCENDING)], unique=True)
+db.asset_items.create_index([("category_id", ASCENDING)])
+db.asset_items.create_index([("department", ASCENDING)])
+db.asset_items.create_index([("location", ASCENDING)])
+db.asset_items.create_index([("maintenance_due_date", ASCENDING)])
+db.employees.create_index([("employee_id", ASCENDING), ("email", ASCENDING)], unique=True)
+db.documents.create_index([("asset_id", ASCENDING), ("employee_id", ASCENDING)])
+logger.info("Indexes created successfully")
+
+def get_db() -> Database:
     """
     Yields the MongoDB database instance for use in FastAPI routes.
     """
@@ -69,3 +59,27 @@ def get_db():
         yield db
     finally:
         logger.debug("Database connection yielded")
+
+def get_asset_categories_collection(db: Database = Depends(get_db)) -> Collection:
+    """
+    Provides the asset_categories collection.
+    """
+    return db["asset_categories"]
+
+def get_asset_items_collection(db: Database = Depends(get_db)) -> Collection:
+    """
+    Provides the asset_items collection.
+    """
+    return db["asset_items"]
+
+def get_employees_collection(db: Database = Depends(get_db)) -> Collection:
+    return db["employees"]
+
+def get_documents_collection(db: Database = Depends(get_db)) -> Collection:
+    return db["documents"]
+
+def get_assignment_history_collection(db: Database = Depends(get_db)) -> Collection:
+    return db["assignment_history"]
+
+def get_maintenance_history_collection(db: Database = Depends(get_db)) -> Collection:
+    return db["maintenance_history"]

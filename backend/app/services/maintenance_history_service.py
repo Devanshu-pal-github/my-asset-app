@@ -2,12 +2,40 @@ from pymongo.database import Database
 from pymongo.errors import PyMongoError
 from bson import ObjectId
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models.asset_item import AssetItem, AssetStatus
 from app.models.maintenance_history import MaintenanceHistoryEntry, MaintenanceRequest, MaintenanceUpdate, MaintenanceStatus
 import logging
 
 logger = logging.getLogger(__name__)
+
+def calculate_next_maintenance(category: dict, completed_date: datetime) -> Optional[datetime]:
+    """
+    Calculate the next scheduled maintenance date based on category policies.
+    """
+    policies = category.get("policies", [])
+    maintenance_frequency = None
+    for policy in policies:
+        if "maintenance_frequency" in policy:
+            _, value = policy.split(":", 1)
+            maintenance_frequency = value.strip()
+            break
+    
+    if not maintenance_frequency:
+        return None
+    
+    try:
+        freq_value, freq_unit = maintenance_frequency.split()
+        freq_value = int(freq_value)
+        if freq_unit.lower() in ["days", "day"]:
+            return completed_date + timedelta(days=freq_value)
+        elif freq_unit.lower() in ["months", "month"]:
+            return completed_date + timedelta(days=freq_value * 30)
+        elif freq_unit.lower() in ["years", "year"]:
+            return completed_date + timedelta(days=freq_value * 365)
+        return None
+    except (ValueError, AttributeError):
+        return None
 
 def request_maintenance(db: Database, request: MaintenanceRequest) -> AssetItem:
     """
@@ -31,6 +59,8 @@ def request_maintenance(db: Database, request: MaintenanceRequest) -> AssetItem:
         
         maintenance_entry = MaintenanceHistoryEntry(
             id=str(ObjectId()),
+            asset_id=request.asset_id,
+            asset_name=asset.get("name", ""),
             maintenance_type=request.maintenance_type,
             technician=request.technician,
             condition_before=request.condition,
@@ -38,7 +68,8 @@ def request_maintenance(db: Database, request: MaintenanceRequest) -> AssetItem:
             status=MaintenanceStatus.REQUESTED,
             cost=request.cost,
             notes=request.notes,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
+            next_scheduled_maintenance=None
         )
         
         update_result = db.asset_items.update_one(
@@ -57,7 +88,13 @@ def request_maintenance(db: Database, request: MaintenanceRequest) -> AssetItem:
             raise ValueError("Failed to update asset")
         
         updated_asset = db.asset_items.find_one({"_id": ObjectId(request.asset_id)})
-        updated_item = AssetItem(**{**updated_asset, "id": str(updated_asset["_id"])})
+        category = db.asset_categories.find_one({"_id": ObjectId(updated_asset["category_id"])})
+        updated_dict = {
+            **updated_asset,
+            "id": str(updated_asset["_id"]),
+            "category_name": category.get("name", "") if category else ""
+        }
+        updated_item = AssetItem(**updated_dict)
         logger.info(f"Maintenance requested for asset {request.asset_id}, maintenance_id: {maintenance_entry.id}")
         return updated_item
     except PyMongoError as e:
@@ -90,6 +127,10 @@ def update_maintenance_status(db: Database, update: MaintenanceUpdate) -> AssetI
             logger.warning(f"Maintenance {update.maintenance_id} not found for asset {update.asset_id}")
             raise ValueError(f"Maintenance {update.maintenance_id} not found")
         
+        category = db.asset_categories.find_one({"_id": ObjectId(asset["category_id"])})
+        completed_date = update.completed_date if update.completed_date else datetime.utcnow()
+        next_scheduled_maintenance = calculate_next_maintenance(category, completed_date)
+        
         update_result = db.asset_items.update_one(
             {
                 "_id": ObjectId(update.asset_id),
@@ -97,13 +138,16 @@ def update_maintenance_status(db: Database, update: MaintenanceUpdate) -> AssetI
             },
             {
                 "$set": {
+                    "maintenance_history.$.asset_name": asset.get("name", ""),
                     "maintenance_history.$.condition_after": update.condition_after,
-                    "maintenance_history.$.completed_date": update.completed_date,
+                    "maintenance_history.$.completed_date": completed_date,
                     "maintenance_history.$.status": MaintenanceStatus.COMPLETED,
                     "maintenance_history.$.notes": update.notes,
+                    "maintenance_history.$.next_scheduled_maintenance": next_scheduled_maintenance,
                     "status": AssetStatus.AVAILABLE,
                     "is_operational": True,
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.utcnow(),
+                    "maintenance_due_date": next_scheduled_maintenance
                 }
             }
         )
@@ -113,7 +157,13 @@ def update_maintenance_status(db: Database, update: MaintenanceUpdate) -> AssetI
             raise ValueError("No maintenance request found or failed to update")
         
         updated_asset = db.asset_items.find_one({"_id": ObjectId(update.asset_id)})
-        updated_item = AssetItem(**{**updated_asset, "id": str(updated_asset["_id"])})
+        category = db.asset_categories.find_one({"_id": ObjectId(updated_asset["category_id"])})
+        updated_dict = {
+            **updated_asset,
+            "id": str(updated_asset["_id"]),
+            "category_name": category.get("name", "") if category else ""
+        }
+        updated_item = AssetItem(**updated_dict)
         logger.info(f"Maintenance updated for asset {update.asset_id}, maintenance_id: {update.maintenance_id}")
         return updated_item
     except PyMongoError as e:
