@@ -18,6 +18,9 @@ import AddAllottedItems from "./pages/AssetTable/components/AddAllottedItems.jsx
 import BulkUploadPage from "./pages/AssetTable/components/BulkUploadPage.jsx"; // Import BulkUploadPage
 import EmployeeAssets from "./pages/EmployeeAssets/index.jsx";
 import EmployeeDetails from "./pages/EmployeeDetails/index.jsx";
+import Maintenance from "./pages/Maintenance/index.jsx"; // Import Maintenance page
+import RequestsApprovals from "./pages/RequestsApprovals/index.jsx"; // Import RequestsApprovals page
+import ReportsAnalytics from "./pages/ReportsAnalytics/index.jsx"; // Import Reports & Analytics page
 import logger from "./utils/logger.jsx";
 
 // Mock assetCategories and addAssetItem for BulkUploadPage (replace with actual data in a real app)
@@ -54,6 +57,9 @@ function App() {
           <Route path="asset/:assetId" element={<AssetDetail />} />
           <Route path="employee-assets" element={<EmployeeAssets />} />
           <Route path="employee-profile/:id" element={<EmployeeDetails />} />
+          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="requests-approvals" element={<RequestsApprovals />} />
+          <Route path="reports-analytics" element={<ReportsAnalytics />} />
           <Route path="*" element={<Navigate to="/asset-inventory" replace />} />
         </Route>
       </Routes>
