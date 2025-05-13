@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pymongo.collection import Collection
 from typing import List, Optional
 from datetime import datetime
 from app.dependencies import get_db
-from app.models.asset_item import AssetItem, AssetItemCreate, AssetStatus
+from app.models.asset_item import AssetItem, AssetItemCreate, AssetItemUpdate, AssetStatus, AssetCondition
 from app.services.asset_item_service import (
     get_asset_items,
     get_asset_item_by_id,
@@ -24,15 +24,19 @@ async def read_asset_items(
     status: Optional[AssetStatus] = None,
     has_active_assignment: Optional[bool] = None,
     serial_number: Optional[str] = None,
+    asset_tag: Optional[str] = None,
     department: Optional[str] = None,
     location: Optional[str] = None,
     maintenance_due_before: Optional[str] = None,
+    requires_maintenance: Optional[bool] = None,
+    is_active: Optional[bool] = None,
+    tags: Optional[List[str]] = Query(None),
     db: Collection = Depends(get_db)
 ):
     """
     Retrieve asset items with optional filters for category, status, assignment, serial number, department, location, or maintenance due date.
     """
-    logger.info(f"Fetching asset items - category_id: {category_id}, status: {status}, has_active_assignment: {has_active_assignment}, serial_number: {serial_number}, department: {department}, location: {location}, maintenance_due_before: {maintenance_due_before}")
+    logger.info(f"Fetching asset items - category_id: {category_id}, status: {status}, has_active_assignment: {has_active_assignment}, serial_number: {serial_number}, asset_tag: {asset_tag}, department: {department}, location: {location}, maintenance_due_before: {maintenance_due_before}")
     try:
         query = {}
         if category_id:
@@ -43,10 +47,18 @@ async def read_asset_items(
             query["has_active_assignment"] = has_active_assignment
         if serial_number:
             query["serial_number"] = serial_number
+        if asset_tag:
+            query["asset_tag"] = asset_tag
         if department:
             query["department"] = department
         if location:
             query["location"] = location
+        if requires_maintenance is not None:
+            query["requires_maintenance"] = requires_maintenance
+        if is_active is not None:
+            query["is_active"] = is_active
+        if tags:
+            query["tags"] = {"$in": tags}
         if maintenance_due_before:
             try:
                 due_date = datetime.fromisoformat(maintenance_due_before.replace("Z", "+00:00"))
@@ -55,7 +67,7 @@ async def read_asset_items(
                 logger.warning(f"Invalid maintenance_due_before format: {maintenance_due_before}")
                 raise HTTPException(status_code=400, detail="Invalid maintenance_due_before format; use ISO 8601")
         
-        items = get_asset_items(db, **query)
+        items = get_asset_items(db, query)
         logger.debug(f"Fetched {len(items)} asset items")
         return items
     except HTTPException:
@@ -119,7 +131,7 @@ async def create_new_asset_item(item: AssetItemCreate, db: Collection = Depends(
         raise HTTPException(status_code=500, detail=f"Failed to create asset item: {str(e)}")
 
 @router.put("/{id}", response_model=AssetItem)
-async def update_existing_asset_item(id: str, item: AssetItemCreate, db: Collection = Depends(get_db)):
+async def update_existing_asset_item(id: str, item: AssetItemUpdate, db: Collection = Depends(get_db)):
     """
     Update an existing asset item.
     """
