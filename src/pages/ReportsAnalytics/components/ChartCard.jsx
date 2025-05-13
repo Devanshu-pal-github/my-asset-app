@@ -14,18 +14,18 @@ const ChartCard = ({
   className 
 }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}>
-      <div className="p-4 border-b">
+    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full ${className}`}>
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-        {description && <p className="text-sm text-gray-600 mt-1">{description}</p>}
+        {description && <p className="text-sm text-gray-600 mt-1.5">{description}</p>}
       </div>
       
-      <div className="p-4 overflow-hidden">
+      <div className="p-5 overflow-hidden">
         {children}
       </div>
       
       {extraContent && (
-        <div className="bg-gray-50 px-4 py-3 border-t">
+        <div className="bg-gray-50 px-5 py-3 border-t border-gray-200">
           {extraContent}
         </div>
       )}

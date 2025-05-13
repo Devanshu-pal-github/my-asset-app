@@ -9,6 +9,7 @@ from app.routers import (
     documents,
     employees,
 )
+from app.api.v1 import analytics
 import logging
 import logging.handlers
 from pymongo.database import Database
@@ -59,6 +60,7 @@ app.include_router(assignment_history.router, prefix="/api/v1")
 app.include_router(maintenance_history.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(employees.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
 
 # Startup event
 @app.on_event("startup")

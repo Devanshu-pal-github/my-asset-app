@@ -20,37 +20,79 @@ ChartJS.register(
  * Asset Status Distribution chart
  * Shows current status of all assets in the system using a pie chart
  */
-const AssetStatusChart = () => {
+const AssetStatusChart = ({ data = assetStatusData, onLoaded, dataLimit }) => {
+  // Notify parent when component is loaded
+  React.useEffect(() => {
+    if (onLoaded) onLoaded('statusChart');
+  }, [onLoaded]);
+
+  // Process data and handle undefined/null cases
+  const processedData = useMemo(() => {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    return data;
+  }, [data]);
+
   // Calculate total for percentage calculations
-  const totalAssets = useMemo(() => 
-    assetStatusData.reduce((total, item) => total + item.count, 0),
-    []
-  );
+  const totalAssets = useMemo(() => {
+    if (processedData.length === 0) {
+      return 0;
+    }
+    return processedData.reduce((total, item) => total + item.count, 0);
+  }, [processedData]);
+
+  // Consistent color mapping for asset statuses
+  const colorMapping = useMemo(() => ({
+    'In Use': { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgba(59, 130, 246, 1)' }, // Blue
+    'Available': { bg: 'rgba(52, 211, 153, 0.7)', border: 'rgba(52, 211, 153, 1)' }, // Green
+    'In Maintenance': { bg: 'rgba(251, 191, 36, 0.7)', border: 'rgba(251, 191, 36, 1)' }, // Yellow/Orange
+    'Reserved': { bg: 'rgba(139, 92, 246, 0.7)', border: 'rgba(139, 92, 246, 1)' }, // Purple
+    'End of Life': { bg: 'rgba(156, 163, 175, 0.7)', border: 'rgba(156, 163, 175, 1)' } // Gray
+  }), []);
 
   // Prepare data for Chart.js - memoized to prevent recalculations
-  const chartData = useMemo(() => ({
-    labels: assetStatusData.map(item => item.status),
-    datasets: [
-      {
-        data: assetStatusData.map(item => item.count),
-        backgroundColor: [
-          'rgba(52, 211, 153, 0.7)', // Green for Available
-          'rgba(59, 130, 246, 0.7)', // Blue for Assigned
-          'rgba(251, 191, 36, 0.7)', // Yellow for Under Maintenance
-          'rgba(156, 163, 175, 0.7)', // Gray for Retired
-          'rgba(239, 68, 68, 0.7)'  // Red for Lost/Stolen
-        ],
-        borderColor: [
-          'rgba(52, 211, 153, 1)',
-          'rgba(59, 130, 246, 1)',
-          'rgba(251, 191, 36, 1)',
-          'rgba(156, 163, 175, 1)', 
-          'rgba(239, 68, 68, 1)'
-        ],
-        borderWidth: 1
-      }
-    ]
-  }), []);
+  const chartData = useMemo(() => {
+    if (processedData.length === 0) {
+      return {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            backgroundColor: [],
+            borderColor: [],
+            borderWidth: 1
+          }
+        ]
+      };
+    }
+    
+    const labels = processedData.map(item => item.status);
+    const backgroundColors = [];
+    const borderColors = [];
+    
+    // Map colors based on status names for consistency
+    labels.forEach(statusName => {
+      const colorInfo = colorMapping[statusName] || { 
+        bg: 'rgba(107, 114, 128, 0.7)', 
+        border: 'rgba(107, 114, 128, 1)' 
+      }; // Default gray
+      backgroundColors.push(colorInfo.bg);
+      borderColors.push(colorInfo.border);
+    });
+    
+    return {
+      labels,
+      datasets: [
+        {
+          data: processedData.map(item => item.count),
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 1
+        }
+      ]
+    };
+  }, [processedData, colorMapping]);
 
   const options = useMemo(() => ({
     responsive: true,
@@ -58,13 +100,20 @@ const AssetStatusChart = () => {
     plugins: {
       legend: {
         position: 'right',
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
       },
       tooltip: {
         callbacks: {
           label: (context) => {
+            if (totalAssets === 0) return 'No data available';
             const value = context.raw;
+            if (value === undefined || value === null) return '';
             const percentage = Math.round((value / totalAssets) * 100);
-            return `${context.label}: ${value} (${percentage}%)`;
+            return `${context.label}: ${value.toLocaleString()} assets (${percentage}%)`;
           }
         }
       }
@@ -74,7 +123,7 @@ const AssetStatusChart = () => {
   return (
     <ChartCard 
       title="Asset Status Distribution" 
-      description="Current status of all assets in the system"
+      description={`Current status of ${totalAssets.toLocaleString()} assets in the system`}
     >
       <div style={{ height: '300px' }}>
         <Pie data={chartData} options={options} />

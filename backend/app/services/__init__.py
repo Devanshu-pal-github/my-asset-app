@@ -33,3 +33,9 @@ from .maintenance_history_service import (
     request_maintenance,
     update_maintenance_status
 )
+from .analytics_service import (
+    get_asset_analytics,
+    get_department_analytics,
+    get_maintenance_analytics,
+    get_employee_asset_analytics
+)
