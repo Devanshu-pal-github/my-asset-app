@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from app.dependencies import db, get_db
 from app.routers import (
     asset_categories,
@@ -14,6 +16,8 @@ import logging
 import logging.handlers
 from pymongo.database import Database
 from starlette.responses import JSONResponse
+from enum import Enum
+from typing import Any
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -25,6 +29,33 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 app = FastAPI(title="Asset Management API", version="1.0.0")
+
+# Custom JSON encoder for enums
+class EnumJsonEncoder:
+    @staticmethod
+    def encode(obj: Any) -> Any:
+        if isinstance(obj, Enum):
+            return obj.value
+        return obj
+
+# Custom response class to handle enums
+class CustomJSONResponse(JSONResponse):
+    def render(self, content: Any) -> bytes:
+        # Process any enum values before encoding
+        def process_enums(data):
+            if isinstance(data, dict):
+                return {k: process_enums(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                return [process_enums(item) for item in data]
+            elif isinstance(data, Enum):
+                return data.value
+            return data
+        
+        processed_content = process_enums(content)
+        return super().render(processed_content)
+
+# Override the default JSONResponse
+app.router.default_response_class = CustomJSONResponse
 
 # Enhanced CORS configuration
 app.add_middleware(

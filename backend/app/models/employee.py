@@ -48,6 +48,7 @@ class Employee(BaseModel):
     assigned_assets: List[AssignedAsset] = Field(default_factory=list, description="List of assigned assets")
     email: str = Field(..., description="Employee's email address")
     role: Optional[str] = Field(None, description="Employee's role or job title")
+    job_title: Optional[str] = Field(None, description="Employee's job title or designation")
     designation: Optional[str] = Field(None, description="Employee's designation")
     phone: Optional[str] = Field(None, description="Employee's phone number")
     is_active: bool = Field(True, description="Indicates if the employee is active")
@@ -78,6 +79,7 @@ class EmployeeCreate(BaseModel):
     status: Optional[str] = "Active"
     email: str
     role: Optional[str] = None
+    job_title: Optional[str] = None
     designation: Optional[str] = None
     phone: Optional[str] = None
     is_active: bool = Field(True)

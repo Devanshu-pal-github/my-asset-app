@@ -361,10 +361,10 @@ def get_asset_statistics(db: Collection) -> dict:
     try:
         total = db.count_documents({})
         assigned = db.count_documents({"has_active_assignment": True})
-        available = db.count_documents({"status": AssetStatus.AVAILABLE})
-        under_maintenance = db.count_documents({"status": AssetStatus.UNDER_MAINTENANCE})
-        retired = db.count_documents({"status": AssetStatus.RETIRED})
-        lost = db.count_documents({"status": AssetStatus.LOST})
+        available = db.count_documents({"status": AssetStatus.AVAILABLE.value})
+        under_maintenance = db.count_documents({"status": AssetStatus.UNDER_MAINTENANCE.value})
+        retired = db.count_documents({"status": AssetStatus.RETIRED.value})
+        lost = db.count_documents({"status": AssetStatus.LOST.value})
         
         # Get values per category
         pipeline = [

@@ -6,21 +6,21 @@ from bson import ObjectId
 
 # Enum for Asset Status
 class AssetStatus(str, Enum):
-    AVAILABLE = "available"
+    AVAILABLE = "Available"
     ASSIGNED = "Assigned"
-    UNDER_MAINTENANCE = "under_maintenance"
-    MAINTENANCE_REQUESTED = "maintenance_requested"
-    MAINTENANCE_COMPLETED = "maintenance_completed"
-    RETIRED = "retired"
+    UNDER_MAINTENANCE = "Under Maintenance"
+    MAINTENANCE_REQUESTED = "Maintenance Requested"
+    MAINTENANCE_COMPLETED = "Maintenance Completed"
+    RETIRED = "Retired"
     PENDING = "Pending"
-    LOST = "lost"
+    LOST = "Lost"
 
 # Enum for Asset Condition
 class AssetCondition(str, Enum):
-    NEW = "new"
+    NEW = "New"
     GOOD = "Good"
-    FAIR = "fair"
-    POOR = "poor"
+    FAIR = "Fair"
+    POOR = "Poor"
     EXCELLENT = "Excellent"
 
 # Enum for Maintenance Status

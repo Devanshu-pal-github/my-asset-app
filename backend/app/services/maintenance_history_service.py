@@ -76,7 +76,7 @@ def request_maintenance(db: Database, request: MaintenanceRequest) -> AssetItem:
             {"_id": ObjectId(request.asset_id)},
             {
                 "$set": {
-                    "status": AssetStatus.MAINTENANCE_REQUESTED,
+                    "status": AssetStatus.MAINTENANCE_REQUESTED.value,
                     "updated_at": datetime.utcnow()
                 },
                 "$push": {"maintenance_history": maintenance_entry.dict()}
@@ -144,7 +144,7 @@ def update_maintenance_status(db: Database, update: MaintenanceUpdate) -> AssetI
                     "maintenance_history.$.status": MaintenanceStatus.COMPLETED,
                     "maintenance_history.$.notes": update.notes,
                     "maintenance_history.$.next_scheduled_maintenance": next_scheduled_maintenance,
-                    "status": AssetStatus.AVAILABLE,
+                    "status": AssetStatus.AVAILABLE.value,
                     "is_operational": True,
                     "updated_at": datetime.utcnow(),
                     "maintenance_due_date": next_scheduled_maintenance

@@ -48,7 +48,7 @@ def assign_asset_to_employee(
             logger.warning(f"Category not found for asset: {asset_id}")
             raise ValueError("Category not found")
         
-        if asset["status"] != AssetStatus.AVAILABLE:
+        if asset["status"] != AssetStatus.AVAILABLE.value:
             logger.warning(f"Asset not available: {asset_id}, status: {asset['status']}")
             raise ValueError(f"Asset is not available (status: {asset['status']})")
         
@@ -89,7 +89,7 @@ def assign_asset_to_employee(
         )
         
         update_dict = {
-            "status": AssetStatus.IN_USE,
+            "status": AssetStatus.ASSIGNED.value,
             "has_active_assignment": True,
             "is_operational": True,
             "current_assignee_id": employee_ids[0] if employee_ids else None,
@@ -182,7 +182,7 @@ def unassign_employee_from_asset(
         update_dict = {
             "updated_at": datetime.utcnow(),
             "has_active_assignment": remaining_assignments > 0,
-            "status": AssetStatus.AVAILABLE if remaining_assignments == 0 else AssetStatus.IN_USE,
+            "status": AssetStatus.AVAILABLE.value if remaining_assignments == 0 else AssetStatus.ASSIGNED.value,
             "current_assignee_id": None if remaining_assignments == 0 else asset["current_assignee_id"],
             "current_assignment_date": None if remaining_assignments == 0 else asset["current_assignment_date"],
             "department": None if remaining_assignments == 0 else asset.get("department")

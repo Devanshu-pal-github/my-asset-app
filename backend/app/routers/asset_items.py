@@ -42,7 +42,7 @@ async def read_asset_items(
         if category_id:
             query["category_id"] = category_id
         if status:
-            query["status"] = status
+            query["status"] = status.value if isinstance(status, AssetStatus) else status
         if has_active_assignment is not None:
             query["has_active_assignment"] = has_active_assignment
         if serial_number:
