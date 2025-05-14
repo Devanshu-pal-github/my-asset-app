@@ -17,7 +17,7 @@ from app.services.analytics_service import (
     get_maintenance_analytics,
     get_employee_asset_analytics
 )
-from app.db.session import get_db
+from app.dependencies import get_db
 
 router = APIRouter(
     prefix="/analytics",
