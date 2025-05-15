@@ -6,29 +6,29 @@ from bson import ObjectId
 
 # Enum for Asset Status
 class AssetStatus(str, Enum):
-    AVAILABLE = "Available"
-    ASSIGNED = "Assigned"
-    UNDER_MAINTENANCE = "Under Maintenance"
-    MAINTENANCE_REQUESTED = "Maintenance Requested"
-    MAINTENANCE_COMPLETED = "Maintenance Completed"
-    RETIRED = "Retired"
-    PENDING = "Pending"
-    LOST = "Lost"
+    AVAILABLE = "available"
+    ASSIGNED = "assigned"
+    UNDER_MAINTENANCE = "under_maintenance"
+    MAINTENANCE_REQUESTED = "maintenance_requested"
+    MAINTENANCE_COMPLETED = "maintenance_completed"
+    RETIRED = "retired"
+    PENDING = "pending"
+    LOST = "lost"
 
 # Enum for Asset Condition
 class AssetCondition(str, Enum):
-    NEW = "New"
-    GOOD = "Good"
-    FAIR = "Fair"
-    POOR = "Poor"
-    EXCELLENT = "Excellent"
+    NEW = "new"
+    GOOD = "good"
+    FAIR = "fair"
+    POOR = "poor"
+    EXCELLENT = "excellent"
 
 # Enum for Maintenance Status
 class MaintenanceStatus(str, Enum):
-    REQUESTED = "Requested"
-    IN_PROGRESS = "In Progress"
-    COMPLETED = "Completed"
-    CANCELLED = "Cancelled"
+    REQUESTED = "requested"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
 # Edit History Entry for AssetCategory
 class EditHistoryEntry(BaseModel):
@@ -76,6 +76,19 @@ class AssetCategory(BaseModel):
     unassignable_assets: int = Field(0, description="Number of assets that cannot be assigned")
     total_cost: float = Field(0.0, description="Total cost of assets in the category")
     
+    # Used in AssetTable/index.jsx
+    name: Optional[str] = Field(None, description="Category name (alias for category_name)")
+    in_storage: Optional[int] = Field(0, description="Number of items in storage")
+    totalUnits: Optional[int] = Field(None, description="Total units in the category")
+    totalCost: Optional[float] = Field(None, description="Total cost in the category")
+    inStorage: Optional[int] = Field(None, description="Items in storage")
+    
+    # Assignment history fields
+    assignment_history: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="History of assignments")
+    
+    # Edit history fields
+    edit_history: List[EditHistoryEntry] = Field(default_factory=list, description="History of edits made to the category")
+    
     # Fields matching the frontend AddAssetForm.jsx
     can_be_assigned_reassigned: bool = Field(False, description="Indicates if assets can be assigned and reassigned")
     is_consumable: bool = Field(False, description="Indicates if assets are consumable")
@@ -107,8 +120,15 @@ class AssetCategory(BaseModel):
     maintenance_alert_days: Optional[int] = Field(None, description="Days to alert before maintenance due")
     assignment_policies: Optional[AssignmentPolicies] = Field(None, description="Assignment policies")
     
+    # Make sure we have fields used in FilterBar and AllottedCategories
+    is_allotable: bool = Field(False, description="Indicates if the category can be allotted")
+    utilizationRate: Optional[float] = Field(None, description="Utilization rate of the category")
+    
+    # Fields from index.jsx and related components
+    notes: Optional[str] = Field(None, description="Notes about the category")
+    available_assets: Optional[int] = Field(None, description="Number of available assets")
+    
     # History and timestamps
-    edit_history: List[EditHistoryEntry] = Field(default_factory=list, description="History of edits made to the category")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
@@ -122,6 +142,14 @@ class AssetCategoryCreate(BaseModel):
     category_type: Optional[str] = None
     description: Optional[str] = None
     policies: List[str] = Field(default_factory=list)
+    
+    # AssetTable fields
+    name: Optional[str] = None
+    total_assets: Optional[int] = 0
+    assigned_assets: Optional[int] = 0
+    under_maintenance: Optional[int] = 0
+    unassignable_assets: Optional[int] = 0
+    total_cost: Optional[float] = 0.0
     
     # Fields matching the frontend AddAssetForm.jsx
     can_be_assigned_reassigned: bool = Field(False)
@@ -153,7 +181,88 @@ class AssetCategoryCreate(BaseModel):
     requires_maintenance: bool = Field(False)
     maintenance_alert_days: Optional[int] = None
     assignment_policies: Optional[AssignmentPolicies] = None
-
+    
+    # Additional frontend field
+    is_allotable: bool = Field(False)
+    notes: Optional[str] = None
+    available_assets: Optional[int] = None
+    
     class Config:
         arbitrary_types_allowed = True
+        populate_by_name = True
+
+class AssetCategoryUpdate(BaseModel):
+    category_name: Optional[str] = None
+    category_type: Optional[str] = None
+    description: Optional[str] = None
+    policies: Optional[List[str]] = None
+    total_assets: Optional[int] = None
+    assigned_assets: Optional[int] = None
+    under_maintenance: Optional[int] = None
+    unassignable_assets: Optional[int] = None
+    total_cost: Optional[float] = None
+    name: Optional[str] = None
+    in_storage: Optional[int] = None
+    can_be_assigned_reassigned: Optional[bool] = None
+    is_consumable: Optional[bool] = None
+    is_allotted: Optional[bool] = None
+    maintenance_required: Optional[bool] = None
+    is_recurring_maintenance: Optional[bool] = None
+    maintenance_frequency: Optional[str] = None
+    alert_before_due: Optional[int] = None
+    has_specifications: Optional[bool] = None
+    specifications: Optional[List[Dict[str, str]]] = None
+    required_documents: Optional[bool] = None
+    documents: Optional[Union[Dict[str, Any], Documents]] = None
+    cost_per_unit: Optional[float] = None
+    expected_life: Optional[int] = None
+    life_unit: Optional[str] = None
+    depreciation_method: Optional[str] = None
+    residual_value: Optional[float] = None
+    default_assignment_duration: Optional[int] = None
+    assignment_duration_unit: Optional[str] = None
+    can_be_assigned_to: Optional[str] = None
+    allow_multiple_assignments: Optional[bool] = None
+    is_enabled: Optional[bool] = None
+    is_active: Optional[bool] = None
+    is_reassignable: Optional[bool] = None
+    requires_maintenance: Optional[bool] = None
+    maintenance_alert_days: Optional[int] = None
+    assignment_policies: Optional[AssignmentPolicies] = None
+    is_allotable: Optional[bool] = None
+    utilizationRate: Optional[float] = None
+    notes: Optional[str] = None
+    available_assets: Optional[int] = None
+    totalUnits: Optional[int] = None
+    totalCost: Optional[float] = None
+    inStorage: Optional[int] = None
+    
+    class Config:
+        arbitrary_types_allowed = True
+        populate_by_name = True
+
+# For AssetTablePage component
+class AssetCategoryResponse(BaseModel):
+    id: str = Field(..., alias="_id")
+    category_name: str
+    name: Optional[str] = None
+    description: Optional[str] = None
+    total_assets: int
+    assigned_assets: int 
+    under_maintenance: int
+    unassignable_assets: int
+    total_cost: float
+    is_allotted: bool
+    in_storage: Optional[int] = None
+    utilizationRate: Optional[float] = None
+    edit_history: Optional[List[Dict[str, Any]]] = None
+    available_assets: Optional[int] = None
+    notes: Optional[str] = None
+    totalUnits: Optional[int] = None
+    totalCost: Optional[float] = None
+    inStorage: Optional[int] = None
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
         populate_by_name = True

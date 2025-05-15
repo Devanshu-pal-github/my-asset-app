@@ -1,103 +1,209 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import List, Optional, Dict, Any
+from enum import Enum
 from datetime import datetime
 from bson import ObjectId
-from enum import Enum
 
+# Document Type Enum - lowercase to match frontend
 class DocumentType(str, Enum):
-    WARRANTY = "Warranty"
-    INVOICE = "Invoice"
-    PURCHASE_ORDER = "Purchase Order"
-    INSURANCE = "Insurance"
-    MANUAL = "Manual"
-    IMAGE = "Image"
-    CONTRACT = "Contract"
-    LICENSE = "License"
-    CERTIFICATE = "Certificate"
-    OTHER = "Other"
+    INVOICE = "invoice"
+    WARRANTY = "warranty"
+    PURCHASE_ORDER = "purchase_order"
+    INSURANCE = "insurance"
+    MANUAL = "manual"
+    CERTIFICATE = "certificate"
+    CONTRACT = "contract"
+    LICENSE = "license"
+    COMPLIANCE = "compliance"
+    OTHER = "other"
 
+# Document Status Enum - lowercase to match frontend
 class DocumentStatus(str, Enum):
-    ACTIVE = "Active"
-    EXPIRED = "Expired"
-    PENDING = "Pending"
-    REJECTED = "Rejected"
-    ARCHIVED = "Archived"
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    PENDING = "pending"
+    INVALID = "invalid"
+    DRAFT = "draft"
+    ARCHIVED = "archived"
 
-class DocumentEntry(BaseModel):
+# Document Approval Status
+class ApprovalStatus(str, Enum):
+    APPROVED = "approved"
+    PENDING = "pending"
+    REJECTED = "rejected"
+    WAITING = "waiting"
+    NOT_REQUIRED = "not_required"
+
+# Document Schema with all frontend fields
+class Document(BaseModel):
     id: Optional[str] = Field(None, alias="_id", description="Unique document ID")
-    asset_id: Optional[str] = Field(None, description="Associated asset ID")
-    asset_name: Optional[str] = Field(None, description="Name of the associated asset")
-    asset_tag: Optional[str] = Field(None, description="Tag of the associated asset")
-    category_id: Optional[str] = Field(None, description="Category ID of the associated asset")
-    category_name: Optional[str] = Field(None, description="Name of the associated category")
-    employee_id: Optional[str] = Field(None, description="Associated employee ID")
-    employee_name: Optional[str] = Field(None, description="Name of the associated employee")
+    
+    # Basic Information
+    name: str = Field(..., description="Document name")
+    description: Optional[str] = Field(None, description="Document description")
     document_type: DocumentType = Field(..., description="Type of document")
-    document_title: Optional[str] = Field(None, description="Title of the document")
-    file_url: str = Field(..., description="URL to the document file")
-    file_name: Optional[str] = Field(None, description="Original file name")
-    file_size: Optional[int] = Field(None, description="Size of the file in bytes")
-    file_type: Optional[str] = Field(None, description="MIME type of the file")
-    issue_date: Optional[datetime] = Field(None, description="Date the document was issued")
-    expiry_date: Optional[datetime] = Field(None, description="Document expiry date, if applicable")
-    status: DocumentStatus = Field(DocumentStatus.ACTIVE, description="Current status of the document")
-    is_required: bool = Field(False, description="Whether the document is required")
-    is_verified: bool = Field(False, description="Whether the document has been verified")
-    verified_by: Optional[str] = Field(None, description="ID of employee who verified the document")
-    verified_by_name: Optional[str] = Field(None, description="Name of employee who verified the document")
-    verification_date: Optional[datetime] = Field(None, description="Date the document was verified")
-    tags: List[str] = Field(default_factory=list, description="Tags associated with the document")
-    notes: Optional[str] = Field(None, description="Additional notes")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata for the document")
-    uploaded_by: str = Field(..., description="ID of the employee who uploaded the document")
-    uploaded_by_name: Optional[str] = Field(None, description="Name of the employee who uploaded the document")
+    status: DocumentStatus = Field(default=DocumentStatus.ACTIVE, description="Document status")
+    
+    # File Information
+    file_name: str = Field(..., description="Original file name")
+    file_type: str = Field(..., description="File type, e.g., 'pdf', 'docx'")
+    file_size: Optional[int] = Field(None, description="File size in bytes")
+    file_url: str = Field(..., description="URL to access the file")
+    thumbnail_url: Optional[str] = Field(None, description="URL to thumbnail, if available")
+    
+    # Association Information
+    asset_id: Optional[str] = Field(None, description="Asset ID this document is associated with")
+    asset_name: Optional[str] = Field(None, description="Asset name for reference")
+    asset_tag: Optional[str] = Field(None, description="Asset tag for reference")
+    category_id: Optional[str] = Field(None, description="Category ID this document is associated with")
+    category_name: Optional[str] = Field(None, description="Category name for reference")
+    employee_id: Optional[str] = Field(None, description="Employee ID this document is associated with")
+    employee_name: Optional[str] = Field(None, description="Employee name for reference")
+    
+    # Dates
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
-
+    upload_date: str = Field(..., description="Date of upload in YYYY-MM-DD format")
+    issue_date: Optional[str] = Field(None, description="Date of issue in YYYY-MM-DD format")
+    expiry_date: Optional[str] = Field(None, description="Expiration date in YYYY-MM-DD format")
+    
+    # Additional Information
+    tags: List[str] = Field(default_factory=list, description="Tags associated with the document")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    notes: Optional[str] = Field(None, description="Additional notes")
+    
+    # Approval and Workflow
+    approval_status: ApprovalStatus = Field(default=ApprovalStatus.NOT_REQUIRED, description="Approval status")
+    approval_date: Optional[str] = Field(None, description="Date of approval")
+    approved_by: Optional[str] = Field(None, description="Person who approved the document")
+    uploaded_by: Optional[str] = Field(None, description="Person who uploaded the document")
+    uploaded_by_name: Optional[str] = Field(None, description="Name of person who uploaded the document")
+    
+    # Additional fields from frontend
+    document_id: Optional[str] = Field(None, description="Alternative document identifier")
+    document_number: Optional[str] = Field(None, description="Document number (e.g., invoice number)")
+    version: Optional[str] = Field(None, description="Document version")
+    is_confidential: Optional[bool] = Field(False, description="Whether the document is confidential")
+    access_level: Optional[str] = Field(None, description="Access level for the document")
+    related_documents: List[str] = Field(default_factory=list, description="IDs of related documents")
+    
+    # Fields from DocumentList in index.jsx
+    doc_id: Optional[str] = Field(None, description="Document ID used in frontend")
+    docType: Optional[str] = Field(None, description="Document type in camelCase")
+    assignedTo: Optional[str] = Field(None, description="Assigned to in camelCase")
+    downloadUrl: Optional[str] = Field(None, description="Download URL in camelCase")
+    isExpired: Optional[bool] = Field(False, description="Whether the document is expired")
+    daysUntilExpiry: Optional[int] = Field(None, description="Days until document expiry")
+    
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         populate_by_name = True
 
+# For document creation
 class DocumentCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    document_type: DocumentType
+    status: DocumentStatus = DocumentStatus.ACTIVE
+    file_name: str
+    file_type: str
+    file_size: Optional[int] = None
+    file_url: str
+    thumbnail_url: Optional[str] = None
     asset_id: Optional[str] = None
     asset_name: Optional[str] = None
+    asset_tag: Optional[str] = None
     category_id: Optional[str] = None
+    category_name: Optional[str] = None
     employee_id: Optional[str] = None
     employee_name: Optional[str] = None
-    document_type: DocumentType
-    document_title: Optional[str] = None
-    file_url: str
-    file_name: Optional[str] = None
-    file_size: Optional[int] = None
-    file_type: Optional[str] = None
-    issue_date: Optional[datetime] = None
-    expiry_date: Optional[datetime] = None
-    status: DocumentStatus = DocumentStatus.ACTIVE
-    is_required: bool = False
-    is_verified: bool = False
+    upload_date: str
+    issue_date: Optional[str] = None
+    expiry_date: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
-    notes: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    uploaded_by: str
-
+    notes: Optional[str] = None
+    approval_status: ApprovalStatus = ApprovalStatus.NOT_REQUIRED
+    uploaded_by: Optional[str] = None
+    uploaded_by_name: Optional[str] = None
+    document_number: Optional[str] = None
+    is_confidential: Optional[bool] = False
+    doc_id: Optional[str] = None
+    docType: Optional[str] = None
+    downloadUrl: Optional[str] = None
+    
     class Config:
         arbitrary_types_allowed = True
         populate_by_name = True
 
+# For document updates
 class DocumentUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
     document_type: Optional[DocumentType] = None
-    document_title: Optional[str] = None
-    expiry_date: Optional[datetime] = None
     status: Optional[DocumentStatus] = None
-    is_required: Optional[bool] = None
-    is_verified: Optional[bool] = None
-    verified_by: Optional[str] = None
-    verification_date: Optional[datetime] = None
+    file_name: Optional[str] = None
+    file_type: Optional[str] = None
+    file_size: Optional[int] = None
+    file_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    asset_id: Optional[str] = None
+    asset_name: Optional[str] = None
+    asset_tag: Optional[str] = None
+    category_id: Optional[str] = None
+    category_name: Optional[str] = None
+    employee_id: Optional[str] = None
+    employee_name: Optional[str] = None
+    upload_date: Optional[str] = None
+    issue_date: Optional[str] = None
+    expiry_date: Optional[str] = None
     tags: Optional[List[str]] = None
-    notes: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    notes: Optional[str] = None
+    approval_status: Optional[ApprovalStatus] = None
+    approval_date: Optional[str] = None
+    approved_by: Optional[str] = None
+    document_id: Optional[str] = None
+    document_number: Optional[str] = None
+    version: Optional[str] = None
+    is_confidential: Optional[bool] = None
+    access_level: Optional[str] = None
+    related_documents: Optional[List[str]] = None
+    doc_id: Optional[str] = None
+    docType: Optional[str] = None
+    assignedTo: Optional[str] = None
+    downloadUrl: Optional[str] = None
+    isExpired: Optional[bool] = None
+    daysUntilExpiry: Optional[int] = None
     
     class Config:
         arbitrary_types_allowed = True
+        populate_by_name = True
+
+# For document response in list views
+class DocumentResponse(BaseModel):
+    id: str = Field(..., alias="_id")
+    name: str
+    document_type: str
+    status: str
+    file_name: str
+    file_type: str
+    file_url: str
+    upload_date: str
+    expiry_date: Optional[str] = None
+    asset_name: Optional[str] = None
+    asset_tag: Optional[str] = None
+    employee_name: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    is_confidential: Optional[bool] = None
+    doc_id: Optional[str] = None
+    docType: Optional[str] = None
+    downloadUrl: Optional[str] = None
+    file_size: Optional[int] = None
+    created_at: Optional[datetime] = None
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
         populate_by_name = True
