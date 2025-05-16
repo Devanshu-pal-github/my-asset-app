@@ -50,13 +50,13 @@ def safe_create_index(collection, keys, **kwargs):
                 logger.info(f"Dropping existing index {index_name} to recreate with new options")
                 collection.drop_index(index_name)
                 collection.create_index(keys, **kwargs)
-                logger.info(f"Recreated index {index_name} with options: {kwargs}")
+                logger.info(f"Recreated index {index_name}")
             else:
                 logger.info(f"Index {index_name} already exists, skipping")
         else:
             # Create new index
             collection.create_index(keys, **kwargs)
-            logger.info(f"Created new index {index_name} with options: {kwargs}")
+            logger.info(f"Created new index {index_name}")
     except OperationFailure as e:
         logger.error(f"Error working with index {index_name}: {str(e)}")
         # If it's not a critical error, continue
@@ -64,7 +64,7 @@ def safe_create_index(collection, keys, **kwargs):
             raise
 
 # Fix the unique index on asset_categories
-logger.debug("Checking and creating indexes for asset_categories...")
+logger.info("Checking and creating indexes for asset_categories...")
 try:
     category_indexes = db.asset_categories.index_information()
     if "name_1" in category_indexes:
@@ -76,7 +76,8 @@ try:
 except Exception as e:
     logger.error(f"Error fixing asset_categories index: {str(e)}")
 
-# Create UUID-based indexes for all collections
+# Create UUID-based indexes for all collections - log only once at startup
+logger.info("Creating/verifying indexes for all collections")
 safe_create_index(db.asset_categories, [("id", ASCENDING)], unique=True)
 safe_create_index(db.asset_items, [("id", ASCENDING)], unique=True)
 safe_create_index(db.asset_items, [("asset_tag", ASCENDING)], unique=True)
@@ -110,14 +111,14 @@ safe_create_index(db.requests, [("created_at", ASCENDING)])
 
 logger.info("All indexes created successfully")
 
-def get_db() -> Database:
+# Function to get the database - supports both sync and async contexts
+def get_db():
     """
-    Yields the MongoDB database instance for use in FastAPI routes.
+    Get the MongoDB database instance.
+    
+    Can be used in both sync and async contexts.
     """
-    try:
-        yield db
-    finally:
-        logger.debug("Database connection yielded")
+    return db
 
 def get_asset_categories_collection(db: Database = Depends(get_db)) -> Collection:
     """

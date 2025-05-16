@@ -19,11 +19,8 @@ from app.services.analytics_service import (
 )
 from app.dependencies import get_db
 
-router = APIRouter(
-    prefix="/analytics",
-    tags=["analytics"],
-    responses={404: {"description": "Not found"}},
-)
+# Create a regular FastAPI router
+router = APIRouter(tags=["Analytics"])
 
 # Define models for response schemas
 class TimeFrame(str, Enum):

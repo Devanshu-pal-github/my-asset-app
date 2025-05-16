@@ -1,0 +1,9 @@
+2025-05-16 18:16:16 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-16 18:16:16 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-16 18:16:16 - app.main - INFO - Registering routers with prefix /api
+2025-05-16 18:16:17 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-16 18:16:17 - app.main - INFO - MongoDB connection verified successfully
+2025-05-16 18:16:17 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-16 18:16:17 - app.main - INFO - All database indexes verified
+2025-05-16 18:16:17 - app.main - INFO - Server started successfully!
+2025-05-16 18:16:17 - app.main - INFO - API documentation available at: http://localhost:8000/docs

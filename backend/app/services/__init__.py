@@ -1,3 +1,24 @@
+import logging
+from app.logging_config import get_logger
+
+# Set up loggers for services
+service_modules = [
+    "asset_category_service",
+    "asset_item_service",
+    "assignment_history_service",
+    "document_service",
+    "employee_service",
+    "maintenance_history_service",
+    "analytics_service",
+    "request_service"
+]
+
+# Get logger instances from our centralized configuration
+for module in service_modules:
+    # The module name format is important for the hierarchical logger structure
+    full_module_name = f"app.services.{module}"
+    logger = get_logger(full_module_name)
+
 from .asset_category_service import (
     get_asset_categories,
     create_asset_category,
