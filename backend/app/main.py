@@ -4,12 +4,13 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from app.dependencies import db, get_db
 from app.routers import (
-    asset_categories,
-    asset_items,
-    assignment_history,
-    maintenance_history,
-    documents,
-    employees,
+    asset_categories_router,
+    asset_items_router,
+    assignment_history_router,
+    maintenance_history_router,
+    documents_router,
+    employees_router,
+    request_approval_router
 )
 from app.api.v1 import analytics
 import logging
@@ -18,6 +19,7 @@ from pymongo.database import Database
 from starlette.responses import JSONResponse
 from enum import Enum
 from typing import Any
+from pymongo import ASCENDING
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -85,12 +87,13 @@ async def log_requests(request: Request, call_next):
 
 # Register routers
 logger.debug("Registering routers with prefix /api/v1")
-app.include_router(asset_categories.router, prefix="/api/v1")
-app.include_router(asset_items.router, prefix="/api/v1")
-app.include_router(assignment_history.router, prefix="/api/v1")
-app.include_router(maintenance_history.router, prefix="/api/v1")
-app.include_router(documents.router, prefix="/api/v1")
-app.include_router(employees.router, prefix="/api/v1")
+app.include_router(asset_categories_router, prefix="/api/v1")
+app.include_router(asset_items_router, prefix="/api/v1")
+app.include_router(assignment_history_router, prefix="/api/v1")
+app.include_router(maintenance_history_router, prefix="/api/v1")
+app.include_router(documents_router, prefix="/api/v1")
+app.include_router(employees_router, prefix="/api/v1")
+app.include_router(request_approval_router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 
 # Startup event
