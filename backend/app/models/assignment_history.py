@@ -1,8 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from bson import ObjectId
 from enum import Enum
+from .utils import (
+    model_config,
+    generate_assignment_id,
+    generate_uuid,
+    get_current_datetime
+)
 
 class AssignmentStatus(str, Enum):
     ASSIGNED = "assigned"
@@ -34,22 +39,20 @@ class ConditionUpdate(BaseModel):
     condition_notes: Optional[str] = Field(None, description="Notes about condition changes")
     damage_details: Optional[str] = Field(None, description="Details about any damage")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 class AssignmentAttachment(BaseModel):
-    id: str = Field(..., description="Unique identifier for the attachment")
+    id: str = Field(default_factory=generate_uuid, description="Unique identifier for the attachment")
     name: str = Field(..., description="Attachment name")
     file_type: str = Field(..., description="Type of file")
     url: str = Field(..., description="URL to the attachment")
     upload_date: str = Field(..., description="Date of upload")
     notes: Optional[str] = Field(None, description="Notes about the attachment")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 class AssignmentHistoryEntry(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique assignment record ID")
+    id: str = Field(default_factory=generate_assignment_id, description="Unique assignment record ID")
     
     # Asset Information
     asset_id: str = Field(..., description="ID of the assigned asset")
@@ -121,13 +124,10 @@ class AssignmentHistoryEntry(BaseModel):
     current_assignee_name: Optional[str] = Field(None, description="Name of current assignee")
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 class AssignmentCreate(BaseModel):
     asset_id: str
@@ -161,9 +161,7 @@ class AssignmentCreate(BaseModel):
     employee_id: Optional[str] = None
     employee_name: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class AssignmentReturn(BaseModel):
     assignment_id: str
@@ -181,9 +179,7 @@ class AssignmentReturn(BaseModel):
     unassigned_at: Optional[str] = None
     notes: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class AssignmentUpdate(BaseModel):
     asset_id: Optional[str] = None
@@ -236,12 +232,10 @@ class AssignmentUpdate(BaseModel):
     current_assignee_id: Optional[str] = None
     current_assignee_name: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class AssignmentResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     asset_id: str
     asset_name: str
     asset_tag: str
@@ -262,7 +256,4 @@ class AssignmentResponse(BaseModel):
     unassigned_at: Optional[str] = None
     notes: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config

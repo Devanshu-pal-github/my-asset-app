@@ -2,7 +2,11 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
-from bson import ObjectId
+from .utils import (
+    model_config,
+    generate_document_id,
+    get_current_datetime
+)
 
 # Document Type Enum - lowercase to match frontend
 class DocumentType(str, Enum):
@@ -36,7 +40,7 @@ class ApprovalStatus(str, Enum):
 
 # Document Schema with all frontend fields
 class Document(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique document ID")
+    id: str = Field(default_factory=generate_document_id, description="Unique document ID")
     
     # Basic Information
     name: str = Field(..., description="Document name")
@@ -61,7 +65,7 @@ class Document(BaseModel):
     employee_name: Optional[str] = Field(None, description="Employee name for reference")
     
     # Dates
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     upload_date: str = Field(..., description="Date of upload in YYYY-MM-DD format")
     issue_date: Optional[str] = Field(None, description="Date of issue in YYYY-MM-DD format")
@@ -95,10 +99,7 @@ class Document(BaseModel):
     isExpired: Optional[bool] = Field(False, description="Whether the document is expired")
     daysUntilExpiry: Optional[int] = Field(None, description="Days until document expiry")
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 # For document creation
 class DocumentCreate(BaseModel):
@@ -133,9 +134,7 @@ class DocumentCreate(BaseModel):
     docType: Optional[str] = None
     downloadUrl: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 # For document updates
 class DocumentUpdate(BaseModel):
@@ -177,13 +176,11 @@ class DocumentUpdate(BaseModel):
     isExpired: Optional[bool] = None
     daysUntilExpiry: Optional[int] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 # For document response in list views
 class DocumentResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     name: str
     document_type: str
     status: str
@@ -203,7 +200,4 @@ class DocumentResponse(BaseModel):
     file_size: Optional[int] = None
     created_at: Optional[datetime] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config

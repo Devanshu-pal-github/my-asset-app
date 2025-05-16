@@ -2,7 +2,12 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 from datetime import datetime
-from bson import ObjectId
+from .utils import (
+    model_config,
+    generate_category_id,
+    generate_uuid,
+    get_current_datetime
+)
 
 # Enum for Asset Status
 class AssetStatus(str, Enum):
@@ -32,15 +37,14 @@ class MaintenanceStatus(str, Enum):
 
 # Edit History Entry for AssetCategory
 class EditHistoryEntry(BaseModel):
-    id: str = Field(..., description="Unique identifier for the edit record")
+    id: str = Field(default_factory=generate_uuid, description="Unique identifier for the edit record")
     type: str = Field(..., description="Type of action, e.g., 'edit'")
     edit_date: str = Field(..., description="Date of the edit in YYYY-MM-DD format")
     change_type: str = Field(..., description="Type of change, e.g., 'Category Update'")
     details: str = Field(..., description="Details of the changes made")
     notes: str = Field(..., description="Notes about the edit")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Assignment Policies Schema - matching frontend naming
 class AssignmentPolicies(BaseModel):
@@ -50,8 +54,7 @@ class AssignmentPolicies(BaseModel):
     duration_unit: Optional[str] = Field(None, description="Unit for assignment duration, e.g., 'days'")
     allow_multiple_assignments: bool = Field(False, description="Indicates if multiple assignments are allowed")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Documents Schema - matching frontend naming
 class Documents(BaseModel):
@@ -60,12 +63,11 @@ class Documents(BaseModel):
     insurance: bool = Field(False, description="Insurance document required")
     custom: List[str] = Field(default_factory=list, description="Custom document types")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Asset Category Schema
 class AssetCategory(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique category ID")
+    id: str = Field(default_factory=generate_category_id, description="Unique category ID")
     category_name: str = Field(..., description="Category name, e.g., 'Laptops'")
     category_type: Optional[str] = Field(None, description="Type, e.g., 'hardware', 'software', 'stationery'")
     description: Optional[str] = Field(None, description="Category description")
@@ -129,13 +131,10 @@ class AssetCategory(BaseModel):
     available_assets: Optional[int] = Field(None, description="Number of available assets")
     
     # History and timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 class AssetCategoryCreate(BaseModel):
     category_name: str
@@ -187,9 +186,7 @@ class AssetCategoryCreate(BaseModel):
     notes: Optional[str] = None
     available_assets: Optional[int] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class AssetCategoryUpdate(BaseModel):
     category_name: Optional[str] = None
@@ -237,13 +234,11 @@ class AssetCategoryUpdate(BaseModel):
     totalCost: Optional[float] = None
     inStorage: Optional[int] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 # For AssetTablePage component
 class AssetCategoryResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     category_name: str
     name: Optional[str] = None
     description: Optional[str] = None
@@ -262,7 +257,4 @@ class AssetCategoryResponse(BaseModel):
     totalCost: Optional[float] = None
     inStorage: Optional[int] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config

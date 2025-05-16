@@ -2,7 +2,12 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from enum import Enum
 from datetime import datetime
-from bson import ObjectId
+from .utils import (
+    model_config,
+    generate_maintenance_id,
+    generate_uuid,
+    get_current_datetime
+)
 
 class MaintenanceStatus(str, Enum):
     REQUESTED = "requested"
@@ -29,7 +34,7 @@ class MaintenanceType(str, Enum):
     OTHER = "other"
 
 class MaintenanceHistoryEntry(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique maintenance ID")
+    id: str = Field(default_factory=generate_maintenance_id, description="Unique maintenance ID")
     asset_id: str = Field(..., description="ID of the asset")
     asset_name: Optional[str] = Field(None, description="Name of the asset at time of maintenance")
     asset_tag: Optional[str] = Field(None, description="Asset tag/identifier")
@@ -61,17 +66,14 @@ class MaintenanceHistoryEntry(BaseModel):
     notes: Optional[str] = Field(None, description="Additional notes")
     completion_notes: Optional[str] = Field(None, description="Notes provided upon completion")
     documents: List[Dict[str, Any]] = Field(default_factory=list, description="Documents related to maintenance")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     
     # Additional fields from Maintenance/index.jsx
     performed_by: Optional[str] = Field(None, description="Person or company who performed the maintenance")
     next_scheduled: Optional[str] = Field(None, description="Date of next scheduled maintenance")
 
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 class MaintenanceRequest(BaseModel):
     asset_id: str
@@ -90,9 +92,7 @@ class MaintenanceRequest(BaseModel):
     # Additional fields from Maintenance/index.jsx
     performed_by: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class MaintenanceUpdate(BaseModel):
     maintenance_id: str
@@ -113,12 +113,10 @@ class MaintenanceUpdate(BaseModel):
     performed_by: Optional[str] = None
     next_scheduled: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class MaintenanceAttachment(BaseModel):
-    id: str = Field(..., description="Unique identifier for the attachment")
+    id: str = Field(default_factory=generate_uuid, description="Unique identifier for the attachment")
     name: str = Field(..., description="Attachment name")
     file_type: str = Field(..., description="Type of file")
     url: str = Field(..., description="URL to the attachment")
@@ -126,8 +124,7 @@ class MaintenanceAttachment(BaseModel):
     size: Optional[int] = Field(None, description="Size of attachment in bytes")
     notes: Optional[str] = Field(None, description="Notes about the attachment")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 class MaintenanceCost(BaseModel):
     amount: float = Field(..., description="Cost amount")
@@ -137,8 +134,7 @@ class MaintenanceCost(BaseModel):
     date: Optional[str] = Field(None, description="Date when cost was incurred")
     invoice_number: Optional[str] = Field(None, description="Associated invoice number")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 class Technician(BaseModel):
     id: Optional[str] = Field(None, description="Technician ID")
@@ -149,8 +145,7 @@ class Technician(BaseModel):
     specialization: Optional[str] = Field(None, description="Area of specialization")
     company: Optional[str] = Field(None, description="Company or organization")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 class StatusUpdate(BaseModel):
     status: str = Field(..., description="New status")
@@ -158,11 +153,10 @@ class StatusUpdate(BaseModel):
     updated_by: Optional[str] = Field(None, description="Person who updated the status")
     notes: Optional[str] = Field(None, description="Notes about the update")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 class MaintenanceHistory(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique maintenance record ID")
+    id: str = Field(default_factory=generate_maintenance_id, description="Unique maintenance record ID")
     
     asset_id: str = Field(..., description="ID of the asset under maintenance")
     asset_name: str = Field(..., description="Name of the asset")
@@ -225,13 +219,10 @@ class MaintenanceHistory(BaseModel):
     performed_by: Optional[str] = Field(None, description="Person or company who performed the maintenance")
     next_scheduled: Optional[str] = Field(None, description="Date of next scheduled maintenance")
     
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 class MaintenanceCreate(BaseModel):
     asset_id: str
@@ -271,9 +262,7 @@ class MaintenanceCreate(BaseModel):
     next_scheduled: Optional[str] = None
     technician: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class MaintenanceUpdate(BaseModel):
     asset_id: Optional[str] = None
@@ -328,12 +317,10 @@ class MaintenanceUpdate(BaseModel):
     performed_by: Optional[str] = None
     next_scheduled: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class MaintenanceResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     asset_id: str
     asset_name: str
     asset_tag: str
@@ -363,7 +350,4 @@ class MaintenanceResponse(BaseModel):
     performed_by: Optional[str] = None
     next_scheduled: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config

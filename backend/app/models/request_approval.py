@@ -2,7 +2,12 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 from datetime import datetime
-from bson import ObjectId
+from .utils import (
+    model_config,
+    generate_request_id,
+    generate_uuid,
+    get_current_datetime
+)
 
 # Request Types Enum - lowercase to match frontend
 class RequestType(str, Enum):
@@ -33,8 +38,7 @@ class Requestor(BaseModel):
     email: Optional[str] = Field(None, description="Email of the requestor")
     phone: Optional[str] = Field(None, description="Phone number of the requestor")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Approver Information Schema
 class Approver(BaseModel):
@@ -45,20 +49,18 @@ class Approver(BaseModel):
     date: Optional[str] = Field(None, description="Date of approval/rejection")
     notes: Optional[str] = Field(None, description="Notes provided by the approver")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Comment Schema
 class RequestComment(BaseModel):
-    id: str = Field(..., description="Comment ID")
+    id: str = Field(default_factory=generate_uuid, description="Comment ID")
     author: str = Field(..., description="Name of comment author")
     content: str = Field(..., description="Comment content")
     date: str = Field(..., description="Date of comment")
     author_id: Optional[str] = Field(None, description="ID of comment author")
     author_role: Optional[str] = Field(None, description="Role of comment author")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Asset Request Details Schema
 class AssetRequestDetails(BaseModel):
@@ -66,8 +68,7 @@ class AssetRequestDetails(BaseModel):
     specifications: str = Field(..., description="Asset specifications")
     purpose: str = Field(..., description="Purpose for requesting the asset")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Maintenance Approval Details Schema
 class MaintenanceApprovalDetails(BaseModel):
@@ -76,8 +77,7 @@ class MaintenanceApprovalDetails(BaseModel):
     asset_tag: Optional[str] = Field(None, description="Asset tag/identifier")
     issue: str = Field(..., description="Description of the maintenance issue")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Assignment Approval Details Schema
 class AssignmentApprovalDetails(BaseModel):
@@ -85,8 +85,7 @@ class AssignmentApprovalDetails(BaseModel):
     items: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="List of assets to assign")
     recipients: Optional[str] = Field(None, description="Description of recipients")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Purchase Approval Details Schema
 class PurchaseApprovalDetails(BaseModel):
@@ -95,8 +94,7 @@ class PurchaseApprovalDetails(BaseModel):
     estimated_cost: Optional[float] = Field(None, description="Estimated cost")
     vendor: Optional[str] = Field(None, description="Preferred vendor")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Asset Return Details Schema
 class AssetReturnDetails(BaseModel):
@@ -105,12 +103,11 @@ class AssetReturnDetails(BaseModel):
     asset_tag: Optional[str] = Field(None, description="Asset tag/identifier")
     reason: str = Field(..., description="Reason for returning the asset")
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Request Schema with all frontend fields
 class Request(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique request ID")
+    id: str = Field(default_factory=generate_request_id, description="Unique request ID")
     type: RequestType = Field(..., description="Type of request")
     title: str = Field(..., description="Request title")
     requestor: Requestor = Field(..., description="Information about the requestor")
@@ -146,13 +143,10 @@ class Request(BaseModel):
     completed_date: Optional[str] = Field(None, description="Date when request was completed")
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 class RequestCreate(BaseModel):
     type: RequestType
@@ -170,9 +164,7 @@ class RequestCreate(BaseModel):
     approvers: Optional[List[Approver]] = None
     comments: Optional[List[RequestComment]] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class RequestUpdate(BaseModel):
     type: Optional[RequestType] = None
@@ -199,12 +191,10 @@ class RequestUpdate(BaseModel):
     last_updated: Optional[str] = None
     completed_date: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class RequestResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     type: str
     title: str
     requestor: Dict[str, Any]
@@ -215,10 +205,7 @@ class RequestResponse(BaseModel):
     approvers: List[Dict[str, Any]]
     comments: List[Dict[str, Any]]
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 # For adding a comment to a request
 class CommentCreate(BaseModel):
@@ -228,9 +215,7 @@ class CommentCreate(BaseModel):
     author_id: Optional[str] = Field(None, description="ID of comment author")
     author_role: Optional[str] = Field(None, description="Role of comment author")
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 # For updating the approval status
 class ApprovalUpdate(BaseModel):
@@ -239,6 +224,4 @@ class ApprovalUpdate(BaseModel):
     status: RequestStatus = Field(..., description="New approval status")
     notes: Optional[str] = Field(None, description="Notes for the approval/rejection")
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True 
+    model_config = model_config 

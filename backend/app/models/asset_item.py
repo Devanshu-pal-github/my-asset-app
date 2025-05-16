@@ -2,7 +2,12 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 from datetime import datetime, date
-from bson import ObjectId
+from .utils import (
+    model_config,
+    generate_asset_id,
+    generate_uuid,
+    get_current_datetime
+)
 
 # Enum for Asset Status - lowercase to match frontend
 class AssetStatus(str, Enum):
@@ -28,7 +33,7 @@ class AssetCondition(str, Enum):
 
 # Asset History Entry Schema
 class AssetHistoryEntry(BaseModel):
-    id: str = Field(..., description="Unique identifier for the history record")
+    id: str = Field(default_factory=generate_uuid, description="Unique identifier for the history record")
     type: str = Field(..., description="Type of history entry, e.g., 'assignment', 'maintenance'")
     date: str = Field(..., description="Date of the event in YYYY-MM-DD format")
     user_id: Optional[str] = Field(None, description="ID of the user who performed the action")
@@ -36,16 +41,14 @@ class AssetHistoryEntry(BaseModel):
     details: str = Field(..., description="Details of the history entry")
     notes: Optional[str] = Field(None, description="Additional notes")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Specifications Schema
 class Specification(BaseModel):
     key: str = Field(..., description="Specification name, e.g., 'RAM'")
     value: str = Field(..., description="Specification value, e.g., '16GB'")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Maintenance Record Schema
 class MaintenanceRecord(BaseModel):
@@ -59,8 +62,7 @@ class MaintenanceRecord(BaseModel):
     cost: Optional[float] = Field(None, description="Cost of the maintenance")
     notes: Optional[str] = Field(None, description="Additional notes")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Document Schema
 class Document(BaseModel):
@@ -72,21 +74,19 @@ class Document(BaseModel):
     expiry_date: Optional[str] = Field(None, description="Document expiry date if applicable")
     notes: Optional[str] = Field(None, description="Additional notes")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Tag Schema
 class Tag(BaseModel):
-    id: str = Field(..., description="Unique tag ID")
+    id: str = Field(default_factory=generate_uuid, description="Unique tag ID")
     name: str = Field(..., description="Tag name")
     color: Optional[str] = Field(None, description="Tag color")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # AssetItem Schema with all required frontend fields
 class AssetItem(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique asset ID")
+    id: str = Field(default_factory=generate_asset_id, description="Unique asset ID")
     
     # Basic Information
     category_id: str = Field(..., description="Asset category ID")
@@ -203,7 +203,7 @@ class AssetItem(BaseModel):
     totalPurchaseValue: Optional[float] = Field(None, description="Total purchase value")
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     createdAt: Optional[str] = Field(None, description="Creation timestamp (camelCase alias)")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     lastUpdated: Optional[str] = Field(None, description="Last update timestamp (camelCase alias)")
@@ -226,11 +226,8 @@ class AssetItem(BaseModel):
     expected_life_months: Optional[int] = Field(None, description="Expected life in months")
     procurement_method: Optional[str] = Field(None, description="Method of procurement")
     purchase_order_number: Optional[str] = Field(None, description="Purchase order number")
-    
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+
+    model_config = model_config
 
 # For assets creation
 class AssetItemCreate(BaseModel):
@@ -283,10 +280,8 @@ class AssetItemCreate(BaseModel):
     maintenance_due_date: Optional[str] = None
     disposal_date: Optional[str] = None
     department: Optional[str] = None
-    
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+
+    model_config = model_config
 
 # For updating assets
 class AssetItemUpdate(BaseModel):
@@ -383,13 +378,11 @@ class AssetItemUpdate(BaseModel):
     lastUpdated: Optional[str] = None
     purchaseDate: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 # For asset item response
 class AssetItemResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     category_id: str
     category_name: Optional[str] = None
     name: str
@@ -424,10 +417,7 @@ class AssetItemResponse(BaseModel):
     current_assignee_name: Optional[str] = None
     current_assignment_date: Optional[str] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
 
 # For bulk asset creation
 class BulkAssetCreate(BaseModel):
@@ -459,7 +449,5 @@ class BulkAssetCreate(BaseModel):
     is_operational: Optional[bool] = Field(True, description="Whether the asset is operational")
     model: Optional[str] = Field(None, description="Model of the asset")
     serial_number: Optional[str] = Field(None, description="Serial number of the asset")
-    
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+
+    model_config = model_config

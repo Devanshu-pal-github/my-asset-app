@@ -2,7 +2,12 @@ from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
-from bson import ObjectId
+from .utils import (
+    model_config,
+    generate_employee_id,
+    generate_uuid,
+    get_current_datetime
+)
 
 # Enum for Employee Status
 class EmployeeStatus(str, Enum):
@@ -26,8 +31,7 @@ class AssignedAsset(BaseModel):
     assignment_notes: Optional[str] = Field(None, description="Notes about the assignment")
     condition: Optional[str] = Field(None, description="Condition of the asset when assigned")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Employee Contact Information
 class EmployeeContact(BaseModel):
@@ -43,8 +47,7 @@ class EmployeeContact(BaseModel):
     postal_code: Optional[str] = Field(None, description="Postal code")
     country: Optional[str] = Field(None, description="Country of residence")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Employee Metadata
 class EmployeeMetadata(BaseModel):
@@ -67,12 +70,11 @@ class EmployeeMetadata(BaseModel):
     designation: Optional[str] = Field(None, description="Designation (from EmployeeAssignment)")
     created_at: Optional[str] = Field(None, description="Date when employee record was created")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = model_config
 
 # Employee Schema with all required frontend fields
 class Employee(BaseModel):
-    id: Optional[str] = Field(None, alias="_id", description="Unique employee ID")
+    id: str = Field(default_factory=generate_employee_id, description="Unique employee ID")
     employee_id: str = Field(..., description="Employee ID (e.g., EMP001)")
     first_name: str = Field(..., description="First name")
     last_name: str = Field(..., description="Last name")
@@ -109,7 +111,7 @@ class Employee(BaseModel):
     employee_type: Optional[str] = Field(None, description="Type of employee")
     location: Optional[str] = Field(None, description="Employee location")
     avatar_url: Optional[str] = Field(None, description="URL to employee avatar image")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
     
     # Assignment related fields used in frontend 
@@ -126,10 +128,10 @@ class Employee(BaseModel):
     # Fields from EmployeeDetails/index.jsx
     current_assets: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="Currently assigned assets")
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    # Count of assigned assets
+    assigned_assets_count: Optional[int] = Field(0, description="Count of assets assigned to the employee")
+    
+    model_config = model_config
 
 class EmployeeCreate(BaseModel):
     employee_id: str
@@ -150,10 +152,9 @@ class EmployeeCreate(BaseModel):
     location: Optional[str] = None
     job_title: Optional[str] = None
     is_active: Optional[bool] = True
+    current_assets: Optional[List[Dict[str, Any]]] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 class EmployeeUpdate(BaseModel):
     employee_id: Optional[str] = None
@@ -194,14 +195,13 @@ class EmployeeUpdate(BaseModel):
     # Additional fields from frontend
     is_active: Optional[bool] = None
     current_assets: Optional[List[Dict[str, Any]]] = None
+    assigned_assets_count: Optional[int] = None
     
-    class Config:
-        arbitrary_types_allowed = True
-        populate_by_name = True
+    model_config = model_config
 
 # For employee response in list views
 class EmployeeResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     employee_id: str
     first_name: str
     last_name: str
@@ -216,9 +216,6 @@ class EmployeeResponse(BaseModel):
     department_id: Optional[str] = None
     job_title: Optional[str] = None
     is_active: Optional[bool] = None
-    assigned_assets: Optional[int] = Field(None, description="Count of assets assigned to the employee")
+    assigned_assets: Optional[int] = None  # Alias for total_assigned_assets or assigned_assets_count
     
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
+    model_config = model_config
