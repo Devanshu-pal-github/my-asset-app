@@ -1,417 +1,514 @@
 from pymongo.collection import Collection
-from pymongo.errors import DuplicateKeyError
-from bson import ObjectId
-from typing import List, Optional, Dict, Any
-from datetime import datetime
-from app.models.asset_item import AssetItem, AssetItemCreate, AssetItemUpdate, AssetStatus, AssetCondition, AssetHistoryEntry
+from pymongo.errors import DuplicateKeyError, OperationFailure
+from typing import List, Optional, Dict, Any, Tuple
+from datetime import datetime, timedelta
+from app.models.asset_item import (
+    AssetItem, 
+    AssetItemCreate, 
+    AssetItemUpdate,
+    AssetItemResponse,
+    AssetStatus,
+    MaintenanceSchedule
+)
+from app.models.utils import generate_uuid, get_current_datetime, serialize_model
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
-def get_asset_items(db: Collection, query: Dict[str, Any] = None) -> List[AssetItem]:
+def get_asset_items(
+    db: Collection, 
+    filters: Dict[str, Any] = None
+) -> List[AssetItemResponse]:
     """
-    Retrieve asset items with optional filters.
+    Retrieve asset items with optional filtering.
+    
+    Args:
+        db (Collection): MongoDB collection
+        filters (Dict[str, Any], optional): Filtering criteria
+        
+    Returns:
+        List[AssetItemResponse]: List of asset items
     """
-    if query is None:
+    logger.info("Fetching asset items with filters")
+    try:
         query = {}
         
-    logger.info(f"Fetching asset items with query: {query}")
-    try:
-        items = list(db.find(query))
-        result = []
-        for item in items:
-            # Get category info
-            category_id = item.get("category_id")
-            category = db.database["asset_categories"].find_one({"_id": ObjectId(category_id)}) if category_id else None
-            
-            # Get assignee info if assigned
-            assignee_id = item.get("current_assignee_id")
-            assignee = db.database["employees"].find_one({"_id": ObjectId(assignee_id)}) if assignee_id else None
-            assignee_name = f"{assignee.get('first_name', '')} {assignee.get('last_name', '')}" if assignee else None
-            
-            # Prepare the response with all fields
-            item_dict = {
-                **item,
-                "id": str(item["_id"]),
-                "_id": str(item["_id"]),
-                "category_name": category.get("category_name", "") if category else "",
-                "current_assignee_name": assignee_name,
-            }
-            
-            # Convert ObjectIds in nested arrays to strings
-            if "assignment_history" in item_dict:
-                for history in item_dict["assignment_history"]:
-                    if "_id" in history:
-                        history["_id"] = str(history["_id"])
-            
-            if "maintenance_history" in item_dict:
-                for history in item_dict["maintenance_history"]:
-                    if "_id" in history:
-                        history["_id"] = str(history["_id"])
-                        
-            if "documents" in item_dict:
-                for doc in item_dict["documents"]:
-                    if "_id" in doc:
-                        doc["_id"] = str(doc["_id"])
-            
-            try:
-                result.append(AssetItem(**item_dict))
-            except Exception as e:
-                logger.error(f"Error creating AssetItem model: {str(e)}", exc_info=True)
-                # Continue with next item instead of failing
+        # Apply filters if provided
+        if filters:
+            if "category_id" in filters and filters["category_id"]:
+                query["category_id"] = filters["category_id"]
+                
+            if "status" in filters and filters["status"]:
+                query["status"] = filters["status"]
+                
+            if "has_active_assignment" in filters:
+                query["has_active_assignment"] = filters["has_active_assignment"]
+                
+            if "serial_number" in filters and filters["serial_number"]:
+                query["serial_number"] = {"$regex": filters["serial_number"], "$options": "i"}
+                
+            if "asset_tag" in filters and filters["asset_tag"]:
+                query["asset_tag"] = {"$regex": filters["asset_tag"], "$options": "i"}
+                
+            if "department" in filters and filters["department"]:
+                query["department"] = filters["department"]
+                
+            if "location" in filters and filters["location"]:
+                query["location"] = filters["location"]
+                
+            if "maintenance_due_before" in filters and filters["maintenance_due_before"]:
+                query["next_maintenance_date"] = {"$lte": filters["maintenance_due_before"]}
+                
+            if "requires_maintenance" in filters:
+                query["requires_maintenance"] = filters["requires_maintenance"]
+                
+            if "is_active" in filters:
+                query["is_active"] = filters["is_active"]
+                
+            if "tags" in filters and filters["tags"]:
+                query["tags"] = {"$in": filters["tags"]}
         
+        assets = list(db.find(query))
+        result = []
+        
+        for asset in assets:
+            # Convert _id to id if needed
+            if "_id" in asset and "id" not in asset:
+                asset["id"] = str(asset["_id"])
+                
+            # Remove _id field as we have id
+            if "_id" in asset:
+                del asset["_id"]
+                
+            # Convert to AssetItemResponse
+            asset_response = AssetItemResponse(**asset)
+            result.append(asset_response)
+            
         logger.debug(f"Fetched {len(result)} asset items")
         return result
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
     except Exception as e:
         logger.error(f"Error fetching asset items: {str(e)}", exc_info=True)
         raise
 
-def get_asset_item_by_id(db: Collection, id: str) -> Optional[AssetItem]:
+def get_asset_item_by_id(db: Collection, asset_id: str) -> Optional[AssetItemResponse]:
     """
     Retrieve a specific asset item by ID.
-    """
-    logger.info(f"Fetching asset item ID: {id}")
-    try:
-        if not ObjectId.is_valid(id):
-            logger.warning(f"Invalid ObjectId: {id}")
-            raise ValueError("Invalid asset ID")
+    
+    Args:
+        db (Collection): MongoDB collection
+        asset_id (str): Asset ID to retrieve
         
-        item = db.find_one({"_id": ObjectId(id)})
-        if not item:
-            logger.warning(f"Asset item not found: {id}")
+    Returns:
+        Optional[AssetItemResponse]: The asset if found, None otherwise
+    """
+    logger.info(f"Fetching asset item ID: {asset_id}")
+    try:
+        asset = db.find_one({"id": asset_id})
+        if not asset:
+            logger.warning(f"Asset not found: {asset_id}")
             return None
         
-        # Get category info
-        category_id = item.get("category_id")
-        category = db.database["asset_categories"].find_one({"_id": ObjectId(category_id)}) if category_id else None
-        
-        # Get assignee info if assigned
-        assignee_id = item.get("current_assignee_id")
-        assignee = db.database["employees"].find_one({"_id": ObjectId(assignee_id)}) if assignee_id else None
-        assignee_name = f"{assignee.get('first_name', '')} {assignee.get('last_name', '')}" if assignee else None
-        
-        # Prepare the response with all fields
-        item_dict = {
-            **item,
-            "id": str(item["_id"]),
-            "_id": str(item["_id"]),
-            "category_name": category.get("category_name", "") if category else "",
-            "current_assignee_name": assignee_name,
-        }
-        
-        # Convert ObjectIds in nested arrays to strings
-        if "assignment_history" in item_dict:
-            for history in item_dict["assignment_history"]:
-                if "_id" in history:
-                    history["_id"] = str(history["_id"])
-        
-        if "maintenance_history" in item_dict:
-            for history in item_dict["maintenance_history"]:
-                if "_id" in history:
-                    history["_id"] = str(history["_id"])
-                    
-        if "documents" in item_dict:
-            for doc in item_dict["documents"]:
-                if "_id" in doc:
-                    doc["_id"] = str(doc["_id"])
-        
-        asset_item = AssetItem(**item_dict)
-        logger.debug(f"Fetched asset item: {asset_item.name}")
-        return asset_item
-    except Exception as e:
-        logger.error(f"Error fetching asset item {id}: {str(e)}", exc_info=True)
-        raise
-
-def create_asset_item(db: Collection, item: AssetItemCreate) -> AssetItem:
-    """
-    Create a new asset item with validation.
-    """
-    logger.info(f"Creating asset item: {item.name}")
-    try:
-        if not ObjectId.is_valid(item.category_id):
-            logger.warning(f"Invalid category ID: {item.category_id}")
-            raise ValueError("Invalid category ID")
-        
-        category = db.database["asset_categories"].find_one({"_id": ObjectId(item.category_id)})
-        if not category:
-            logger.warning(f"Category not found: {item.category_id}")
-            raise ValueError("Category not found")
-        
-        # Check for duplicate asset tag or serial number
-        existing = db.find_one({"$or": [
-            {"asset_tag": item.asset_tag},
-            {"serial_number": item.serial_number}
-        ]})
-        
-        if existing:
-            logger.warning(f"Duplicate found: asset_tag={existing.get('asset_tag')}, serial_number={existing.get('serial_number')}")
-            raise ValueError(f"Asset tag '{item.asset_tag}' or serial number '{item.serial_number}' already exists")
-        
-        if item.status == AssetStatus.RETIRED:
-            logger.warning("Cannot create asset with RETIRED status")
-            raise ValueError("Cannot create asset with RETIRED status")
-        
-        item_dict = item.dict(exclude_none=True)
-        item_dict["has_active_assignment"] = False
-        item_dict["is_operational"] = item.status in [AssetStatus.AVAILABLE, AssetStatus.ASSIGNED]
-        item_dict["current_value"] = item.purchase_cost
-        item_dict["created_at"] = datetime.utcnow()
-        item_dict["assignment_history"] = []
-        item_dict["maintenance_history"] = []
-        item_dict["documents"] = []
-        item_dict["history"] = []
-        
-        # Add a history entry for the creation
-        history_entry = {
-            "id": str(ObjectId()),
-            "type": "creation",
-            "date": datetime.utcnow(),
-            "details": {
-                "action": "Created asset",
-                "status": item.status
-            },
-            "notes": "Initial creation"
-        }
-        item_dict["history"].append(history_entry)
-        
-        result = db.insert_one(item_dict)
-        logger.debug(f"Inserted asset item: {item.name} with ID: {result.inserted_id}")
-        
-        response_dict = {
-            **item_dict,
-            "id": str(result.inserted_id),
-            "_id": str(result.inserted_id),
-            "category_name": category.get("category_name", "")
-        }
-        created_item = AssetItem(**response_dict)
-        logger.info(f"Created asset item with ID: {created_item.id}")
-        return created_item
-    except DuplicateKeyError:
-        logger.warning(f"Duplicate found: asset_tag={item.asset_tag}, serial_number={item.serial_number}")
-        raise ValueError(f"Asset tag '{item.asset_tag}' or serial number '{item.serial_number}' already exists")
-    except Exception as e:
-        logger.error(f"Error creating asset item: {str(e)}", exc_info=True)
-        raise
-
-def update_asset_item(db: Collection, id: str, item: AssetItemUpdate) -> Optional[AssetItem]:
-    """
-    Update an existing asset item.
-    """
-    logger.info(f"Updating asset item ID: {id}")
-    try:
-        if not ObjectId.is_valid(id):
-            logger.warning(f"Invalid ObjectId: {id}")
-            raise ValueError("Invalid asset ID")
-        
-        existing = db.find_one({"_id": ObjectId(id)})
-        if not existing:
-            logger.warning(f"Asset item not found: {id}")
-            return None
-        
-        # Validate category if provided
-        if item.category_id:
-            if not ObjectId.is_valid(item.category_id):
-                logger.warning(f"Invalid category ID: {item.category_id}")
-                raise ValueError("Invalid category ID")
+        # Remove _id field as we have id
+        if "_id" in asset:
+            del asset["_id"]
             
-            category = db.database["asset_categories"].find_one({"_id": ObjectId(item.category_id)})
+        # Convert to AssetItemResponse
+        asset_response = AssetItemResponse(**asset)
+        logger.debug(f"Fetched asset: {asset_response.asset_name}")
+        return asset_response
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching asset {asset_id}: {str(e)}", exc_info=True)
+        raise
+
+def create_asset_item(db: Collection, asset: AssetItemCreate) -> AssetItemResponse:
+    """
+    Create a new asset item.
+    
+    Args:
+        db (Collection): MongoDB collection
+        asset (AssetItemCreate): Asset data to create
+        
+    Returns:
+        AssetItemResponse: The created asset
+    """
+    logger.info(f"Creating asset: {asset.asset_name}")
+    try:
+        # Convert to dict, excluding None values
+        asset_dict = asset.model_dump(exclude_none=True)
+        
+        # Check if asset with serial number already exists (if provided)
+        if asset.serial_number:
+            existing = db.find_one({"serial_number": asset.serial_number})
+            if existing:
+                logger.warning(f"Asset with serial number already exists: {asset.serial_number}")
+                raise ValueError(f"Asset with serial number '{asset.serial_number}' already exists")
+        
+        # Check if asset with asset tag already exists (if provided)
+        if asset.asset_tag:
+            existing = db.find_one({"asset_tag": asset.asset_tag})
+            if existing:
+                logger.warning(f"Asset with asset tag already exists: {asset.asset_tag}")
+                raise ValueError(f"Asset with asset tag '{asset.asset_tag}' already exists")
+        
+        # Check if the category exists
+        if asset.category_id:
+            category = db.database["asset_categories"].find_one({"id": asset.category_id})
             if not category:
-                logger.warning(f"Category not found: {item.category_id}")
-                raise ValueError("Category not found")
-        else:
-            category_id = existing.get("category_id")
-            category = db.database["asset_categories"].find_one({"_id": ObjectId(category_id)}) if category_id else None
-        
-        # Check for duplicate asset tag or serial number
-        if item.asset_tag or item.serial_number:
-            duplicate_query = {"_id": {"$ne": ObjectId(id)}, "$or": []}
+                logger.warning(f"Category not found: {asset.category_id}")
+                raise ValueError(f"Category with ID '{asset.category_id}' does not exist")
             
-            if item.asset_tag:
-                duplicate_query["$or"].append({"asset_tag": item.asset_tag})
+            # Add category name to asset
+            asset_dict["category_name"] = category.get("category_name", "Unknown")
+        
+        # Set default values
+        asset_dict["is_active"] = asset_dict.get("is_active", True)
+        asset_dict["is_operational"] = asset_dict.get("is_operational", True)
+        asset_dict["has_active_assignment"] = False
+        asset_dict["status"] = asset_dict.get("status", "available")
+        
+        # Initialize metadata fields
+        asset_dict["assignment_history"] = []
+        asset_dict["maintenance_history"] = []
+        asset_dict["ownership_history"] = []
+        asset_dict["edit_history"] = []
+        asset_dict["created_at"] = get_current_datetime()
+        
+        # Handle maintenance scheduling
+        if "maintenance_schedule" in asset_dict and asset_dict["maintenance_schedule"]:
+            if not isinstance(asset_dict["maintenance_schedule"], dict):
+                asset_dict["maintenance_schedule"] = asset_dict["maintenance_schedule"].model_dump()
             
-            if item.serial_number:
-                duplicate_query["$or"].append({"serial_number": item.serial_number})
-            
-            if duplicate_query["$or"]:
-                existing_tag = db.find_one(duplicate_query)
-                if existing_tag:
-                    logger.warning(f"Duplicate found: asset_tag={existing_tag.get('asset_tag')}, serial_number={existing_tag.get('serial_number')}")
-                    raise ValueError(f"Asset tag or serial number already exists")
+            if asset_dict["maintenance_schedule"].get("frequency") and asset_dict["maintenance_schedule"].get("frequency_unit"):
+                # Calculate next maintenance date
+                frequency = asset_dict["maintenance_schedule"]["frequency"]
+                frequency_unit = asset_dict["maintenance_schedule"]["frequency_unit"]
+                
+                if frequency > 0:
+                    now = get_current_datetime()
+                    if frequency_unit == "days":
+                        asset_dict["next_maintenance_date"] = now + timedelta(days=frequency)
+                    elif frequency_unit == "weeks":
+                        asset_dict["next_maintenance_date"] = now + timedelta(weeks=frequency)
+                    elif frequency_unit == "months":
+                        # Approximate months as 30 days
+                        asset_dict["next_maintenance_date"] = now + timedelta(days=30 * frequency)
+                    elif frequency_unit == "years":
+                        # Approximate years as 365 days
+                        asset_dict["next_maintenance_date"] = now + timedelta(days=365 * frequency)
         
-        # Prevent update of retired assets unless changing status
-        if existing["status"] == AssetStatus.RETIRED and (not item.status or item.status == AssetStatus.RETIRED):
-            logger.warning(f"Cannot update RETIRED asset: {id}")
-            raise ValueError("Cannot update a retired asset")
+        # Generate UUID for the id field
+        asset_dict["id"] = generate_uuid()
         
-        item_dict = item.dict(exclude_unset=True, exclude_none=True)
+        # Add _id field for MongoDB to use the same value as id
+        asset_dict["_id"] = asset_dict["id"]
         
-        # Update operational status based on new status
-        if "status" in item_dict:
-            item_dict["is_operational"] = item_dict["status"] in [AssetStatus.AVAILABLE.value, AssetStatus.ASSIGNED.value]
+        # Insert the asset
+        result = db.insert_one(asset_dict)
+        logger.debug(f"Inserted asset: {asset.asset_name} with ID: {asset_dict['id']}")
         
-        # Add an update entry to the history
-        history_entry = {
-            "id": str(ObjectId()),
-            "type": "update",
-            "date": datetime.utcnow(),
-            "details": {
-                "action": "Updated asset",
-                "fields_updated": list(item_dict.keys())
-            },
-            "notes": "Updated via API"
+        # Add a history entry for this creation
+        edit_entry = {
+            "id": generate_uuid(),
+            "type": "creation",
+            "edit_date": get_current_datetime().strftime("%Y-%m-%d"),
+            "change_type": "Asset Creation",
+            "details": "Initial asset creation",
+            "notes": asset_dict.get("notes", "")
         }
         
-        # Add history entry
+        # Add history entry to the document
         db.update_one(
-            {"_id": ObjectId(id)},
-            {"$push": {"history": history_entry}}
+            {"id": asset_dict["id"]},
+            {"$push": {"edit_history": edit_entry}}
         )
         
-        # Set the updated timestamp
-        item_dict["updated_at"] = datetime.utcnow()
+        # Retrieve the created asset
+        created_asset = db.find_one({"id": asset_dict["id"]})
+        
+        # Remove _id field
+        if "_id" in created_asset:
+            del created_asset["_id"]
+        
+        # Convert to AssetItemResponse
+        asset_response = AssetItemResponse(**created_asset)
+        logger.info(f"Created asset with ID: {asset_response.id}")
+        return asset_response
+    except DuplicateKeyError as e:
+        logger.warning(f"Duplicate key error: {str(e)}")
+        raise ValueError(f"Asset with duplicate key already exists: {str(e)}")
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except ValueError as e:
+        # Re-raise ValueError as is
+        raise
+    except Exception as e:
+        logger.error(f"Error creating asset: {str(e)}", exc_info=True)
+        raise
+
+def update_asset_item(db: Collection, asset_id: str, asset: AssetItemUpdate) -> Optional[AssetItemResponse]:
+    """
+    Update an existing asset item.
+    
+    Args:
+        db (Collection): MongoDB collection
+        asset_id (str): Asset ID to update
+        asset (AssetItemUpdate): Asset data to update
+        
+    Returns:
+        Optional[AssetItemResponse]: The updated asset if found, None otherwise
+    """
+    logger.info(f"Updating asset ID: {asset_id}")
+    try:
+        # Check if asset exists
+        existing_asset = db.find_one({"id": asset_id})
+        if not existing_asset:
+            logger.warning(f"Asset not found: {asset_id}")
+            return None
+        
+        # Convert to dict, excluding unset and None values
+        asset_dict = asset.model_dump(exclude_unset=True, exclude_none=True)
+        
+        # Check for duplicate serial_number
+        if "serial_number" in asset_dict and asset_dict["serial_number"]:
+            existing = db.find_one({
+                "serial_number": asset_dict["serial_number"], 
+                "id": {"$ne": asset_id}
+            })
+            if existing:
+                logger.warning(f"Asset with serial number already exists: {asset_dict['serial_number']}")
+                raise ValueError(f"Asset with serial number '{asset_dict['serial_number']}' already exists")
+        
+        # Check for duplicate asset_tag
+        if "asset_tag" in asset_dict and asset_dict["asset_tag"]:
+            existing = db.find_one({
+                "asset_tag": asset_dict["asset_tag"], 
+                "id": {"$ne": asset_id}
+            })
+            if existing:
+                logger.warning(f"Asset with asset tag already exists: {asset_dict['asset_tag']}")
+                raise ValueError(f"Asset with asset tag '{asset_dict['asset_tag']}' already exists")
+        
+        # Check if category exists if being updated
+        if "category_id" in asset_dict and asset_dict["category_id"]:
+            category = db.database["asset_categories"].find_one({"id": asset_dict["category_id"]})
+            if not category:
+                logger.warning(f"Category not found: {asset_dict['category_id']}")
+                raise ValueError(f"Category with ID '{asset_dict['category_id']}' does not exist")
+            
+            # Update category name
+            asset_dict["category_name"] = category.get("category_name", "Unknown")
+        
+        # Handle maintenance scheduling
+        if "maintenance_schedule" in asset_dict and asset_dict["maintenance_schedule"]:
+            if not isinstance(asset_dict["maintenance_schedule"], dict):
+                asset_dict["maintenance_schedule"] = asset_dict["maintenance_schedule"].model_dump()
+            
+            if asset_dict["maintenance_schedule"].get("frequency") and asset_dict["maintenance_schedule"].get("frequency_unit"):
+                # Calculate next maintenance date
+                frequency = asset_dict["maintenance_schedule"]["frequency"]
+                frequency_unit = asset_dict["maintenance_schedule"]["frequency_unit"]
+                
+                if frequency > 0:
+                    now = get_current_datetime()
+                    if frequency_unit == "days":
+                        asset_dict["next_maintenance_date"] = now + timedelta(days=frequency)
+                    elif frequency_unit == "weeks":
+                        asset_dict["next_maintenance_date"] = now + timedelta(weeks=frequency)
+                    elif frequency_unit == "months":
+                        # Approximate months as 30 days
+                        asset_dict["next_maintenance_date"] = now + timedelta(days=30 * frequency)
+                    elif frequency_unit == "years":
+                        # Approximate years as 365 days
+                        asset_dict["next_maintenance_date"] = now + timedelta(days=365 * frequency)
+        
+        # Track edit history
+        current_time = get_current_datetime()
+        asset_dict["updated_at"] = current_time
+        
+        # Add a history entry for this update
+        edit_entry = {
+            "id": generate_uuid(),
+            "type": "edit",
+            "edit_date": current_time.strftime("%Y-%m-%d"),
+            "change_type": "Asset Update",
+            "details": f"Updated asset fields: {', '.join(asset_dict.keys())}",
+            "notes": asset_dict.get("notes", "")
+        }
+        
+        # Add history entry to the document
+        db.update_one(
+            {"id": asset_id},
+            {"$push": {"edit_history": edit_entry}}
+        )
         
         # Apply all updates
         result = db.update_one(
-            {"_id": ObjectId(id)},
-            {"$set": item_dict}
+            {"id": asset_id},
+            {"$set": asset_dict}
         )
         
         if result.matched_count == 0:
-            logger.warning(f"Asset item not found: {id}")
+            logger.warning(f"Asset not found: {asset_id}")
             return None
         
-        # Get the updated asset
-        updated = db.find_one({"_id": ObjectId(id)})
+        # Fetch the updated asset
+        updated_asset = db.find_one({"id": asset_id})
         
-        # Get assignee info if assigned
-        assignee_id = updated.get("current_assignee_id")
-        assignee = db.database["employees"].find_one({"_id": ObjectId(assignee_id)}) if assignee_id else None
-        assignee_name = f"{assignee.get('first_name', '')} {assignee.get('last_name', '')}" if assignee else None
+        # Remove _id field
+        if "_id" in updated_asset:
+            del updated_asset["_id"]
         
-        # Prepare the response with all fields
-        updated_dict = {
-            **updated,
-            "id": str(updated["_id"]),
-            "_id": str(updated["_id"]),
-            "category_name": category.get("category_name", "") if category else "",
-            "current_assignee_name": assignee_name,
-        }
-        
-        # Convert ObjectIds in nested arrays to strings
-        if "assignment_history" in updated_dict:
-            for history in updated_dict["assignment_history"]:
-                if "_id" in history:
-                    history["_id"] = str(history["_id"])
-        
-        if "maintenance_history" in updated_dict:
-            for history in updated_dict["maintenance_history"]:
-                if "_id" in history:
-                    history["_id"] = str(history["_id"])
-                    
-        if "documents" in updated_dict:
-            for doc in updated_dict["documents"]:
-                if "_id" in doc:
-                    doc["_id"] = str(doc["_id"])
-        
-        updated_item = AssetItem(**updated_dict)
-        logger.debug(f"Updated asset item: {updated_item.name}")
-        return updated_item
-    except DuplicateKeyError:
-        logger.warning(f"Duplicate found: asset_tag={item.asset_tag}, serial_number={item.serial_number}")
-        raise ValueError(f"Asset tag or serial number already exists")
+        # Convert to AssetItemResponse
+        asset_response = AssetItemResponse(**updated_asset)
+        logger.debug(f"Updated asset: {asset_response.asset_name}")
+        return asset_response
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except ValueError as e:
+        # Re-raise ValueError as is
+        raise
     except Exception as e:
-        logger.error(f"Error updating asset item {id}: {str(e)}", exc_info=True)
+        logger.error(f"Error updating asset {asset_id}: {str(e)}", exc_info=True)
         raise
 
-def delete_asset_item(db: Collection, id: str) -> bool:
+def delete_asset_item(db: Collection, asset_id: str) -> bool:
     """
-    Delete an asset item if not assigned.
-    """
-    logger.info(f"Deleting asset item ID: {id}")
-    try:
-        if not ObjectId.is_valid(id):
-            logger.warning(f"Invalid ObjectId: {id}")
-            raise ValueError("Invalid asset ID")
+    Delete an asset item if it has no active assignments.
+    
+    Args:
+        db (Collection): MongoDB collection
+        asset_id (str): Asset ID to delete
         
-        existing = db.find_one({"_id": ObjectId(id)})
-        if not existing:
-            logger.warning(f"Asset item not found: {id}")
+    Returns:
+        bool: True if asset was deleted, False if not found or has active assignment
+    """
+    logger.info(f"Deleting asset ID: {asset_id}")
+    try:
+        # Check if asset exists
+        existing_asset = db.find_one({"id": asset_id})
+        if not existing_asset:
+            logger.warning(f"Asset not found: {asset_id}")
             return False
         
-        if existing.get("has_active_assignment"):
-            logger.warning(f"Cannot delete assigned asset: {id}")
-            raise ValueError("Cannot delete an assigned asset")
+        # Check if asset has active assignment
+        if existing_asset.get("has_active_assignment", False):
+            logger.warning(f"Cannot delete asset with active assignment: {asset_id}")
+            raise ValueError("Cannot delete asset with active assignment")
         
-        result = db.delete_one({"_id": ObjectId(id)})
+        # Delete the asset
+        result = db.delete_one({"id": asset_id})
         if result.deleted_count == 0:
-            logger.warning(f"Asset item not found for deletion: {id}")
+            logger.warning(f"Asset not found: {asset_id}")
             return False
         
-        logger.debug(f"Deleted asset item ID: {id}")
+        logger.debug(f"Deleted asset ID: {asset_id}")
         return True
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
     except Exception as e:
-        logger.error(f"Error deleting asset item {id}: {str(e)}", exc_info=True)
+        logger.error(f"Error deleting asset {asset_id}: {str(e)}", exc_info=True)
         raise
 
-def get_asset_statistics(db: Collection) -> dict:
+def get_asset_utilization(db: Collection) -> Dict[str, Any]:
     """
-    Get statistics for assets (total count, assigned, under maintenance, etc.).
+    Get utilization statistics for all assets.
+    
+    Args:
+        db (Collection): MongoDB collection
+        
+    Returns:
+        Dict[str, Any]: Asset utilization statistics
     """
-    logger.info("Calculating asset statistics")
+    logger.info("Calculating asset utilization statistics")
     try:
-        total = db.count_documents({})
-        assigned = db.count_documents({"has_active_assignment": True})
-        available = db.count_documents({"status": AssetStatus.AVAILABLE.value})
-        under_maintenance = db.count_documents({"status": AssetStatus.UNDER_MAINTENANCE.value})
-        retired = db.count_documents({"status": AssetStatus.RETIRED.value})
-        lost = db.count_documents({"status": AssetStatus.LOST.value})
+        # Count total assets
+        total_assets = db.count_documents({})
         
-        # Get values per category
-        pipeline = [
-            {"$group": {
-                "_id": "$category_id",
-                "count": {"$sum": 1},
-                "value": {"$sum": "$purchase_cost"}
-            }}
-        ]
-        category_stats = list(db.aggregate(pipeline))
+        # Count assets by status
+        status_counts = {}
+        for status in ["available", "assigned", "under_maintenance", "maintenance_requested", "retired", "lost"]:
+            status_counts[status] = db.count_documents({"status": status})
         
-        # Add category names to the results
-        for stat in category_stats:
-            if stat["_id"] and ObjectId.is_valid(stat["_id"]):
-                cat = db.database["asset_categories"].find_one({"_id": ObjectId(stat["_id"])})
-                if cat:
-                    stat["category_name"] = cat.get("category_name", "Unknown")
-                else:
-                    stat["category_name"] = "Unknown"
-            else:
-                stat["category_name"] = "Unknown"
-            stat["id"] = stat.pop("_id")
+        # Count assets by operational status
+        operational_count = db.count_documents({"is_operational": True})
+        non_operational_count = db.count_documents({"is_operational": False})
         
-        # Get total asset value
-        total_value = sum(item.get("purchase_cost", 0) for item in db.find())
-        current_value = sum(item.get("current_value", 0) for item in db.find())
-        depreciation = total_value - current_value
+        # Count assets with active assignments
+        assigned_count = db.count_documents({"has_active_assignment": True})
         
-        # Calculate utilization rate 
-        utilization_rate = (assigned / total * 100) if total > 0 else 0
+        # Calculate utilization rate (assigned / assignable)
+        assignable_count = db.count_documents({
+            "status": {"$nin": ["retired", "lost", "under_maintenance"]}
+        })
         
-        statistics = {
-            "total": total,
-            "assigned": assigned,
-            "available": available,
-            "under_maintenance": under_maintenance,
-            "retired": retired,
-            "lost": lost,
+        utilization_rate = (assigned_count / assignable_count * 100) if assignable_count > 0 else 0.0
+        
+        # Get assets requiring maintenance
+        maintenance_due_count = db.count_documents({
+            "next_maintenance_date": {"$lte": get_current_datetime()}
+        })
+        
+        # Calculate average time between assignments
+        # This would require more complex aggregation, simplifying for now
+        
+        result = {
+            "total_assets": total_assets,
+            "status_counts": status_counts,
+            "operational_count": operational_count,
+            "non_operational_count": non_operational_count,
+            "assigned_count": assigned_count,
+            "assignable_count": assignable_count,
             "utilization_rate": round(utilization_rate, 2),
-            "total_value": round(total_value, 2),
-            "current_value": round(current_value, 2),
-            "depreciation": round(depreciation, 2),
-            "by_category": category_stats
+            "maintenance_due_count": maintenance_due_count
         }
         
-        logger.debug(f"Asset statistics calculated: {statistics}")
-        return statistics
+        logger.debug("Calculated asset utilization statistics")
+        return result
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
     except Exception as e:
-        logger.error(f"Error calculating asset statistics: {str(e)}", exc_info=True)
+        logger.error(f"Error calculating asset utilization: {str(e)}", exc_info=True)
+        raise
+
+def check_maintenance_due_assets(db: Collection) -> List[str]:
+    """
+    Check for assets that are due for maintenance.
+    
+    Args:
+        db (Collection): MongoDB collection
+        
+    Returns:
+        List[str]: IDs of assets due for maintenance
+    """
+    logger.info("Checking for assets due for maintenance")
+    try:
+        current_date = get_current_datetime()
+        
+        # Find assets with maintenance due
+        due_assets = list(db.find({
+            "next_maintenance_date": {"$lte": current_date},
+            "status": {"$nin": ["under_maintenance", "maintenance_requested", "retired", "lost"]},
+            "requires_maintenance": True
+        }))
+        
+        due_asset_ids = [asset["id"] for asset in due_assets]
+        
+        logger.debug(f"Found {len(due_asset_ids)} assets due for maintenance")
+        return due_asset_ids
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Error checking maintenance due assets: {str(e)}", exc_info=True)
         raise

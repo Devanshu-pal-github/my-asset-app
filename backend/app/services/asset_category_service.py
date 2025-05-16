@@ -1,44 +1,84 @@
 from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError, OperationFailure
-from bson import ObjectId
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from app.models.asset_category import AssetCategory, AssetCategoryCreate, AssignmentPolicies, Documents
+from app.models.asset_category import (
+    AssetCategory, 
+    AssetCategoryCreate, 
+    AssetCategoryUpdate,
+    AssetCategoryResponse,
+    AssignmentPolicies, 
+    Documents
+)
+from app.models.utils import generate_uuid, get_current_datetime, serialize_model
 import logging
 
 logger = logging.getLogger(__name__)
 
-def get_asset_categories(collection: Collection) -> List[AssetCategory]:
+def get_asset_categories(
+    db: Collection, 
+    filters: Dict[str, Any] = None
+) -> List[AssetCategoryResponse]:
     """
     Retrieve all asset categories with statistics.
+    
+    Args:
+        db (Collection): MongoDB collection
+        filters (Dict[str, Any], optional): Filtering criteria
+        
+    Returns:
+        List[AssetCategoryResponse]: List of asset categories with computed statistics
     """
     logger.info("Fetching all asset categories")
     try:
-        categories = list(collection.find())
+        query = filters or {}
+        categories = list(db.find(query))
         result = []
         for cat in categories:
-            count = collection.database["asset_items"].count_documents({"category_id": str(cat["_id"])})
+            # Convert _id to id if needed
+            if "_id" in cat and "id" not in cat:
+                cat["id"] = str(cat["_id"])
+            
+            # Get statistics from asset items collection
+            count = db.database["asset_items"].count_documents({"category_id": cat["id"]})
+            
+            # Sum the purchase cost of all items in this category
             total_cost = sum(
-                item["purchase_cost"] for item in collection.database["asset_items"].find({"category_id": str(cat["_id"])})
+                item.get("purchase_cost", 0) for item in db.database["asset_items"].find({"category_id": cat["id"]})
             )
-            assigned_count = collection.database["asset_items"].count_documents({"category_id": str(cat["_id"]), "has_active_assignment": True})
-            maintenance_count = collection.database["asset_items"].count_documents({"category_id": str(cat["_id"]), "status": "Under Maintenance"})
+            
+            # Count assigned and maintenance assets
+            assigned_count = db.database["asset_items"].count_documents({
+                "category_id": cat["id"], 
+                "has_active_assignment": True
+            })
+            
+            maintenance_count = db.database["asset_items"].count_documents({
+                "category_id": cat["id"], 
+                "status": {"$in": ["under_maintenance", "maintenance_requested"]}
+            })
+            
+            # Calculate utilization rate
             utilization_rate = (
-                collection.database["asset_items"].count_documents({"category_id": str(cat["_id"]), "is_operational": True}) /
+                db.database["asset_items"].count_documents({"category_id": cat["id"], "is_operational": True}) /
                 count * 100
             ) if count > 0 else 0.0
+            
             cat_dict = {
                 **cat,
-                "id": str(cat["_id"]),
-                "_id": str(cat["_id"]),
-                "category_name": cat.get("category_name", ""),
                 "total_assets": count,
                 "total_cost": total_cost,
                 "assigned_assets": assigned_count,
                 "under_maintenance": maintenance_count,
-                "utilization_rate": round(utilization_rate, 2)
+                "utilizationRate": round(utilization_rate, 2)
             }
-            result.append(AssetCategory(**cat_dict))
+            
+            # Remove _id field as we already have id
+            if "_id" in cat_dict:
+                del cat_dict["_id"]
+            
+            result.append(AssetCategoryResponse(**cat_dict))
+        
         logger.debug(f"Fetched {len(result)} categories")
         return result
     except OperationFailure as e:
@@ -48,43 +88,68 @@ def get_asset_categories(collection: Collection) -> List[AssetCategory]:
         logger.error(f"Error fetching categories: {str(e)}", exc_info=True)
         raise
 
-def get_asset_category_by_id(collection: Collection, id: str) -> Optional[AssetCategory]:
+def get_asset_category_by_id(db: Collection, category_id: str) -> Optional[AssetCategory]:
     """
     Retrieve a specific asset category by ID with statistics.
-    """
-    logger.info(f"Fetching asset category ID: {id}")
-    try:
-        if not ObjectId.is_valid(id):
-            logger.warning(f"Invalid ObjectId: {id}")
-            raise ValueError("Invalid category ID")
+    
+    Args:
+        db (Collection): MongoDB collection
+        category_id (str): Category ID to retrieve
         
-        category = collection.find_one({"_id": ObjectId(id)})
+    Returns:
+        Optional[AssetCategory]: The category if found, None otherwise
+    """
+    logger.info(f"Fetching asset category ID: {category_id}")
+    try:
+        category = db.find_one({"id": category_id})
         if not category:
-            logger.warning(f"Category not found: {id}")
+            logger.warning(f"Category not found: {category_id}")
             return None
         
-        count = collection.database["asset_items"].count_documents({"category_id": id})
+        # Get statistics from asset items collection
+        count = db.database["asset_items"].count_documents({"category_id": category_id})
+        
+        # Sum the purchase cost of all items in this category
         total_cost = sum(
-            item["purchase_cost"] for item in collection.database["asset_items"].find({"category_id": id})
+            item.get("purchase_cost", 0) for item in db.database["asset_items"].find({"category_id": category_id})
         )
-        assigned_count = collection.database["asset_items"].count_documents({"category_id": id, "has_active_assignment": True})
-        maintenance_count = collection.database["asset_items"].count_documents({"category_id": id, "status": "Under Maintenance"})
+        
+        # Count assigned and maintenance assets
+        assigned_count = db.database["asset_items"].count_documents({
+            "category_id": category_id, 
+            "has_active_assignment": True
+        })
+        
+        maintenance_count = db.database["asset_items"].count_documents({
+            "category_id": category_id, 
+            "status": {"$in": ["under_maintenance", "maintenance_requested"]}
+        })
+        
+        unassignable_count = db.database["asset_items"].count_documents({
+            "category_id": category_id, 
+            "status": {"$in": ["retired", "lost", "under_maintenance"]}
+        })
+        
+        # Calculate utilization rate
         utilization_rate = (
-            collection.database["asset_items"].count_documents({"category_id": id, "is_operational": True}) /
+            db.database["asset_items"].count_documents({"category_id": category_id, "is_operational": True}) /
             count * 100
         ) if count > 0 else 0.0
         
         cat_dict = {
             **category,
-            "id": str(category["_id"]),
-            "_id": str(category["_id"]),
-            "category_name": category.get("category_name", ""),
             "total_assets": count,
             "total_cost": total_cost,
             "assigned_assets": assigned_count,
             "under_maintenance": maintenance_count,
-            "utilization_rate": round(utilization_rate, 2)
+            "unassignable_assets": unassignable_count,
+            "utilizationRate": round(utilization_rate, 2)
         }
+        
+        # Remove _id field as we already have id
+        if "_id" in cat_dict:
+            del cat_dict["_id"]
+        
         result = AssetCategory(**cat_dict)
         logger.debug(f"Fetched category: {result.category_name}")
         return result
@@ -92,21 +157,29 @@ def get_asset_category_by_id(collection: Collection, id: str) -> Optional[AssetC
         logger.error(f"Database operation failed: {str(e)}", exc_info=True)
         raise
     except Exception as e:
-        logger.error(f"Error fetching category {id}: {str(e)}", exc_info=True)
+        logger.error(f"Error fetching category {category_id}: {str(e)}", exc_info=True)
         raise
 
-def create_asset_category(collection: Collection, category: AssetCategoryCreate) -> AssetCategory:
+def create_asset_category(db: Collection, category: AssetCategoryCreate) -> AssetCategory:
     """
     Create a new asset category with validation.
+    
+    Args:
+        db (Collection): MongoDB collection
+        category (AssetCategoryCreate): Category data to create
+        
+    Returns:
+        AssetCategory: The created category
     """
     logger.info(f"Creating category: {category.category_name}")
     try:
-        existing = collection.find_one({"category_name": category.category_name})
+        existing = db.find_one({"category_name": category.category_name})
         if existing:
             logger.warning(f"Category already exists: {category.category_name}")
             raise ValueError(f"Category '{category.category_name}' already exists")
         
-        category_dict = category.dict(exclude_none=True)
+        # Convert to dictionary and populate defaults
+        category_dict = category.model_dump(exclude_none=True)
         
         # Handle boolean fields with defaults
         category_dict["is_active"] = category_dict.get("is_active", True)
@@ -126,7 +199,7 @@ def create_asset_category(collection: Collection, category: AssetCategoryCreate)
         # Handle documents field properly
         if "documents" in category_dict and category_dict["documents"]:
             if not isinstance(category_dict["documents"], dict):
-                category_dict["documents"] = category_dict["documents"].dict()
+                category_dict["documents"] = category_dict["documents"].model_dump()
         else:
             category_dict["documents"] = {
                 "purchase": False,
@@ -138,7 +211,7 @@ def create_asset_category(collection: Collection, category: AssetCategoryCreate)
         # Handle assignment policies
         if "assignment_policies" in category_dict and category_dict["assignment_policies"]:
             if not isinstance(category_dict["assignment_policies"], dict):
-                category_dict["assignment_policies"] = category_dict["assignment_policies"].dict()
+                category_dict["assignment_policies"] = category_dict["assignment_policies"].model_dump()
         else:
             category_dict["assignment_policies"] = {
                 "max_assignments": 1,
@@ -163,18 +236,20 @@ def create_asset_category(collection: Collection, category: AssetCategoryCreate)
         category_dict["under_maintenance"] = 0
         category_dict["unassignable_assets"] = 0
         category_dict["edit_history"] = []
-        category_dict["created_at"] = datetime.utcnow()
+        category_dict["created_at"] = get_current_datetime()
         
-        result = collection.insert_one(category_dict)
-        logger.debug(f"Inserted category: {category.category_name} with ID: {result.inserted_id}")
+        # Generate UUID for the id field if not provided
+        if "id" not in category_dict:
+            category_dict["id"] = generate_uuid()
         
-        response_dict = {
-            **category_dict,
-            "id": str(result.inserted_id),
-            "_id": str(result.inserted_id),
-            "category_name": category_dict.get("category_name", "")
-        }
-        created_category = AssetCategory(**response_dict)
+        # Add _id field for MongoDB to use the same value as id
+        category_dict["_id"] = category_dict["id"]
+        
+        result = db.insert_one(category_dict)
+        logger.debug(f"Inserted category: {category.category_name} with ID: {category_dict['id']}")
+        
+        # Create full AssetCategory object from saved data
+        created_category = AssetCategory(**category_dict)
         logger.info(f"Created category with ID: {created_category.id}")
         return created_category
     except DuplicateKeyError:
@@ -187,22 +262,35 @@ def create_asset_category(collection: Collection, category: AssetCategoryCreate)
         logger.error(f"Error creating category: {str(e)}", exc_info=True)
         raise
 
-def update_asset_category(collection: Collection, id: str, category: AssetCategoryCreate) -> Optional[AssetCategory]:
+def update_asset_category(db: Collection, category_id: str, category: AssetCategoryUpdate) -> Optional[AssetCategory]:
     """
     Update an existing asset category.
+    
+    Args:
+        db (Collection): MongoDB collection
+        category_id (str): Category ID to update
+        category (AssetCategoryUpdate): Category data to update
+        
+    Returns:
+        Optional[AssetCategory]: The updated category if found, None otherwise
     """
-    logger.info(f"Updating category ID: {id}")
+    logger.info(f"Updating category ID: {category_id}")
     try:
-        if not ObjectId.is_valid(id):
-            logger.warning(f"Invalid ObjectId: {id}")
-            raise ValueError("Invalid category ID")
+        # Check if category exists
+        existing_category = db.find_one({"id": category_id})
+        if not existing_category:
+            logger.warning(f"Category not found: {category_id}")
+            return None
         
-        existing = collection.find_one({"category_name": category.category_name, "_id": {"$ne": ObjectId(id)}})
-        if existing:
-            logger.warning(f"Category name already taken: {category.category_name}")
-            raise ValueError(f"Category name '{category.category_name}' already exists")
+        # Check for duplicate name
+        if category.category_name:
+            existing = db.find_one({"category_name": category.category_name, "id": {"$ne": category_id}})
+            if existing:
+                logger.warning(f"Category name already taken: {category.category_name}")
+                raise ValueError(f"Category name '{category.category_name}' already exists")
         
-        category_dict = category.dict(exclude_unset=True, exclude_none=True)
+        # Convert to dictionary, excluding unset and None values
+        category_dict = category.model_dump(exclude_unset=True, exclude_none=True)
         
         # Handle boolean fields
         bool_fields = [
@@ -219,12 +307,12 @@ def update_asset_category(collection: Collection, id: str, category: AssetCatego
         # Handle documents field
         if "documents" in category_dict and category_dict["documents"]:
             if not isinstance(category_dict["documents"], dict):
-                category_dict["documents"] = category_dict["documents"].dict()
+                category_dict["documents"] = category_dict["documents"].model_dump()
         
         # Handle assignment policies
         if "assignment_policies" in category_dict and category_dict["assignment_policies"]:
             if not isinstance(category_dict["assignment_policies"], dict):
-                category_dict["assignment_policies"] = category_dict["assignment_policies"].dict()
+                category_dict["assignment_policies"] = category_dict["assignment_policies"].model_dump()
         
         # Update policies from individual fields if specified
         if "policies" in category_dict:
@@ -237,12 +325,12 @@ def update_asset_category(collection: Collection, id: str, category: AssetCatego
                 ]
         
         # Track edit history
-        current_time = datetime.utcnow()
+        current_time = get_current_datetime()
         category_dict["updated_at"] = current_time
         
         # Add a history entry for this update
         edit_entry = {
-            "id": str(ObjectId()),
+            "id": generate_uuid(),
             "type": "edit",
             "edit_date": current_time.strftime("%Y-%m-%d"),
             "change_type": "Category Update",
@@ -251,48 +339,59 @@ def update_asset_category(collection: Collection, id: str, category: AssetCatego
         }
         
         # Add history entry to the document
-        collection.update_one(
-            {"_id": ObjectId(id)},
+        db.update_one(
+            {"id": category_id},
             {"$push": {"edit_history": edit_entry}}
         )
         
         # Apply all updates
-        result = collection.update_one(
-            {"_id": ObjectId(id)},
+        result = db.update_one(
+            {"id": category_id},
             {"$set": category_dict}
         )
         
         if result.matched_count == 0:
-            logger.warning(f"Category not found: {id}")
+            logger.warning(f"Category not found: {category_id}")
             return None
         
         # Fetch the updated category
-        updated = collection.find_one({"_id": ObjectId(id)})
+        updated = db.find_one({"id": category_id})
         
         # Calculate statistics
-        count = collection.database["asset_items"].count_documents({"category_id": id})
+        count = db.database["asset_items"].count_documents({"category_id": category_id})
         total_cost = sum(
-            item.get("purchase_cost", 0) for item in collection.database["asset_items"].find({"category_id": id})
+            item.get("purchase_cost", 0) for item in db.database["asset_items"].find({"category_id": category_id})
         )
-        assigned_count = collection.database["asset_items"].count_documents({"category_id": id, "has_active_assignment": True})
-        maintenance_count = collection.database["asset_items"].count_documents({"category_id": id, "status": "under_maintenance"})
-        unassignable_count = collection.database["asset_items"].count_documents({"category_id": id, "status": {"$in": ["retired", "lost", "under_maintenance"]}})
+        assigned_count = db.database["asset_items"].count_documents({
+            "category_id": category_id, 
+            "has_active_assignment": True
+        })
+        maintenance_count = db.database["asset_items"].count_documents({
+            "category_id": category_id, 
+            "status": {"$in": ["under_maintenance", "maintenance_requested"]}
+        })
+        unassignable_count = db.database["asset_items"].count_documents({
+            "category_id": category_id, 
+            "status": {"$in": ["retired", "lost", "under_maintenance"]}
+        })
         utilization_rate = (
-            collection.database["asset_items"].count_documents({"category_id": id, "is_operational": True}) /
+            db.database["asset_items"].count_documents({"category_id": category_id, "is_operational": True}) /
             count * 100
         ) if count > 0 else 0.0
         
         updated_dict = {
             **updated,
-            "id": str(updated["_id"]),
-            "_id": str(updated["_id"]),
             "total_assets": count,
             "total_cost": total_cost,
             "assigned_assets": assigned_count,
             "under_maintenance": maintenance_count,
             "unassignable_assets": unassignable_count,
-            "utilization_rate": round(utilization_rate, 2)
+            "utilizationRate": round(utilization_rate, 2)
         }
+        
+        # Remove _id field as we already have id
+        if "_id" in updated_dict:
+            del updated_dict["_id"]
         
         result = AssetCategory(**updated_dict)
         logger.debug(f"Updated category: {result.category_name}")
@@ -301,34 +400,37 @@ def update_asset_category(collection: Collection, id: str, category: AssetCatego
         logger.error(f"Database operation failed: {str(e)}", exc_info=True)
         raise
     except Exception as e:
-        logger.error(f"Error updating category {id}: {str(e)}", exc_info=True)
+        logger.error(f"Error updating category {category_id}: {str(e)}", exc_info=True)
         raise
 
-def delete_asset_category(collection: Collection, id: str) -> bool:
+def delete_asset_category(db: Collection, category_id: str) -> bool:
     """
     Delete an asset category if no assets are associated.
-    """
-    logger.info(f"Deleting category ID: {id}")
-    try:
-        if not ObjectId.is_valid(id):
-            logger.warning(f"Invalid ObjectId: {id}")
-            raise ValueError("Invalid category ID")
+    
+    Args:
+        db (Collection): MongoDB collection
+        category_id (str): Category ID to delete
         
-        asset_count = collection.database["asset_items"].count_documents({"category_id": id})
+    Returns:
+        bool: True if category was deleted, False if not found
+    """
+    logger.info(f"Deleting category ID: {category_id}")
+    try:
+        asset_count = db.database["asset_items"].count_documents({"category_id": category_id})
         if asset_count > 0:
-            logger.warning(f"Cannot delete category {id}: {asset_count} assets associated")
+            logger.warning(f"Cannot delete category {category_id}: {asset_count} assets associated")
             raise ValueError(f"Cannot delete category with {asset_count} associated assets")
         
-        result = collection.delete_one({"_id": ObjectId(id)})
+        result = db.delete_one({"id": category_id})
         if result.deleted_count == 0:
-            logger.warning(f"Category not found: {id}")
+            logger.warning(f"Category not found: {category_id}")
             return False
         
-        logger.debug(f"Deleted category ID: {id}")
+        logger.debug(f"Deleted category ID: {category_id}")
         return True
     except OperationFailure as e:
         logger.error(f"Database operation failed: {str(e)}", exc_info=True)
         raise
     except Exception as e:
-        logger.error(f"Error deleting category {id}: {str(e)}", exc_info=True)
+        logger.error(f"Error deleting category {category_id}: {str(e)}", exc_info=True)
         raise

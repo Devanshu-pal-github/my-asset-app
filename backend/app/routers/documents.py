@@ -1,43 +1,56 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pymongo.database import Database
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from app.dependencies import get_db
-from app.models.document import Document, DocumentCreate, DocumentUpdate, DocumentResponse
-from app.services.document_service import create_document, get_documents, delete_document, update_document
+from pymongo.database import Database
+from pymongo.errors import PyMongoError
+from app.database import get_database
+from app.models.document import (
+    Document,
+    DocumentCreate,
+    DocumentUpdate,
+    DocumentResponse,
+    DocumentType,
+    DocumentStatus
+)
+from app.services import document_service
 import logging
 
-logger = logging.getLogger(__name__)
+router = APIRouter(
+    prefix="/documents",
+    tags=["documents"]
+)
 
-router = APIRouter(prefix="/documents", tags=["Documents"])
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=List[DocumentResponse])
 async def read_documents(
     asset_id: Optional[str] = None,
     employee_id: Optional[str] = None,
     document_type: Optional[str] = None,
-    db: Database = Depends(get_db)
+    status: Optional[str] = None,
+    tag: Optional[str] = None,
+    is_confidential: Optional[bool] = None,
+    db: Database = Depends(get_database)
 ):
     """
-    Retrieve documents by asset ID, employee ID, or document type.
+    Get documents with optional filtering.
     
     Args:
-        asset_id (Optional[str]): Filter by asset ID
-        employee_id (Optional[str]): Filter by employee ID
-        document_type (Optional[str]): Filter by document type
-        db (Database): MongoDB database instance, injected via dependency
+        asset_id: Filter by asset ID
+        employee_id: Filter by employee ID
+        document_type: Filter by document type
+        status: Filter by status
+        tag: Filter by tag
+        is_confidential: Filter by confidentiality
+        db: Database instance
         
     Returns:
-        List[DocumentResponse]: List of documents matching the filters
-        
+        List of DocumentResponse objects
+    
     Raises:
-        HTTPException: 400 if no valid filter provided, 500 for server errors
+        HTTPException: If there's an error processing the request
     """
-    logger.info(f"Fetching documents - asset_id: {asset_id}, employee_id: {employee_id}, document_type: {document_type}")
+    logger.info(f"GET /documents/ - asset_id: {asset_id}, employee_id: {employee_id}, document_type: {document_type}")
     try:
-        if not asset_id and not employee_id:
-            logger.warning("No asset_id or employee_id provided")
-            raise HTTPException(status_code=400, detail="At least one of asset_id or employee_id must be provided")
-        
         filters = {}
         if asset_id:
             filters["asset_id"] = asset_id
@@ -45,131 +58,143 @@ async def read_documents(
             filters["employee_id"] = employee_id
         if document_type:
             filters["document_type"] = document_type
+        if status:
+            filters["status"] = status
+        if tag:
+            filters["tags"] = {"$in": [tag]}
+        if is_confidential is not None:
+            filters["is_confidential"] = is_confidential
             
-        documents = get_documents(db, filters)
-        logger.debug(f"Fetched {len(documents)} documents")
+        documents = document_service.get_documents(db, filters)
         return documents
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Failed to fetch documents: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch documents: {str(e)}")
+        logger.error(f"Error in read_documents: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{document_id}", response_model=DocumentResponse)
-async def read_document(document_id: str, db: Database = Depends(get_db)):
+@router.get("/{document_id}", response_model=Document)
+async def read_document(
+    document_id: str,
+    db: Database = Depends(get_database)
+):
     """
-    Retrieve a specific document by ID.
+    Get a specific document by ID.
     
     Args:
-        document_id (str): Document ID
-        db (Database): MongoDB database instance, injected via dependency
+        document_id: The document ID
+        db: Database instance
         
     Returns:
-        DocumentResponse: Document details
-        
+        Document object
+    
     Raises:
-        HTTPException: 404 if document not found, 500 for server errors
+        HTTPException: If document not found or there's an error processing the request
     """
-    logger.info(f"Fetching document with ID: {document_id}")
+    logger.info(f"GET /documents/{document_id}")
     try:
-        document = get_documents(db, {"id": document_id})
-        if not document or len(document) == 0:
+        document = document_service.get_document_by_id(db, document_id)
+        if not document:
             logger.warning(f"Document not found: {document_id}")
             raise HTTPException(status_code=404, detail="Document not found")
-        
-        logger.debug(f"Found document: {document[0].name}")
-        return document[0]
+        return document
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to fetch document {document_id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch document: {str(e)}")
+        logger.error(f"Error in read_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/", response_model=DocumentResponse)
-async def create_new_document(document: DocumentCreate, db: Database = Depends(get_db)):
+@router.post("/", response_model=Document, status_code=201)
+async def create_new_document(
+    document: DocumentCreate,
+    db: Database = Depends(get_database)
+):
     """
-    Create a new document linked to an asset or employee.
+    Create a new document.
     
     Args:
-        document (DocumentCreate): Document details
-        db (Database): MongoDB database instance, injected via dependency
+        document: Document creation data
+        db: Database instance
         
     Returns:
-        DocumentResponse: Created document details
-        
+        Created Document object
+    
     Raises:
-        HTTPException: 400 for validation errors, 500 for server errors
+        HTTPException: If there's an error processing the request or validation fails
     """
-    logger.info(f"Creating document - asset_id: {document.asset_id}, employee_id: {document.employee_id}, type: {document.document_type}")
+    logger.info("POST /documents/")
     try:
-        created_document = create_document(db, document)
-        logger.debug(f"Created document with ID: {created_document.id}")
-        return created_document
-    except ValueError as ve:
-        logger.warning(f"Failed to create document: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
+        result = document_service.create_document(db, document)
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in create_new_document: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in create_new_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
-        logger.error(f"Failed to create document: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to create document: {str(e)}")
+        logger.error(f"Error in create_new_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.put("/{document_id}", response_model=DocumentResponse)
-async def update_existing_document(document_id: str, document: DocumentUpdate, db: Database = Depends(get_db)):
+@router.put("/{document_id}", response_model=Document)
+async def update_existing_document(
+    document_id: str,
+    update: DocumentUpdate,
+    db: Database = Depends(get_database)
+):
     """
     Update an existing document.
     
     Args:
-        document_id (str): Document ID to update
-        document (DocumentUpdate): Updated document details
-        db (Database): MongoDB database instance, injected via dependency
+        document_id: The document ID to update
+        update: Document update data
+        db: Database instance
         
     Returns:
-        DocumentResponse: Updated document details
-        
-    Raises:
-        HTTPException: 404 if document not found, 400 for validation errors, 500 for server errors
-    """
-    logger.info(f"Updating document: {document_id}")
-    try:
-        updated_document = update_document(db, document_id, document)
-        if not updated_document:
-            logger.warning(f"Document not found: {document_id}")
-            raise HTTPException(status_code=404, detail="Document not found")
-            
-        logger.debug(f"Updated document: {updated_document.id}")
-        return updated_document
-    except ValueError as ve:
-        logger.warning(f"Failed to update document: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(f"Failed to update document: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to update document: {str(e)}")
-
-@router.delete("/{document_id}", response_model=dict)
-async def delete_existing_document(document_id: str, db: Database = Depends(get_db)):
-    """
-    Delete a document by ID.
+        Updated Document object
     
-    Args:
-        document_id (str): Document ID to delete
-        db (Database): MongoDB database instance, injected via dependency
-        
-    Returns:
-        dict: Success message
-        
     Raises:
-        HTTPException: 404 if document not found, 500 for server errors
+        HTTPException: If document not found or there's an error processing the request
     """
-    logger.info(f"Deleting document with ID: {document_id}")
+    logger.info(f"PUT /documents/{document_id}")
     try:
-        result = delete_document(db, document_id)
+        result = document_service.update_document(db, document_id, update)
         if not result:
             logger.warning(f"Document not found: {document_id}")
             raise HTTPException(status_code=404, detail="Document not found")
-        
-        logger.debug(f"Deleted document ID: {document_id}")
-        return {"message": "Document deleted successfully"}
-    except HTTPException:
-        raise
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in update_existing_document: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in update_existing_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
-        logger.error(f"Failed to delete document {document_id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+        logger.error(f"Error in update_existing_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{document_id}", status_code=204)
+async def delete_existing_document(
+    document_id: str,
+    db: Database = Depends(get_database)
+):
+    """
+    Delete a document.
+    
+    Args:
+        document_id: The document ID to delete
+        db: Database instance
+    
+    Raises:
+        HTTPException: If document not found or there's an error processing the request
+    """
+    logger.info(f"DELETE /documents/{document_id}")
+    try:
+        result = document_service.delete_document(db, document_id)
+        if not result:
+            logger.warning(f"Document not found: {document_id}")
+            raise HTTPException(status_code=404, detail="Document not found")
+    except PyMongoError as e:
+        logger.error(f"Database error in delete_existing_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        logger.error(f"Error in delete_existing_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

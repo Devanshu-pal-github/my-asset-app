@@ -1,212 +1,469 @@
 from pymongo.collection import Collection
-from bson import ObjectId
-from typing import List, Optional
-from datetime import datetime
+from pymongo.errors import DuplicateKeyError, OperationFailure
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timedelta
 from app.models.asset_item import AssetItem, AssetStatus
-from app.models.assignment_history import AssignmentHistoryEntry
-import logging
+from app.models.assignment_history import (
+    AssignmentHistoryEntry, 
+    AssignmentCreate, 
+    AssignmentReturn, 
+    AssignmentResponse,
+    AssignmentStatus,
+    AssignmentType
+)
+from app.models.utils import generate_uuid, get_current_datetime, serialize_model
 
 logger = logging.getLogger(__name__)
 
-def parse_policies(policies: List[str]) -> dict:
+def get_assignment_history_by_asset(
+    db: Collection, 
+    asset_id: str
+) -> List[AssignmentResponse]:
     """
-    Parse the policies list into a dictionary for easier validation.
-    """
-    policy_dict = {}
-    for policy in policies:
-        if ":" in policy:
-            key, value = policy.split(":", 1)
-            policy_dict[key.strip()] = value.strip()
-    return policy_dict
-
-def assign_asset_to_employee(
-    db: Collection,
-    asset_id: str,
-    employee_ids: List[str],
-    condition: str,
-    department: Optional[str] = None,
-    assignment_type: Optional[str] = None,
-    entity_type: Optional[str] = "Employee",
-    notes: Optional[str] = None
-) -> AssetItem:
-    """
-    Assign an asset to employees, updating history and enforcing policies.
-    """
-    logger.info(f"Assigning asset {asset_id} to employees {employee_ids}")
-    try:
-        if not ObjectId.is_valid(asset_id):
-            logger.warning(f"Invalid asset ID: {asset_id}")
-            raise ValueError("Invalid asset ID")
+    Retrieve assignment history for a specific asset.
+    
+    Args:
+        db (Collection): MongoDB collection
+        asset_id (str): Asset ID to retrieve history for
         
-        asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
+    Returns:
+        List[AssignmentResponse]: List of assignment history entries
+    """
+    logger.info(f"Fetching assignment history for asset ID: {asset_id}")
+    try:
+        # Check if asset exists
+        asset = db.database["asset_items"].find_one({"id": asset_id})
         if not asset:
             logger.warning(f"Asset not found: {asset_id}")
-            raise ValueError("Asset not found")
+            raise ValueError(f"Asset with ID {asset_id} not found")
         
-        category = db.asset_categories.find_one({"_id": ObjectId(asset["category_id"])})
-        if not category:
-            logger.warning(f"Category not found for asset: {asset_id}")
-            raise ValueError("Category not found")
+        # Build query
+        query = {"asset_id": asset_id}
         
-        if asset["status"] != AssetStatus.AVAILABLE.value:
-            logger.warning(f"Asset not available: {asset_id}, status: {asset['status']}")
-            raise ValueError(f"Asset is not available (status: {asset['status']})")
+        # Find assignment history in the collection
+        history_entries = list(db.find(query).sort("assignment_date", -1))
         
-        if not category.get("is_reassignable", False) and asset["assignment_history"]:
-            logger.warning(f"Asset not reassignable: {asset_id}")
-            raise ValueError("Asset cannot be reassigned")
+        result = []
+        for entry in history_entries:
+            # Convert _id to id if needed
+            if "_id" in entry and "id" not in entry:
+                entry["id"] = str(entry["_id"])
+            
+            # Remove _id field as we have id
+            if "_id" in entry:
+                del entry["_id"]
+            
+            # Convert to AssignmentResponse
+            assignment_response = AssignmentResponse(**entry)
+            result.append(assignment_response)
         
-        for emp_id in employee_ids:
-            if not ObjectId.is_valid(emp_id):
-                logger.warning(f"Invalid employee ID: {emp_id}")
-                raise ValueError(f"Invalid employee ID: {emp_id}")
-            emp = db.employees.find_one({"_id": ObjectId(emp_id)})
-            if not emp:
-                logger.warning(f"Employee not found: {emp_id}")
-                raise ValueError(f"Employee not found: {emp_id}")
+        logger.debug(f"Fetched {len(result)} assignment entries for asset ID: {asset_id}")
+        return result
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except ValueError as e:
+        # Re-raise ValueError as is
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching assignment history for asset {asset_id}: {str(e)}", exc_info=True)
+        raise
+
+def get_assignment_history_by_employee(
+    db: Collection, 
+    employee_id: str
+) -> List[AssignmentResponse]:
+    """
+    Retrieve assignment history for a specific employee.
+    
+    Args:
+        db (Collection): MongoDB collection
+        employee_id (str): Employee ID to retrieve history for
         
-        policies = parse_policies(category.get("policies", []))
-        max_assignments = int(policies.get("max_assignments", "1"))
-        allow_multiple = category.get("allow_multiple_assignments", False)
+    Returns:
+        List[AssignmentResponse]: List of assignment history entries
+    """
+    logger.info(f"Fetching assignment history for employee ID: {employee_id}")
+    try:
+        # Check if employee exists
+        employee = db.database["employees"].find_one({"id": employee_id})
+        if not employee:
+            logger.warning(f"Employee not found: {employee_id}")
+            raise ValueError(f"Employee with ID {employee_id} not found")
         
-        if not allow_multiple and len(employee_ids) > 1:
-            logger.warning(f"Multiple assignments not allowed for asset {asset_id}")
-            raise ValueError("Multiple assignments not allowed")
-        if len(employee_ids) > max_assignments:
-            logger.warning(f"Exceeds max assignments ({max_assignments}) for asset {asset_id}")
-            raise ValueError(f"Cannot assign to more than {max_assignments} employees")
+        # Build query
+        query = {"employee_id": employee_id}
         
-        assignment_entry = AssignmentHistoryEntry(
-            id=str(ObjectId()),
-            asset_id=asset_id,
-            assigned_to=employee_ids,
-            department=department or asset.get("department"),
-            assignment_type=assignment_type or "Standard",
-            entity_type=entity_type,
-            condition_at_assignment=condition,
-            assignment_date=datetime.utcnow(),
-            notes=notes
+        # Find assignment history in the collection
+        history_entries = list(db.find(query).sort("assignment_date", -1))
+        
+        result = []
+        for entry in history_entries:
+            # Convert _id to id if needed
+            if "_id" in entry and "id" not in entry:
+                entry["id"] = str(entry["_id"])
+            
+            # Remove _id field as we have id
+            if "_id" in entry:
+                del entry["_id"]
+            
+            # Convert to AssignmentResponse
+            assignment_response = AssignmentResponse(**entry)
+            result.append(assignment_response)
+        
+        logger.debug(f"Fetched {len(result)} assignment entries for employee ID: {employee_id}")
+        return result
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except ValueError as e:
+        # Re-raise ValueError as is
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching assignment history for employee {employee_id}: {str(e)}", exc_info=True)
+        raise
+
+def assign_asset_to_employee(
+    db: Collection, 
+    assignment: AssignmentCreate
+) -> AssetItem:
+    """
+    Assign an asset to an employee, creating an assignment history entry.
+    
+    Args:
+        db (Collection): MongoDB collection
+        assignment (AssignmentCreate): Assignment data
+        
+    Returns:
+        AssetItem: The updated asset
+    """
+    logger.info(f"Assigning asset {assignment.asset_id} to employee {assignment.employee_id}")
+    try:
+        # Check if asset exists and is available
+        asset = db.database["asset_items"].find_one({"id": assignment.asset_id})
+        if not asset:
+            logger.warning(f"Asset not found: {assignment.asset_id}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} not found")
+        
+        # Check if asset is available
+        if asset.get("has_active_assignment", False):
+            logger.warning(f"Asset already assigned: {assignment.asset_id}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} is already assigned")
+        
+        if asset.get("status") not in ["available", "assigned"]:
+            logger.warning(f"Asset not available for assignment: {assignment.asset_id}, status: {asset.get('status')}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} is not available for assignment")
+        
+        # Check if employee exists
+        employee = db.database["employees"].find_one({"id": assignment.employee_id})
+        if not employee:
+            logger.warning(f"Employee not found: {assignment.employee_id}")
+            raise ValueError(f"Employee with ID {assignment.employee_id} not found")
+        
+        # Check category policies if they exist
+        category_id = asset.get("category_id")
+        if category_id:
+            category = db.database["asset_categories"].find_one({"id": category_id})
+            if category:
+                # Check if category can be assigned
+                if not category.get("can_be_assigned_reassigned", True):
+                    logger.warning(f"Category {category_id} cannot be assigned")
+                    raise ValueError(f"Assets in category '{category.get('category_name', 'Unknown')}' cannot be assigned")
+                
+                # Check assignment policies
+                policies = category.get("assignment_policies", {})
+                
+                # Check department restrictions if applicable
+                assignable_to = policies.get("assignable_to")
+                if assignable_to and assignable_to != "All Departments":
+                    employee_dept = employee.get("department", "")
+                    if employee_dept != assignable_to:
+                        logger.warning(f"Employee department {employee_dept} not allowed to be assigned assets from category {category_id}")
+                        raise ValueError(f"Employee in department '{employee_dept}' cannot be assigned assets from category '{category.get('category_name', 'Unknown')}'")
+        
+        # Create assignment history entry
+        current_time = get_current_datetime()
+        
+        # Calculate end date if assignment has a duration
+        end_date = None
+        if assignment.duration and assignment.duration > 0:
+            if assignment.duration_unit == "days":
+                end_date = current_time + timedelta(days=assignment.duration)
+            elif assignment.duration_unit == "weeks":
+                end_date = current_time + timedelta(weeks=assignment.duration)
+            elif assignment.duration_unit == "months":
+                # Approximate months as 30 days
+                end_date = current_time + timedelta(days=30 * assignment.duration)
+            elif assignment.duration_unit == "years":
+                # Approximate years as 365 days
+                end_date = current_time + timedelta(days=365 * assignment.duration)
+        
+        assignment_dict = {
+            "id": generate_uuid(),
+            "asset_id": assignment.asset_id,
+            "asset_name": asset.get("asset_name", "Unknown"),
+            "asset_tag": asset.get("asset_tag", ""),
+            "category_id": asset.get("category_id", ""),
+            "category_name": asset.get("category_name", "Unknown"),
+            "employee_id": assignment.employee_id,
+            "employee_name": f"{employee.get('first_name', '')} {employee.get('last_name', '')}",
+            "employee_email": employee.get("email", ""),
+            "employee_department": employee.get("department", ""),
+            "assignment_date": current_time,
+            "expected_return_date": end_date,
+            "return_date": None,
+            "status": "active",
+            "notes": assignment.notes,
+            "assigned_by": assignment.assigned_by,
+            "assigned_by_name": assignment.assigned_by_name,
+            "location": assignment.location or employee.get("location", ""),
+            "checked_out": True,
+            "checked_out_condition": assignment.checked_out_condition or "good",
+            "checked_in": False,
+            "created_at": current_time,
+            "_id": None
+        }
+        
+        # Set _id field to the same value as id
+        assignment_dict["_id"] = assignment_dict["id"]
+        
+        # Insert the assignment
+        db.insert_one(assignment_dict)
+        logger.debug(f"Inserted assignment: {assignment_dict['id']}")
+        
+        # Update asset status
+        db.database["asset_items"].update_one(
+            {"id": assignment.asset_id},
+            {"$set": {
+                "status": "assigned",
+                "has_active_assignment": True,
+                "current_assignee_id": assignment.employee_id,
+                "current_assignee_name": f"{employee.get('first_name', '')} {employee.get('last_name', '')}",
+                "current_assignment_id": assignment_dict["id"],
+                "current_assignment_date": current_time,
+                "expected_return_date": end_date,
+                "location": assignment.location or employee.get("location", "")
+            }}
+        )
+        logger.info(f"Updated asset status to assigned: {assignment.asset_id}")
+        
+        # Update employee status
+        db.database["employees"].update_one(
+            {"id": assignment.employee_id},
+            {"$set": {
+                "has_assigned_assets": True
+            }}
+        )
+        logger.info(f"Updated employee has_assigned_assets: {assignment.employee_id}")
+        
+        # Add entry to asset's assignment history
+        db.database["asset_items"].update_one(
+            {"id": assignment.asset_id},
+            {"$push": {"assignment_history": {
+                "id": assignment_dict["id"],
+                "employee_id": assignment.employee_id,
+                "employee_name": f"{employee.get('first_name', '')} {employee.get('last_name', '')}",
+                "assignment_date": current_time,
+                "expected_return_date": end_date,
+                "status": "active"
+            }}}
         )
         
-        update_dict = {
-            "status": AssetStatus.ASSIGNED.value,
-            "has_active_assignment": True,
-            "is_operational": True,
-            "current_assignee_id": employee_ids[0] if employee_ids else None,
-            "current_assignment_date": datetime.utcnow(),
-            "department": department or asset.get("department"),
-            "updated_at": datetime.utcnow(),
-            "assignment_history": (asset.get("assignment_history", []) + [assignment_entry.dict()])
-        }
-        db.asset_items.update_one({"_id": ObjectId(asset_id)}, {"$set": update_dict})
+        # Add entry to employee's assignment history
+        db.database["employees"].update_one(
+            {"id": assignment.employee_id},
+            {"$push": {"assignment_history": {
+                "id": assignment_dict["id"],
+                "asset_id": assignment.asset_id,
+                "asset_name": asset.get("asset_name", "Unknown"),
+                "asset_tag": asset.get("asset_tag", ""),
+                "assignment_date": current_time,
+                "expected_return_date": end_date,
+                "status": "active"
+            }}}
+        )
         
-        for emp_id in employee_ids:
-            db.employees.update_one(
-                {"_id": ObjectId(emp_id)},
-                {
-                    "$push": {
-                        "assigned_assets": {
-                            "asset_id": asset_id,
-                            "assigned_at": datetime.utcnow()
-                        }
-                    },
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        # Retrieve the updated asset
+        updated_asset = db.database["asset_items"].find_one({"id": assignment.asset_id})
         
-        updated_asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
-        category = db.asset_categories.find_one({"_id": ObjectId(updated_asset["category_id"])})
-        updated_dict = {
-            **updated_asset,
-            "id": str(updated_asset["_id"]),
-            "category_name": category.get("name", "") if category else ""
-        }
-        updated_item = AssetItem(**updated_dict)
-        logger.debug(f"Assigned asset {asset_id} to {len(employee_ids)} employees")
-        return updated_item
+        # Remove _id field
+        if "_id" in updated_asset:
+            del updated_asset["_id"]
+        
+        # Convert to AssetItem
+        updated_asset_item = AssetItem(**updated_asset)
+        logger.debug(f"Asset assigned successfully: {updated_asset_item.asset_name}")
+        return updated_asset_item
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except ValueError as e:
+        # Re-raise ValueError as is
+        raise
     except Exception as e:
-        logger.error(f"Error assigning asset {asset_id}: {str(e)}", exc_info=True)
+        logger.error(f"Error assigning asset: {str(e)}", exc_info=True)
         raise
 
 def unassign_employee_from_asset(
-    db: Collection,
-    asset_id: str,
-    employee_id: str,
-    condition: str,
-    notes: Optional[str] = None
+    db: Collection, 
+    assignment: AssignmentReturn
 ) -> AssetItem:
     """
-    Unassign an employee from an asset, updating history.
+    Unassign an employee from an asset, updating the assignment history.
+    
+    Args:
+        db (Collection): MongoDB collection
+        assignment (AssignmentReturn): Unassignment data
+        
+    Returns:
+        AssetItem: The updated asset
     """
-    logger.info(f"Unassigning employee {employee_id} from asset {asset_id}")
+    logger.info(f"Unassigning asset {assignment.asset_id}")
     try:
-        if not ObjectId.is_valid(asset_id) or not ObjectId.is_valid(employee_id):
-            logger.warning(f"Invalid IDs - asset: {asset_id}, employee: {employee_id}")
-            raise ValueError("Invalid asset or employee ID")
-        
-        asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
+        # Check if asset exists and is assigned
+        asset = db.database["asset_items"].find_one({"id": assignment.asset_id})
         if not asset:
-            logger.warning(f"Asset not found: {asset_id}")
-            raise ValueError("Asset not found")
+            logger.warning(f"Asset not found: {assignment.asset_id}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} not found")
         
-        employee = db.employees.find_one({"_id": ObjectId(employee_id)})
-        if not employee:
-            logger.warning(f"Employee not found: {employee_id}")
-            raise ValueError("Employee not found")
+        # Check if asset is assigned
+        if not asset.get("has_active_assignment", False):
+            logger.warning(f"Asset not assigned: {assignment.asset_id}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} is not currently assigned")
         
-        active_assignment = None
-        for entry in asset.get("assignment_history", []):
-            if employee_id in entry["assigned_to"] and not entry.get("return_date"):
-                active_assignment = entry
-                break
+        employee_id = asset.get("current_assignee_id")
+        if not employee_id:
+            logger.warning(f"Asset has no current assignee: {assignment.asset_id}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} has no current assignee")
         
-        if not active_assignment:
-            logger.warning(f"No active assignment found for employee {employee_id} on asset {asset_id}")
-            raise ValueError("No active assignment found")
+        # Check if assignment exists
+        assignment_id = asset.get("current_assignment_id")
+        if not assignment_id:
+            logger.warning(f"Asset has no current assignment: {assignment.asset_id}")
+            raise ValueError(f"Asset with ID {assignment.asset_id} has no current assignment")
         
-        db.asset_items.update_one(
-            {"_id": ObjectId(asset_id), "assignment_history.id": active_assignment["id"]},
-            {
-                "$set": {
-                    "assignment_history.$.condition_at_return": condition,
-                    "assignment_history.$.return_date": datetime.utcnow(),
-                    "assignment_history.$.notes": notes or active_assignment.get("notes")
-                }
-            }
+        # Get the assignment record
+        assignment_record = db.find_one({"id": assignment_id})
+        if not assignment_record:
+            logger.warning(f"Assignment not found: {assignment_id}")
+            # Continue anyway since we want to fix the asset state
+        
+        # Update assignment record
+        current_time = get_current_datetime()
+        
+        if assignment_record:
+            update_result = db.update_one(
+                {"id": assignment_id},
+                {"$set": {
+                    "return_date": current_time,
+                    "status": "returned",
+                    "notes": f"{assignment_record.get('notes', '')} Return notes: {assignment.notes}",
+                    "checked_in": True,
+                    "checked_in_condition": assignment.condition,
+                    "updated_at": current_time
+                }}
+            )
+            logger.debug(f"Updated assignment record: {assignment_id}")
+        
+        # Update asset status
+        db.database["asset_items"].update_one(
+            {"id": assignment.asset_id},
+            {"$set": {
+                "status": "available",
+                "has_active_assignment": False,
+                "current_assignee_id": None,
+                "current_assignee_name": None,
+                "current_assignment_id": None,
+                "current_assignment_date": None,
+                "expected_return_date": None,
+                "location": assignment.return_location or asset.get("location", "")
+            }}
+        )
+        logger.info(f"Updated asset status to available: {assignment.asset_id}")
+        
+        # Update assignment history in asset
+        db.database["asset_items"].update_one(
+            {"id": assignment.asset_id, "assignment_history.id": assignment_id},
+            {"$set": {
+                "assignment_history.$.return_date": current_time,
+                "assignment_history.$.status": "returned"
+            }}
         )
         
-        remaining_assignments = sum(
-            1 for entry in asset.get("assignment_history", []) if not entry.get("return_date")
+        # Check if employee has other assigned assets
+        other_assigned = db.database["asset_items"].count_documents({
+            "current_assignee_id": employee_id,
+            "has_active_assignment": True,
+            "id": {"$ne": assignment.asset_id}
+        })
+        
+        # Update employee's assigned status if no other assets
+        if other_assigned == 0:
+            db.database["employees"].update_one(
+                {"id": employee_id},
+                {"$set": {"has_assigned_assets": False}}
+            )
+            logger.info(f"Updated employee has_assigned_assets to false: {employee_id}")
+        
+        # Update assignment history in employee
+        db.database["employees"].update_one(
+            {"id": employee_id, "assignment_history.id": assignment_id},
+            {"$set": {
+                "assignment_history.$.return_date": current_time,
+                "assignment_history.$.status": "returned"
+            }}
         )
         
-        update_dict = {
-            "updated_at": datetime.utcnow(),
-            "has_active_assignment": remaining_assignments > 0,
-            "status": AssetStatus.AVAILABLE.value if remaining_assignments == 0 else AssetStatus.ASSIGNED.value,
-            "current_assignee_id": None if remaining_assignments == 0 else asset["current_assignee_id"],
-            "current_assignment_date": None if remaining_assignments == 0 else asset["current_assignment_date"],
-            "department": None if remaining_assignments == 0 else asset.get("department")
-        }
-        db.asset_items.update_one({"_id": ObjectId(asset_id)}, {"$set": update_dict})
+        # Retrieve the updated asset
+        updated_asset = db.database["asset_items"].find_one({"id": assignment.asset_id})
         
-        db.employees.update_one(
-            {"_id": ObjectId(employee_id)},
-            {
-                "$pull": {"assigned_assets": {"asset_id": asset_id}},
-                "$set": {"updated_at": datetime.utcnow()}
-            }
-        )
+        # Remove _id field
+        if "_id" in updated_asset:
+            del updated_asset["_id"]
         
-        updated_asset = db.asset_items.find_one({"_id": ObjectId(asset_id)})
-        category = db.asset_categories.find_one({"_id": ObjectId(updated_asset["category_id"])})
-        updated_dict = {
-            **updated_asset,
-            "id": str(updated_asset["_id"]),
-            "category_name": category.get("name", "") if category else ""
-        }
-        updated_item = AssetItem(**updated_dict)
-        logger.debug(f"Unassigned employee {employee_id} from asset {asset_id}")
-        return updated_item
+        # Convert to AssetItem
+        updated_asset_item = AssetItem(**updated_asset)
+        logger.debug(f"Asset unassigned successfully: {updated_asset_item.asset_name}")
+        return updated_asset_item
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except ValueError as e:
+        # Re-raise ValueError as is
+        raise
     except Exception as e:
-        logger.error(f"Error unassigning asset {asset_id}: {str(e)}", exc_info=True)
+        logger.error(f"Error unassigning asset: {str(e)}", exc_info=True)
+        raise
+
+def get_assignment_by_id(db: Collection, assignment_id: str) -> Optional[AssignmentResponse]:
+    """
+    Retrieve a specific assignment entry by ID.
+    
+    Args:
+        db (Collection): MongoDB collection
+        assignment_id (str): Assignment ID to retrieve
+        
+    Returns:
+        Optional[AssignmentResponse]: The assignment entry if found, None otherwise
+    """
+    logger.info(f"Fetching assignment ID: {assignment_id}")
+    try:
+        assignment = db.find_one({"id": assignment_id})
+        if not assignment:
+            logger.warning(f"Assignment not found: {assignment_id}")
+            return None
+        
+        # Remove _id field as we have id
+        if "_id" in assignment:
+            del assignment["_id"]
+        
+        # Convert to AssignmentResponse
+        assignment_response = AssignmentResponse(**assignment)
+        logger.debug(f"Fetched assignment: {assignment_response.id}")
+        return assignment_response
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching assignment {assignment_id}: {str(e)}", exc_info=True)
         raise

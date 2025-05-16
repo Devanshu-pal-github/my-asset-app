@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
-from bson import ObjectId
+from pymongo.errors import OperationFailure
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def get_asset_analytics(
         pipeline_categories = [
             {"$lookup": {
                 "from": "asset_items",
-                "localField": "_id",
+                "localField": "id",
                 "foreignField": "category_id",
                 "as": "assets"
             }},
@@ -195,7 +195,7 @@ def get_department_analytics(
             {"$lookup": {
                 "from": "employees",
                 "localField": "employee_id",
-                "foreignField": "_id",
+                "foreignField": "id",
                 "as": "employee"
             }},
             
@@ -203,7 +203,7 @@ def get_department_analytics(
             {"$lookup": {
                 "from": "asset_items",
                 "localField": "asset_id",
-                "foreignField": "_id",
+                "foreignField": "id",
                 "as": "asset"
             }},
             
@@ -391,7 +391,7 @@ def get_employee_asset_analytics(
             # Lookup active assignments for this employee
             {"$lookup": {
                 "from": "assignment_history",
-                "let": {"employee_id": "$_id"},
+                "let": {"employee_id": "$id"},
                 "pipeline": [
                     {"$match": {
                         "$expr": {
@@ -405,7 +405,7 @@ def get_employee_asset_analytics(
                     {"$lookup": {
                         "from": "asset_items",
                         "localField": "asset_id",
-                        "foreignField": "_id",
+                        "foreignField": "id",
                         "as": "asset"
                     }},
                 ],
@@ -433,8 +433,8 @@ def get_employee_asset_analytics(
             
             # Project final fields needed for the result
             {"$project": {
-                "_id": 1,
-                "id": {"$toString": "$_id"},
+                "_id": 0,
+                "id": "$id",
                 "name": 1,
                 "department": 1,
                 "assets": "$assets_count",

@@ -1,60 +1,60 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pymongo.database import Database
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from app.dependencies import get_db
+from pymongo.database import Database
+from pymongo.errors import PyMongoError
+from app.database import get_database
 from app.models.request_approval import (
-    RequestApproval, 
-    RequestCreate, 
+    Request,
+    RequestCreate,
     RequestUpdate,
     RequestResponse,
-    RequestStatus,
     RequestType,
-    RequestPriority
+    RequestStatus,
+    RequestPriority,
+    RequestComment
 )
-from app.services.request_service import (
-    get_requests,
-    get_request_by_id,
-    create_request,
-    update_request,
-    delete_request
-)
+from app.services import request_service
 import logging
+from datetime import datetime
+
+router = APIRouter(
+    prefix="/requests",
+    tags=["requests"]
+)
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/requests", tags=["Requests"])
-
 @router.get("/", response_model=List[RequestResponse])
 async def read_requests(
-    request_type: Optional[RequestType] = None,
-    status: Optional[RequestStatus] = None,
-    priority: Optional[RequestPriority] = None,
+    request_type: Optional[str] = None,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
     requester_id: Optional[str] = None,
     asset_id: Optional[str] = None,
     created_after: Optional[str] = None,
     created_before: Optional[str] = None,
-    db: Database = Depends(get_db)
+    db: Database = Depends(get_database)
 ):
     """
-    Retrieve all requests with optional filters.
+    Get requests with optional filtering.
     
     Args:
-        request_type (Optional[RequestType]): Filter by request type
-        status (Optional[RequestStatus]): Filter by request status
-        priority (Optional[RequestPriority]): Filter by priority
-        requester_id (Optional[str]): Filter by requester ID
-        asset_id (Optional[str]): Filter by asset ID
-        created_after (Optional[str]): Filter by created date (after)
-        created_before (Optional[str]): Filter by created date (before)
-        db (Database): MongoDB database instance, injected via dependency
+        request_type: Filter by request type
+        status: Filter by status
+        priority: Filter by priority
+        requester_id: Filter by requester ID
+        asset_id: Filter by associated asset ID
+        created_after: Filter by creation date (after this date)
+        created_before: Filter by creation date (before this date)
+        db: Database instance
         
     Returns:
-        List[RequestResponse]: List of requests matching the filters
-        
+        List of RequestResponse objects
+    
     Raises:
-        HTTPException: 500 for server errors
+        HTTPException: If there's an error processing the request
     """
-    logger.info(f"Fetching requests - type: {request_type}, status: {status}, priority: {priority}")
+    logger.info(f"GET /requests/ - type: {request_type}, status: {status}, priority: {priority}")
     try:
         filters = {}
         if request_type:
@@ -67,135 +67,233 @@ async def read_requests(
             filters["requester_id"] = requester_id
         if asset_id:
             filters["asset_id"] = asset_id
-        if created_after:
-            filters["created_after"] = created_after
-        if created_before:
-            filters["created_before"] = created_before
             
-        requests = get_requests(db, filters)
-        logger.debug(f"Fetched {len(requests)} requests")
+        # Date range filters
+        date_filter = {}
+        if created_after:
+            date_filter["$gte"] = created_after
+        if created_before:
+            date_filter["$lte"] = created_before
+        if date_filter:
+            filters["created_at"] = date_filter
+            
+        requests = request_service.get_requests(db, filters)
         return requests
     except Exception as e:
-        logger.error(f"Failed to fetch requests: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch requests: {str(e)}")
+        logger.error(f"Error in read_requests: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{request_id}", response_model=RequestResponse)
-async def read_request(request_id: str, db: Database = Depends(get_db)):
+@router.get("/{request_id}", response_model=Request)
+async def read_request(
+    request_id: str,
+    db: Database = Depends(get_database)
+):
     """
-    Retrieve a specific request by ID.
+    Get a specific request by ID.
     
     Args:
-        request_id (str): Request ID
-        db (Database): MongoDB database instance, injected via dependency
+        request_id: The request ID
+        db: Database instance
         
     Returns:
-        RequestResponse: Request details
-        
+        Request object
+    
     Raises:
-        HTTPException: 404 if request not found, 400 for invalid ID, 500 for server errors
+        HTTPException: If request not found or there's an error processing the request
     """
-    logger.info(f"Fetching request with ID: {request_id}")
+    logger.info(f"GET /requests/{request_id}")
     try:
-        request = get_request_by_id(db, request_id)
+        request = request_service.get_request_by_id(db, request_id)
         if not request:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
-            
-        logger.debug(f"Found request: {request.request_id}")
         return request
-    except ValueError as ve:
-        logger.warning(f"Invalid request ID: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Failed to fetch request {request_id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch request: {str(e)}")
+        logger.error(f"Error in read_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/", response_model=RequestResponse)
-async def create_new_request(request: RequestCreate, db: Database = Depends(get_db)):
+@router.post("/", response_model=Request, status_code=201)
+async def create_new_request(
+    request: RequestCreate,
+    db: Database = Depends(get_database)
+):
     """
     Create a new request.
     
     Args:
-        request (RequestCreate): Request details
-        db (Database): MongoDB database instance, injected via dependency
+        request: Request creation data
+        db: Database instance
         
     Returns:
-        RequestResponse: Created request details
-        
+        Created Request object
+    
     Raises:
-        HTTPException: 400 for validation errors, 500 for server errors
+        HTTPException: If there's an error processing the request or validation fails
     """
-    logger.info(f"Creating request for asset: {request.asset_id}")
+    logger.info(f"POST /requests/ - type: {request.request_type}, asset_id: {request.asset_id}")
     try:
-        created_request = create_request(db, request)
-        logger.debug(f"Created request with ID: {created_request.request_id}")
-        return created_request
-    except ValueError as ve:
-        logger.warning(f"Failed to create request: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
+        result = request_service.create_request(db, request)
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in create_new_request: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in create_new_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
-        logger.error(f"Failed to create request: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to create request: {str(e)}")
+        logger.error(f"Error in create_new_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.put("/{request_id}", response_model=RequestResponse)
-async def update_existing_request(request_id: str, request: RequestUpdate, db: Database = Depends(get_db)):
+@router.put("/{request_id}", response_model=Request)
+async def update_existing_request(
+    request_id: str,
+    update: RequestUpdate,
+    db: Database = Depends(get_database)
+):
     """
     Update an existing request.
     
     Args:
-        request_id (str): Request ID to update
-        request (RequestUpdate): Updated request details
-        db (Database): MongoDB database instance, injected via dependency
+        request_id: The request ID to update
+        update: Request update data
+        db: Database instance
         
     Returns:
-        RequestResponse: Updated request details
-        
+        Updated Request object
+    
     Raises:
-        HTTPException: 404 if request not found, 400 for validation errors, 500 for server errors
+        HTTPException: If request not found or there's an error processing the request
     """
-    logger.info(f"Updating request with ID: {request_id}")
+    logger.info(f"PUT /requests/{request_id}")
     try:
-        updated_request = update_request(db, request_id, request)
-        if not updated_request:
+        result = request_service.update_request(db, request_id, update)
+        if not result:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
-            
-        logger.debug(f"Updated request: {updated_request.request_id}")
-        return updated_request
-    except ValueError as ve:
-        logger.warning(f"Failed to update request: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in update_existing_request: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in update_existing_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
-        logger.error(f"Failed to update request {request_id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to update request: {str(e)}")
+        logger.error(f"Error in update_existing_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/{request_id}", response_model=dict)
-async def delete_existing_request(request_id: str, db: Database = Depends(get_db)):
+@router.delete("/{request_id}", status_code=204)
+async def delete_existing_request(
+    request_id: str,
+    db: Database = Depends(get_database)
+):
     """
     Delete a request.
     
     Args:
-        request_id (str): Request ID to delete
-        db (Database): MongoDB database instance, injected via dependency
-        
-    Returns:
-        dict: Success message
-        
+        request_id: The request ID to delete
+        db: Database instance
+    
     Raises:
-        HTTPException: 404 if request not found, 400 for validation errors, 500 for server errors
+        HTTPException: If request not found or there's an error processing the request
     """
-    logger.info(f"Deleting request with ID: {request_id}")
+    logger.info(f"DELETE /requests/{request_id}")
     try:
-        deleted = delete_request(db, request_id)
-        if not deleted:
+        result = request_service.delete_request(db, request_id)
+        if not result:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
-            
-        logger.debug(f"Deleted request ID: {request_id}")
-        return {"message": "Request deleted successfully"}
-    except ValueError as ve:
-        logger.warning(f"Cannot delete request: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
+    except PyMongoError as e:
+        logger.error(f"Database error in delete_existing_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
-        logger.error(f"Failed to delete request {request_id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to delete request: {str(e)}") 
+        logger.error(f"Error in delete_existing_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{request_id}/comments", response_model=Request)
+async def add_comment_to_request(
+    request_id: str,
+    comment: RequestComment,
+    db: Database = Depends(get_database)
+):
+    """
+    Add a comment to a request.
+    
+    Args:
+        request_id: The request ID
+        comment: Comment data
+        db: Database instance
+        
+    Returns:
+        Updated Request object
+    
+    Raises:
+        HTTPException: If request not found or there's an error processing the request
+    """
+    logger.info(f"POST /requests/{request_id}/comments")
+    try:
+        result = request_service.add_comment(db, request_id, comment)
+        if not result:
+            logger.warning(f"Request not found: {request_id}")
+            raise HTTPException(status_code=404, detail="Request not found")
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in add_comment_to_request: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in add_comment_to_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        logger.error(f"Error in add_comment_to_request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/{request_id}/approval", response_model=Request)
+async def update_request_approval(
+    request_id: str,
+    approve: bool,
+    approver_id: str,
+    approver_name: Optional[str] = None,
+    comment: Optional[str] = None,
+    db: Database = Depends(get_database)
+):
+    """
+    Update approval status for a request.
+    
+    Args:
+        request_id: The request ID
+        approve: Whether to approve the request
+        approver_id: ID of the approver
+        approver_name: Name of the approver
+        comment: Optional comment for the approval/rejection
+        db: Database instance
+        
+    Returns:
+        Updated Request object
+    
+    Raises:
+        HTTPException: If request not found or there's an error processing the request
+    """
+    logger.info(f"PUT /requests/{request_id}/approval - approve: {approve}, approver: {approver_id}")
+    try:
+        result = request_service.update_approval(
+            db, 
+            request_id, 
+            approver_id, 
+            approve, 
+            approver_name, 
+            comment
+        )
+        if not result:
+            logger.warning(f"Request not found: {request_id}")
+            raise HTTPException(status_code=404, detail="Request not found")
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in update_request_approval: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in update_request_approval: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        logger.error(f"Error in update_request_approval: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e)) 
