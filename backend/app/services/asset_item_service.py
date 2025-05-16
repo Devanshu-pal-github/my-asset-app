@@ -2,6 +2,7 @@ from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError, OperationFailure
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, timedelta
+import logging
 from app.models.asset_item import (
     AssetItem, 
     AssetItemCreate, 
@@ -11,7 +12,6 @@ from app.models.asset_item import (
     MaintenanceSchedule
 )
 from app.models.utils import generate_uuid, get_current_datetime, serialize_model
-import logging
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -447,38 +447,107 @@ def get_asset_utilization(db: Collection) -> Dict[str, Any]:
         assigned_count = db.count_documents({"has_active_assignment": True})
         
         # Calculate utilization rate (assigned / assignable)
-        assignable_count = db.count_documents({
-            "status": {"$nin": ["retired", "lost", "under_maintenance"]}
-        })
+        assignable_count = total_assets - db.count_documents({"status": "retired"}) - db.count_documents({"status": "lost"})
+        utilization_rate = (assigned_count / assignable_count) * 100 if assignable_count > 0 else 0
         
-        utilization_rate = (assigned_count / assignable_count * 100) if assignable_count > 0 else 0.0
-        
-        # Get assets requiring maintenance
-        maintenance_due_count = db.count_documents({
-            "next_maintenance_date": {"$lte": get_current_datetime()}
-        })
-        
-        # Calculate average time between assignments
-        # This would require more complex aggregation, simplifying for now
-        
-        result = {
+        return {
             "total_assets": total_assets,
             "status_counts": status_counts,
             "operational_count": operational_count,
             "non_operational_count": non_operational_count,
             "assigned_count": assigned_count,
-            "assignable_count": assignable_count,
-            "utilization_rate": round(utilization_rate, 2),
-            "maintenance_due_count": maintenance_due_count
+            "utilization_rate": utilization_rate
         }
-        
-        logger.debug("Calculated asset utilization statistics")
-        return result
-    except OperationFailure as e:
-        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
-        raise
     except Exception as e:
         logger.error(f"Error calculating asset utilization: {str(e)}", exc_info=True)
+        raise
+
+def get_asset_statistics(db: Collection) -> Dict[str, Any]:
+    """
+    Get comprehensive statistics for assets including counts, values, and status information.
+    
+    Args:
+        db (Collection): MongoDB collection
+        
+    Returns:
+        Dict[str, Any]: Comprehensive asset statistics
+    """
+    logger.info("Calculating comprehensive asset statistics")
+    try:
+        # Basic asset counts
+        total_assets = db.count_documents({})
+        available_assets = db.count_documents({"status": "available"})
+        assigned_assets = db.count_documents({"status": "assigned"})
+        maintenance_assets = db.count_documents({"status": {"$in": ["under_maintenance", "maintenance_requested"]}})
+        retired_assets = db.count_documents({"status": "retired"})
+        
+        # Financial statistics
+        pipeline = [
+            {"$match": {"purchase_cost": {"$exists": True, "$ne": None}}},
+            {"$group": {
+                "_id": None,
+                "total_value": {"$sum": "$purchase_cost"},
+                "avg_value": {"$avg": "$purchase_cost"},
+                "max_value": {"$max": "$purchase_cost"},
+                "min_value": {"$min": "$purchase_cost"},
+                "count": {"$sum": 1}
+            }}
+        ]
+        financial_result = list(db.aggregate(pipeline))
+        financial_stats = financial_result[0] if financial_result else {
+            "total_value": 0, "avg_value": 0, "max_value": 0, "min_value": 0, "count": 0
+        }
+        
+        # Department statistics
+        departments = db.distinct("department")
+        department_counts = {}
+        for dept in departments:
+            if dept:  # Skip None values
+                department_counts[dept] = db.count_documents({"department": dept})
+        
+        # Category statistics
+        categories = db.distinct("category_id")
+        category_counts = {}
+        for cat_id in categories:
+            if cat_id:  # Skip None values
+                category = db.database["asset_categories"].find_one({"id": cat_id})
+                category_name = category.get("category_name", "Unknown") if category else "Unknown"
+                category_counts[category_name] = db.count_documents({"category_id": cat_id})
+        
+        # Maintenance statistics
+        maintenance_due = db.count_documents({"due_for_maintenance": True})
+        
+        # Assignment statistics
+        assignment_counts = {
+            "assigned": assigned_assets,
+            "unassigned": available_assets,
+            "total": total_assets,
+            "utilization_rate": (assigned_assets / total_assets * 100) if total_assets > 0 else 0
+        }
+        
+        return {
+            "total_assets": total_assets,
+            "status_counts": {
+                "available": available_assets,
+                "assigned": assigned_assets,
+                "under_maintenance": maintenance_assets,
+                "retired": retired_assets
+            },
+            "financial_stats": {
+                "total_value": financial_stats["total_value"],
+                "average_value": financial_stats["avg_value"],
+                "max_value": financial_stats["max_value"],
+                "min_value": financial_stats["min_value"]
+            },
+            "department_counts": department_counts,
+            "category_counts": category_counts,
+            "maintenance_stats": {
+                "due_for_maintenance": maintenance_due
+            },
+            "assignment_stats": assignment_counts
+        }
+    except Exception as e:
+        logger.error(f"Error calculating asset statistics: {str(e)}", exc_info=True)
         raise
 
 def check_maintenance_due_assets(db: Collection) -> List[str]:

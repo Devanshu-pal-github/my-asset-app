@@ -11,7 +11,7 @@ from app.models.employee import (
 from app.models.asset_item import AssetItem
 from app.models.assignment_history import AssignmentHistoryEntry
 from app.models.maintenance_history import MaintenanceHistoryEntry
-from app.models.document import DocumentEntry
+from app.models.document import Document
 from app.models.utils import generate_uuid, get_current_datetime, serialize_model
 import logging
 

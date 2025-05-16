@@ -1,7 +1,7 @@
 from pymongo import MongoClient, ASCENDING
 from pymongo.collection import Collection
 from pymongo.database import Database
-from pymongo.errors import ServerSelectionTimeoutError
+from pymongo.errors import ServerSelectionTimeoutError, OperationFailure
 from fastapi import Depends, HTTPException, status
 from dotenv import load_dotenv
 import os
@@ -30,47 +30,83 @@ client = MongoClient(
 # Select the database
 db: Database = client["asset_management"]
 
+# Helper function to safely create indexes
+def safe_create_index(collection, keys, **kwargs):
+    """Create an index safely, dropping existing ones if different options are needed"""
+    index_name = kwargs.get('name')
+    if not index_name:
+        # Generate index name like MongoDB would (e.g. "field_1")
+        index_name = '_'.join(f"{key[0]}_{key[1]}" for key in keys)
+        if index_name.endswith('_1'):
+            # Add name to kwargs for future reference
+            kwargs['name'] = index_name
+    
+    try:
+        # Check if index already exists
+        index_info = collection.index_information()
+        if index_name in index_info:
+            # For simple comparison, just drop and recreate if options are provided
+            if kwargs:
+                logger.info(f"Dropping existing index {index_name} to recreate with new options")
+                collection.drop_index(index_name)
+                collection.create_index(keys, **kwargs)
+                logger.info(f"Recreated index {index_name} with options: {kwargs}")
+            else:
+                logger.info(f"Index {index_name} already exists, skipping")
+        else:
+            # Create new index
+            collection.create_index(keys, **kwargs)
+            logger.info(f"Created new index {index_name} with options: {kwargs}")
+    except OperationFailure as e:
+        logger.error(f"Error working with index {index_name}: {str(e)}")
+        # If it's not a critical error, continue
+        if "already exists" not in str(e) and "duplicate" not in str(e):
+            raise
+
 # Fix the unique index on asset_categories
 logger.debug("Checking and creating indexes for asset_categories...")
-category_indexes = db.asset_categories.index_information()
-if "name_1" in category_indexes:
-    db.asset_categories.drop_index("name_1")
-    logger.info("Dropped incorrect unique index name_1 on asset_categories")
-if "category_name_1" not in category_indexes:
-    db.asset_categories.create_index([("category_name", ASCENDING)], unique=True, name="category_name_1")
-    logger.info("Created unique index on asset_categories.category_name")
+try:
+    category_indexes = db.asset_categories.index_information()
+    if "name_1" in category_indexes:
+        db.asset_categories.drop_index("name_1")
+        logger.info("Dropped incorrect unique index name_1 on asset_categories")
+    if "category_name_1" not in category_indexes:
+        db.asset_categories.create_index([("category_name", ASCENDING)], unique=True, name="category_name_1")
+        logger.info("Created unique index on asset_categories.category_name")
+except Exception as e:
+    logger.error(f"Error fixing asset_categories index: {str(e)}")
 
 # Create UUID-based indexes for all collections
-db.asset_categories.create_index([("id", ASCENDING)], unique=True)
-db.asset_items.create_index([("id", ASCENDING)], unique=True)
-db.asset_items.create_index([("asset_tag", ASCENDING)], unique=True)
-db.asset_items.create_index([("serial_number", ASCENDING)], sparse=True)
-db.asset_items.create_index([("category_id", ASCENDING)])
-db.asset_items.create_index([("department", ASCENDING)])
-db.asset_items.create_index([("location", ASCENDING)])
-db.asset_items.create_index([("maintenance_due_date", ASCENDING)])
+safe_create_index(db.asset_categories, [("id", ASCENDING)], unique=True)
+safe_create_index(db.asset_items, [("id", ASCENDING)], unique=True)
+safe_create_index(db.asset_items, [("asset_tag", ASCENDING)], unique=True)
+safe_create_index(db.asset_items, [("serial_number", ASCENDING)], unique=True, sparse=True)
+safe_create_index(db.asset_items, [("category_id", ASCENDING)])
+safe_create_index(db.asset_items, [("department", ASCENDING)])
+safe_create_index(db.asset_items, [("location", ASCENDING)])
+safe_create_index(db.asset_items, [("maintenance_due_date", ASCENDING)])
 
-db.employees.create_index([("id", ASCENDING)], unique=True)
-db.employees.create_index([("employee_id", ASCENDING)], unique=True)
-db.employees.create_index([("contact.email", ASCENDING)], unique=True)
+safe_create_index(db.employees, [("id", ASCENDING)], unique=True)
+safe_create_index(db.employees, [("employee_id", ASCENDING)], unique=True)
+safe_create_index(db.employees, [("contact.email", ASCENDING)], unique=True)
 
-db.documents.create_index([("id", ASCENDING)], unique=True)
-db.documents.create_index([("asset_id", ASCENDING)])
-db.documents.create_index([("employee_id", ASCENDING)])
+safe_create_index(db.documents, [("id", ASCENDING)], unique=True)
+safe_create_index(db.documents, [("asset_id", ASCENDING)])
+safe_create_index(db.documents, [("employee_id", ASCENDING)])
 
-db.assignment_history.create_index([("id", ASCENDING)], unique=True)
-db.assignment_history.create_index([("asset_id", ASCENDING)])
-db.assignment_history.create_index([("assigned_to", ASCENDING)])
-db.assignment_history.create_index([("is_active", ASCENDING)])
+safe_create_index(db.assignment_history, [("id", ASCENDING)], unique=True)
+safe_create_index(db.assignment_history, [("asset_id", ASCENDING)])
+safe_create_index(db.assignment_history, [("assigned_to", ASCENDING)])
+safe_create_index(db.assignment_history, [("is_active", ASCENDING)])
 
-db.maintenance_history.create_index([("id", ASCENDING)], unique=True)
-db.maintenance_history.create_index([("asset_id", ASCENDING)])
-db.maintenance_history.create_index([("status", ASCENDING)])
+safe_create_index(db.maintenance_history, [("id", ASCENDING)], unique=True)
+safe_create_index(db.maintenance_history, [("asset_id", ASCENDING)])
+safe_create_index(db.maintenance_history, [("status", ASCENDING)])
 
-db.requests.create_index([("id", ASCENDING)], unique=True)
-db.requests.create_index([("type", ASCENDING)])
-db.requests.create_index([("status", ASCENDING)])
-db.requests.create_index([("created_at", ASCENDING)])
+safe_create_index(db.requests, [("id", ASCENDING)], unique=True)
+safe_create_index(db.requests, [("type", ASCENDING)])
+safe_create_index(db.requests, [("status", ASCENDING)])
+safe_create_index(db.requests, [("created_at", ASCENDING)])
 
 logger.info("All indexes created successfully")
 

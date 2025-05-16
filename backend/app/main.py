@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from app.dependencies import db, get_db
+from app.dependencies import db, get_db, safe_create_index
 from app.routers import (
     asset_categories_router,
     asset_items_router,
@@ -19,7 +19,7 @@ from pymongo.database import Database
 from starlette.responses import JSONResponse
 from enum import Enum
 from typing import Any
-from pymongo import ASCENDING
+from pymongo import ASCENDING, TEXT
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -105,16 +105,19 @@ async def startup_event():
         logger.info("MongoDB connection verified during startup")
         
         # Ensure text index on asset_items for search capabilities
-        asset_indexes = db.asset_items.index_information()
-        if "text_search_index" not in asset_indexes:
-            db.asset_items.create_index([
-                ("name", "text"), 
-                ("asset_tag", "text"), 
-                ("serial_number", "text"),
-                ("model", "text"),
-                ("manufacturer", "text")
-            ], name="text_search_index")
-            logger.info("Created text search index on asset_items")
+        try:
+            # We use the safe_create_index function with a named index to avoid conflicts
+            text_index = [
+                ("name", TEXT), 
+                ("asset_tag", TEXT), 
+                ("serial_number", TEXT),
+                ("model", TEXT),
+                ("manufacturer", TEXT)
+            ]
+            safe_create_index(db.asset_items, text_index, name="text_search_index")
+            logger.info("Created/verified text search index on asset_items")
+        except Exception as e:
+            logger.warning(f"Error creating text index: {str(e)}")
         
         # Ensure all required collections exist
         collections = db.list_collection_names()
@@ -133,12 +136,16 @@ async def startup_event():
                 db.create_collection(coll)
                 logger.info(f"Created collection: {coll}")
                 
-        # Verify indexes for UUID-based fields
+        # Verify indexes for UUID-based fields for all collections
+        # Note: The main creation is handled in dependencies.py, this is just a verification
         for coll in required_collections:
             if coll in collections:
-                if "id_1" not in db[coll].index_information():
-                    db[coll].create_index([("id", ASCENDING)], unique=True)
-                    logger.info(f"Created index on {coll}.id")
+                try:
+                    index_info = db[coll].index_information()
+                    if "id_1" not in index_info:
+                        logger.warning(f"Collection {coll} missing id index - will be created by dependencies.py")
+                except Exception as e:
+                    logger.error(f"Error checking indexes for {coll}: {str(e)}")
                     
     except Exception as e:
         logger.error(f"MongoDB connection failed: {str(e)}", exc_info=True)

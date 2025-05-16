@@ -2,6 +2,7 @@ from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError, OperationFailure
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
+import logging
 from app.models.asset_item import AssetItem, AssetStatus
 from app.models.assignment_history import (
     AssignmentHistoryEntry, 

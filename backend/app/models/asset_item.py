@@ -84,6 +84,18 @@ class Tag(BaseModel):
 
     model_config = model_config
 
+# Maintenance Schedule Schema
+class MaintenanceSchedule(BaseModel):
+    frequency: int = Field(..., description="Frequency of maintenance")
+    frequency_unit: str = Field(..., description="Unit for frequency (days, weeks, months, years)")
+    maintenance_type: Optional[str] = Field(None, description="Type of maintenance")
+    description: Optional[str] = Field(None, description="Description of the maintenance schedule")
+    is_active: bool = Field(default=True, description="Whether the maintenance schedule is active")
+    last_maintenance_date: Optional[str] = Field(None, description="Date of the last maintenance")
+    next_maintenance_date: Optional[str] = Field(None, description="Date of the next maintenance")
+    
+    model_config = model_config
+
 # AssetItem Schema with all required frontend fields
 class AssetItem(BaseModel):
     id: str = Field(default_factory=generate_asset_id, description="Unique asset ID")
@@ -163,6 +175,7 @@ class AssetItem(BaseModel):
     
     # History records
     maintenance_history: List[MaintenanceRecord] = Field(default_factory=list, description="Maintenance history")
+    maintenance_schedule: Optional[MaintenanceSchedule] = Field(None, description="Maintenance schedule for the asset")
     assignment_history: List[Dict[str, Any]] = Field(default_factory=list, description="Assignment history")
     audit_history: List[Dict[str, Any]] = Field(default_factory=list, description="Audit history")
     history: Optional[List[AssetHistoryEntry]] = Field(default_factory=list, description="General history of the asset")
@@ -270,6 +283,7 @@ class AssetItemCreate(BaseModel):
     due_for_maintenance: Optional[bool] = False
     next_maintenance_date: Optional[str] = None
     last_maintenance_date: Optional[str] = None
+    maintenance_schedule: Optional[MaintenanceSchedule] = None
     departmentId: Optional[str] = None
     departmentName: Optional[str] = None
     quantity: Optional[int] = 1
@@ -333,6 +347,7 @@ class AssetItemUpdate(BaseModel):
     due_for_maintenance: Optional[bool] = None
     next_maintenance_date: Optional[str] = None
     last_maintenance_date: Optional[str] = None
+    maintenance_schedule: Optional[MaintenanceSchedule] = None
     depreciated_value: Optional[float] = None
     utilization_rate: Optional[float] = None
     check_in_out_status: Optional[str] = None
@@ -416,6 +431,7 @@ class AssetItemResponse(BaseModel):
     current_assignee_id: Optional[str] = None
     current_assignee_name: Optional[str] = None
     current_assignment_date: Optional[str] = None
+    maintenance_schedule: Optional[MaintenanceSchedule] = None
     
     model_config = model_config
 
