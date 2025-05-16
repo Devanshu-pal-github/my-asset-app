@@ -104,18 +104,42 @@ async def startup_event():
         db.command("ping")
         logger.info("MongoDB connection verified during startup")
         
-        # Ensure text index on asset_items
+        # Ensure text index on asset_items for search capabilities
         asset_indexes = db.asset_items.index_information()
-        if "asset_tag_text_category_id_1" not in asset_indexes:
-            db.asset_items.create_index([("asset_tag", "text"), ("category_id", ASCENDING)])
-            logger.info("Created text index on asset_items.asset_tag and category_id")
+        if "text_search_index" not in asset_indexes:
+            db.asset_items.create_index([
+                ("name", "text"), 
+                ("asset_tag", "text"), 
+                ("serial_number", "text"),
+                ("model", "text"),
+                ("manufacturer", "text")
+            ], name="text_search_index")
+            logger.info("Created text search index on asset_items")
         
+        # Ensure all required collections exist
         collections = db.list_collection_names()
-        required_collections = ["asset_categories", "asset_items", "employees", "documents"]
+        required_collections = [
+            "asset_categories", 
+            "asset_items", 
+            "employees", 
+            "documents", 
+            "assignment_history", 
+            "maintenance_history",
+            "requests"
+        ]
+        
         for coll in required_collections:
             if coll not in collections:
                 db.create_collection(coll)
                 logger.info(f"Created collection: {coll}")
+                
+        # Verify indexes for UUID-based fields
+        for coll in required_collections:
+            if coll in collections:
+                if "id_1" not in db[coll].index_information():
+                    db[coll].create_index([("id", ASCENDING)], unique=True)
+                    logger.info(f"Created index on {coll}.id")
+                    
     except Exception as e:
         logger.error(f"MongoDB connection failed: {str(e)}", exc_info=True)
         raise
@@ -143,16 +167,17 @@ async def health_check():
     logger.info("Health check endpoint hit")
     try:
         db.command("ping")
+        collections = db.list_collection_names()
         stats = {
             "status": "healthy",
             "mongodb": "connected",
-            "collections": {
-                "asset_categories": db.asset_categories.count_documents({}),
-                "asset_items": db.asset_items.count_documents({}),
-                "employees": db.employees.count_documents({}),
-                "documents": db.documents.count_documents({})
-            }
+            "collections": {}
         }
+        
+        # Get counts for all collections
+        for coll in collections:
+            stats["collections"][coll] = db[coll].count_documents({})
+        
         logger.info(f"MongoDB health check: {stats['collections']}")
         return stats
     except Exception as e:

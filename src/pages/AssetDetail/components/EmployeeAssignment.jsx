@@ -13,7 +13,20 @@ import logger from '../../../utils/logger';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // Utility to validate MongoDB ObjectId
-const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+const isValidObjectId = (id) => {
+  if (!id) return false;
+  
+  // Check for standard UUID format (8-4-4-4-12 hex digits)
+  const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+  
+  // Check for prefixed ID format like AST-12345678
+  const prefixedIdRegex = /^[A-Z]{3}-[0-9A-Z]{8}$/;
+  
+  // Check for old MongoDB ObjectId format (24 hex characters)
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  
+  return uuidRegex.test(id) || prefixedIdRegex.test(id) || objectIdRegex.test(id);
+};
 
 // Retry utility function
 const withRetry = async (fn, retries = 3, delay = 1000) => {
