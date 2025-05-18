@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo.collection import Collection
 from typing import List, Optional
-from app.dependencies import get_db
+from app.dependencies import get_db, get_assignment_history_collection
 from app.models.asset_item import AssetItem
 from app.models.assignment_history import AssignmentHistoryEntry, AssignmentCreate, AssignmentReturn, AssignmentResponse
 from app.services.assignment_history_service import (
@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/assignment-history", tags=["Assignment History"])
 
 @router.get("/asset/{asset_id}", response_model=List[AssignmentResponse])
-async def read_assignment_history(asset_id: str, db: Collection = Depends(get_db)):
+async def read_assignment_history(asset_id: str, collection: Collection = Depends(get_assignment_history_collection)):
     """
     Retrieve the assignment history for a specific asset.
     
     Args:
         asset_id (str): ID of the asset.
-        db (Collection): MongoDB database instance, injected via dependency.
+        collection (Collection): MongoDB assignment history collection, injected via dependency.
     
     Returns:
         List[AssignmentResponse]: List of assignment history entries.
@@ -32,7 +32,7 @@ async def read_assignment_history(asset_id: str, db: Collection = Depends(get_db
     """
     logger.info(f"Fetching assignment history for asset {asset_id}")
     try:
-        history = get_assignment_history_by_asset(db, asset_id)
+        history = get_assignment_history_by_asset(collection, asset_id)
         if history is None:
             logger.warning(f"Asset not found: {asset_id}")
             raise HTTPException(status_code=404, detail="Asset not found")
@@ -49,21 +49,21 @@ async def read_assignment_history(asset_id: str, db: Collection = Depends(get_db
 @router.post("/assign", response_model=AssetItem)
 async def assign_asset(
     assignment: AssignmentCreate,
-    db: Collection = Depends(get_db)
+    collection: Collection = Depends(get_assignment_history_collection)
 ):
     """
     Assign an asset to an employee, updating assignment history.
     
     Args:
         assignment (AssignmentCreate): Assignment details
-        db (Collection): MongoDB database instance, injected via dependency.
+        collection (Collection): MongoDB assignment history collection, injected via dependency.
         
     Returns:
         AssetItem: Updated asset with new assignment information
     """
     logger.info(f"Assigning asset {assignment.asset_id} to {assignment.assigned_to}")
     try:
-        updated_asset = assign_asset_to_employee(db, assignment)
+        updated_asset = assign_asset_to_employee(collection, assignment)
         logger.debug(f"Assigned asset {assignment.asset_id} to {assignment.assigned_to}")
         return updated_asset
     except ValueError as ve:
@@ -76,21 +76,21 @@ async def assign_asset(
 @router.post("/unassign", response_model=AssetItem)
 async def unassign_asset(
     return_data: AssignmentReturn,
-    db: Collection = Depends(get_db)
+    collection: Collection = Depends(get_assignment_history_collection)
 ):
     """
     Unassign a specific employee from an asset, updating assignment history.
     
     Args:
         return_data (AssignmentReturn): Return details
-        db (Collection): MongoDB database instance, injected via dependency.
+        collection (Collection): MongoDB assignment history collection, injected via dependency.
         
     Returns:
         AssetItem: Updated asset with assignment removed
     """
     logger.info(f"Unassigning asset with assignment ID {return_data.assignment_id}")
     try:
-        updated_asset = unassign_employee_from_asset(db, return_data)
+        updated_asset = unassign_employee_from_asset(collection, return_data)
         logger.debug(f"Unassigned assignment {return_data.assignment_id}")
         return updated_asset
     except ValueError as ve:

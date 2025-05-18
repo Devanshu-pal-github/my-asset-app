@@ -125,7 +125,7 @@ def get_assignment_history_by_employee(
         raise
 
 def assign_asset_to_employee(
-    db: Collection, 
+    db: Collection,
     assignment: AssignmentCreate
 ) -> AssetItem:
     """
@@ -306,7 +306,7 @@ def assign_asset_to_employee(
         raise
 
 def unassign_employee_from_asset(
-    db: Collection, 
+    db: Collection,
     assignment: AssignmentReturn
 ) -> AssetItem:
     """

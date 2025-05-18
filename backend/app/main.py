@@ -108,13 +108,13 @@ async def log_requests(request: Request, call_next):
 
 # Register routers
 logger.info("Registering routers with prefix /api")
-app.include_router(asset_categories, prefix="/api/asset-categories", tags=["Asset Categories"])
-app.include_router(asset_items, prefix="/api/asset-items", tags=["Asset Items"])
-app.include_router(employees, prefix="/api/employees", tags=["Employees"])
-app.include_router(documents, prefix="/api/documents", tags=["Documents"])
-app.include_router(assignment_history, prefix="/api/assignment-history", tags=["Assignment History"])
-app.include_router(maintenance_history, prefix="/api/maintenance-history", tags=["Maintenance History"])
-app.include_router(request_approval, prefix="/api/request-approval", tags=["Request Approval"])
+app.include_router(asset_categories, prefix="/api", tags=["Asset Categories"])
+app.include_router(asset_items, prefix="/api", tags=["Asset Items"])
+app.include_router(employees, prefix="/api", tags=["Employees"])
+app.include_router(documents, prefix="/api", tags=["Documents"])
+app.include_router(assignment_history, prefix="/api", tags=["Assignment History"])
+app.include_router(maintenance_history, prefix="/api", tags=["Maintenance History"])
+app.include_router(request_approval, prefix="/api", tags=["Request Approval"])
 # Temporarily comment out analytics router
 # app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"])
 

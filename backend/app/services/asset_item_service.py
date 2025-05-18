@@ -84,7 +84,7 @@ def get_asset_items(
             # Convert to AssetItemResponse
             asset_response = AssetItemResponse(**asset)
             result.append(asset_response)
-            
+        
         logger.debug(f"Fetched {len(result)} asset items")
         return result
     except OperationFailure as e:
@@ -163,7 +163,6 @@ def create_asset_item(db: Collection, asset: AssetItemCreate) -> AssetItemRespon
             if not category:
                 logger.warning(f"Category not found: {asset.category_id}")
                 raise ValueError(f"Category with ID '{asset.category_id}' does not exist")
-            
             # Add category name to asset
             asset_dict["category_name"] = category.get("category_name", "Unknown")
         

@@ -16,6 +16,7 @@ from app.models.request_approval import (
 from app.services import request_service
 import logging
 from datetime import datetime
+from app.dependencies import get_requests_collection
 
 router = APIRouter(
     prefix="/requests",
@@ -33,7 +34,7 @@ async def read_requests(
     asset_id: Optional[str] = None,
     created_after: Optional[str] = None,
     created_before: Optional[str] = None,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Get requests with optional filtering.
@@ -46,7 +47,7 @@ async def read_requests(
         asset_id: Filter by associated asset ID
         created_after: Filter by creation date (after this date)
         created_before: Filter by creation date (before this date)
-        db: Database instance
+        collection: Requests collection
         
     Returns:
         List of RequestResponse objects
@@ -77,7 +78,7 @@ async def read_requests(
         if date_filter:
             filters["created_at"] = date_filter
             
-        requests = request_service.get_requests(db, filters)
+        requests = request_service.get_requests(collection, filters)
         return requests
     except Exception as e:
         logger.error(f"Error in read_requests: {str(e)}", exc_info=True)
@@ -86,14 +87,14 @@ async def read_requests(
 @router.get("/{request_id}", response_model=Request)
 async def read_request(
     request_id: str,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Get a specific request by ID.
     
     Args:
         request_id: The request ID
-        db: Database instance
+        collection: Requests collection
         
     Returns:
         Request object
@@ -103,7 +104,7 @@ async def read_request(
     """
     logger.info(f"GET /requests/{request_id}")
     try:
-        request = request_service.get_request_by_id(db, request_id)
+        request = request_service.get_request_by_id(collection, request_id)
         if not request:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
@@ -117,14 +118,14 @@ async def read_request(
 @router.post("/", response_model=Request, status_code=201)
 async def create_new_request(
     request: RequestCreate,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Create a new request.
     
     Args:
         request: Request creation data
-        db: Database instance
+        collection: Requests collection
         
     Returns:
         Created Request object
@@ -134,7 +135,7 @@ async def create_new_request(
     """
     logger.info(f"POST /requests/ - type: {request.request_type}, asset_id: {request.asset_id}")
     try:
-        result = request_service.create_request(db, request)
+        result = request_service.create_request(collection, request)
         return result
     except ValueError as e:
         logger.warning(f"Validation error in create_new_request: {str(e)}")
@@ -150,7 +151,7 @@ async def create_new_request(
 async def update_existing_request(
     request_id: str,
     update: RequestUpdate,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Update an existing request.
@@ -158,7 +159,7 @@ async def update_existing_request(
     Args:
         request_id: The request ID to update
         update: Request update data
-        db: Database instance
+        collection: Requests collection
         
     Returns:
         Updated Request object
@@ -168,7 +169,7 @@ async def update_existing_request(
     """
     logger.info(f"PUT /requests/{request_id}")
     try:
-        result = request_service.update_request(db, request_id, update)
+        result = request_service.update_request(collection, request_id, update)
         if not result:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
@@ -186,21 +187,21 @@ async def update_existing_request(
 @router.delete("/{request_id}", status_code=204)
 async def delete_existing_request(
     request_id: str,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Delete a request.
     
     Args:
         request_id: The request ID to delete
-        db: Database instance
+        collection: Requests collection
     
     Raises:
         HTTPException: If request not found or there's an error processing the request
     """
     logger.info(f"DELETE /requests/{request_id}")
     try:
-        result = request_service.delete_request(db, request_id)
+        result = request_service.delete_request(collection, request_id)
         if not result:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
@@ -215,7 +216,7 @@ async def delete_existing_request(
 async def add_comment_to_request(
     request_id: str,
     comment: RequestComment,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Add a comment to a request.
@@ -223,7 +224,7 @@ async def add_comment_to_request(
     Args:
         request_id: The request ID
         comment: Comment data
-        db: Database instance
+        collection: Requests collection
         
     Returns:
         Updated Request object
@@ -233,7 +234,7 @@ async def add_comment_to_request(
     """
     logger.info(f"POST /requests/{request_id}/comments")
     try:
-        result = request_service.add_comment(db, request_id, comment)
+        result = request_service.add_comment(collection, request_id, comment)
         if not result:
             logger.warning(f"Request not found: {request_id}")
             raise HTTPException(status_code=404, detail="Request not found")
@@ -255,7 +256,7 @@ async def update_request_approval(
     approver_id: str,
     approver_name: Optional[str] = None,
     comment: Optional[str] = None,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_requests_collection)
 ):
     """
     Update approval status for a request.
@@ -266,7 +267,7 @@ async def update_request_approval(
         approver_id: ID of the approver
         approver_name: Name of the approver
         comment: Optional comment for the approval/rejection
-        db: Database instance
+        collection: Requests collection
         
     Returns:
         Updated Request object
@@ -277,7 +278,7 @@ async def update_request_approval(
     logger.info(f"PUT /requests/{request_id}/approval - approve: {approve}, approver: {approver_id}")
     try:
         result = request_service.update_approval(
-            db, 
+            collection, 
             request_id, 
             approver_id, 
             approve, 

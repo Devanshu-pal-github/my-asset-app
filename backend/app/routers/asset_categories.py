@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pymongo.database import Database
 from typing import List, Optional
-from app.dependencies import get_db
+from app.dependencies import get_db, get_asset_categories_collection
 from app.models.asset_category import AssetCategory, AssetCategoryCreate, AssetCategoryUpdate, AssetCategoryResponse
 from app.services.asset_category_service import (
     get_asset_categories,
@@ -84,13 +84,13 @@ async def read_asset_category(category_id: str, db: Database = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch category: {str(e)}")
 
 @router.post("/", response_model=AssetCategoryResponse, status_code=status.HTTP_201_CREATED)
-async def create_new_asset_category(category: AssetCategoryCreate, db: Database = Depends(get_db)):
+async def create_new_asset_category(category: AssetCategoryCreate, collection: Database = Depends(get_asset_categories_collection)):
     """
     Create a new asset category with specified policies and attributes.
     
     Args:
         category (AssetCategoryCreate): Asset category details
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB asset_categories collection, injected via dependency
         
     Returns:
         AssetCategoryResponse: Created asset category
@@ -100,7 +100,7 @@ async def create_new_asset_category(category: AssetCategoryCreate, db: Database 
     """
     logger.info(f"Creating asset category: {category.category_name}")
     try:
-        created_category = create_asset_category(db, category)
+        created_category = create_asset_category(collection, category)
         logger.debug(f"Created category with ID: {created_category.id}")
         return created_category
     except ValueError as ve:

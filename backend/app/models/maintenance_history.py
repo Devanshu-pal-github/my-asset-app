@@ -68,7 +68,7 @@ class MaintenanceHistoryEntry(BaseModel):
     documents: List[Dict[str, Any]] = Field(default_factory=list, description="Documents related to maintenance")
     created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
-    
+
     # Additional fields from Maintenance/index.jsx
     performed_by: Optional[str] = Field(None, description="Person or company who performed the maintenance")
     next_scheduled: Optional[str] = Field(None, description="Date of next scheduled maintenance")

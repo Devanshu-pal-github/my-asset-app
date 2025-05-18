@@ -13,6 +13,7 @@ from app.models.document import (
 )
 from app.services import document_service
 import logging
+from app.dependencies import get_documents_collection
 
 router = APIRouter(
     prefix="/documents",
@@ -29,7 +30,7 @@ async def read_documents(
     status: Optional[str] = None,
     tag: Optional[str] = None,
     is_confidential: Optional[bool] = None,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_documents_collection)
 ):
     """
     Get documents with optional filtering.
@@ -41,7 +42,7 @@ async def read_documents(
         status: Filter by status
         tag: Filter by tag
         is_confidential: Filter by confidentiality
-        db: Database instance
+        collection: Documents collection
         
     Returns:
         List of DocumentResponse objects
@@ -65,7 +66,7 @@ async def read_documents(
         if is_confidential is not None:
             filters["is_confidential"] = is_confidential
             
-        documents = document_service.get_documents(db, filters)
+        documents = document_service.get_documents(collection, filters)
         return documents
     except Exception as e:
         logger.error(f"Error in read_documents: {str(e)}", exc_info=True)
@@ -74,14 +75,14 @@ async def read_documents(
 @router.get("/{document_id}", response_model=Document)
 async def read_document(
     document_id: str,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_documents_collection)
 ):
     """
     Get a specific document by ID.
     
     Args:
         document_id: The document ID
-        db: Database instance
+        collection: Documents collection
         
     Returns:
         Document object
@@ -91,7 +92,7 @@ async def read_document(
     """
     logger.info(f"GET /documents/{document_id}")
     try:
-        document = document_service.get_document_by_id(db, document_id)
+        document = document_service.get_document_by_id(collection, document_id)
         if not document:
             logger.warning(f"Document not found: {document_id}")
             raise HTTPException(status_code=404, detail="Document not found")
@@ -105,14 +106,14 @@ async def read_document(
 @router.post("/", response_model=Document, status_code=201)
 async def create_new_document(
     document: DocumentCreate,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_documents_collection)
 ):
     """
     Create a new document.
     
     Args:
         document: Document creation data
-        db: Database instance
+        collection: Documents collection
         
     Returns:
         Created Document object
@@ -122,7 +123,7 @@ async def create_new_document(
     """
     logger.info("POST /documents/")
     try:
-        result = document_service.create_document(db, document)
+        result = document_service.create_document(collection, document)
         return result
     except ValueError as e:
         logger.warning(f"Validation error in create_new_document: {str(e)}")
@@ -138,7 +139,7 @@ async def create_new_document(
 async def update_existing_document(
     document_id: str,
     update: DocumentUpdate,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_documents_collection)
 ):
     """
     Update an existing document.
@@ -146,7 +147,7 @@ async def update_existing_document(
     Args:
         document_id: The document ID to update
         update: Document update data
-        db: Database instance
+        collection: Documents collection
         
     Returns:
         Updated Document object
@@ -156,7 +157,7 @@ async def update_existing_document(
     """
     logger.info(f"PUT /documents/{document_id}")
     try:
-        result = document_service.update_document(db, document_id, update)
+        result = document_service.update_document(collection, document_id, update)
         if not result:
             logger.warning(f"Document not found: {document_id}")
             raise HTTPException(status_code=404, detail="Document not found")
@@ -174,21 +175,21 @@ async def update_existing_document(
 @router.delete("/{document_id}", status_code=204)
 async def delete_existing_document(
     document_id: str,
-    db: Database = Depends(get_database)
+    collection: Database = Depends(get_documents_collection)
 ):
     """
     Delete a document.
     
     Args:
         document_id: The document ID to delete
-        db: Database instance
+        collection: Documents collection
     
     Raises:
         HTTPException: If document not found or there's an error processing the request
     """
     logger.info(f"DELETE /documents/{document_id}")
     try:
-        result = document_service.delete_document(db, document_id)
+        result = document_service.delete_document(collection, document_id)
         if not result:
             logger.warning(f"Document not found: {document_id}")
             raise HTTPException(status_code=404, detail="Document not found")

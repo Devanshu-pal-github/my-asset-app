@@ -7,3 +7,109 @@
 2025-05-16 18:16:17 - app.main - INFO - All database indexes verified
 2025-05-16 18:16:17 - app.main - INFO - Server started successfully!
 2025-05-16 18:16:17 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-16 18:23:37 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-16 18:24:00 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-16 18:24:00 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-16 18:24:00 - app.main - INFO - Registering routers with prefix /api
+2025-05-16 18:24:00 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-16 18:24:00 - app.main - INFO - MongoDB connection verified successfully
+2025-05-16 18:24:00 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-16 18:24:01 - app.main - INFO - All database indexes verified
+2025-05-16 18:24:01 - app.main - INFO - Server started successfully!
+2025-05-16 18:24:01 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 11:32:11 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 11:32:11 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 11:32:11 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 11:32:11 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 11:32:11 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 11:32:12 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 11:32:12 - app.main - INFO - All database indexes verified
+2025-05-18 11:32:12 - app.main - INFO - Server started successfully!
+2025-05-18 11:32:12 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 11:33:43 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 11:34:07 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 11:34:07 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 11:34:07 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 11:34:07 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 11:34:07 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 11:34:07 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 11:34:07 - app.main - INFO - All database indexes verified
+2025-05-18 11:34:07 - app.main - INFO - Server started successfully!
+2025-05-18 11:34:07 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 11:38:35 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-18 11:38:35 - app.main - WARNING - Request failed: POST /api/asset-categories/ - Status: 404
+2025-05-18 11:42:26 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 11:43:44 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 11:43:44 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 11:43:44 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 11:43:44 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 11:43:44 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 11:43:44 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 11:43:44 - app.main - INFO - All database indexes verified
+2025-05-18 11:43:44 - app.main - INFO - Server started successfully!
+2025-05-18 11:43:44 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 11:44:05 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-18 11:44:05 - app.routers.asset_categories - INFO - Creating asset category: Laptops
+2025-05-18 11:44:05 - app.services.asset_category_service - INFO - Creating category: Laptops
+2025-05-18 11:44:05 - app.services.asset_category_service - ERROR - Error creating category: 'Collection' object is not callable. If you meant to call the 'find_one' method on a 'Database' object it is failing because no such method exists.
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_category_service.py", line 176, in create_asset_category
+    existing = db.find_one({"category_name": category.category_name})
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 401, in __call__
+    raise TypeError(
+    ...<4 lines>...
+    )
+TypeError: 'Collection' object is not callable. If you meant to call the 'find_one' method on a 'Database' object it is failing because no such method exists.
+2025-05-18 11:44:05 - app.routers.asset_categories - ERROR - Failed to create category: 'Collection' object is not callable. If you meant to call the 'find_one' method on a 'Database' object it is failing because no such method exists.
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\asset_categories.py", line 103, in create_new_asset_category
+    created_category = create_asset_category(db, category)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_category_service.py", line 176, in create_asset_category
+    existing = db.find_one({"category_name": category.category_name})
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 401, in __call__
+    raise TypeError(
+    ...<4 lines>...
+    )
+TypeError: 'Collection' object is not callable. If you meant to call the 'find_one' method on a 'Database' object it is failing because no such method exists.
+2025-05-18 11:44:05 - app.main - WARNING - Request failed: POST /api/asset-categories/ - Status: 500
+2025-05-18 11:48:11 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 11:50:31 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 11:50:31 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 11:50:31 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 11:50:31 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 11:50:31 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 11:50:31 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 11:50:31 - app.main - INFO - All database indexes verified
+2025-05-18 11:50:31 - app.main - INFO - Server started successfully!
+2025-05-18 11:50:31 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 11:50:36 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-18 11:50:36 - app.routers.asset_categories - INFO - Creating asset category: Laptops
+2025-05-18 11:50:36 - app.services.asset_category_service - INFO - Creating category: Laptops
+2025-05-18 11:50:36 - app.services.asset_category_service - INFO - Created category with ID: 6dea1a4c-e556-4a42-a0a9-f6a42d39eb9f
+2025-05-18 12:16:23 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-18 12:16:23 - app.routers.asset_categories - INFO - Creating asset category: Laptops
+2025-05-18 12:16:23 - app.services.asset_category_service - INFO - Creating category: Laptops
+2025-05-18 12:16:24 - app.services.asset_category_service - INFO - Created category with ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-18 12:16:48 - app.main - INFO - Request: POST /api/employees/
+2025-05-18 12:16:48 - app.routers.employees - INFO - Creating employee: EMP001
+2025-05-18 12:16:48 - app.services.employee_service - INFO - Creating employee: Alice Smith
+2025-05-18 12:16:48 - app.services.employee_service - ERROR - Error creating employee: 'EmployeeCreate' object has no attribute 'email'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\employee_service.py", line 233, in create_employee
+    if employee.email:
+       ^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'EmployeeCreate' object has no attribute 'email'
+2025-05-18 12:16:48 - app.routers.employees - ERROR - Failed to create employee: 'EmployeeCreate' object has no attribute 'email'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\employees.py", line 164, in create_new_employee
+    created_employee = create_employee(collection, employee)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\employee_service.py", line 233, in create_employee
+    if employee.email:
+       ^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'EmployeeCreate' object has no attribute 'email'
+2025-05-18 12:16:48 - app.main - WARNING - Request failed: POST /api/employees/ - Status: 500

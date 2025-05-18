@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from pymongo.database import Database
 from typing import List, Optional
-from app.dependencies import get_db
+from app.dependencies import get_employees_collection
 from app.models.employee import Employee, EmployeeCreate, EmployeeUpdate, EmployeeResponse
 from app.models.asset_item import AssetItem
 from app.models.assignment_history import AssignmentResponse
@@ -34,7 +34,7 @@ async def read_employees(
     department: Optional[str] = None,
     role: Optional[str] = None,
     is_active: Optional[bool] = None,
-    db: Database = Depends(get_db)
+    collection: Database = Depends(get_employees_collection)
 ):
     """
     Retrieve all employees with optional filters for department or role.
@@ -43,7 +43,7 @@ async def read_employees(
         department (Optional[str]): Filter by department
         role (Optional[str]): Filter by role
         is_active (Optional[bool]): Filter by active status
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Database): MongoDB collection instance, injected via dependency
         
     Returns:
         List[EmployeeResponse]: List of employees matching the filters
@@ -61,7 +61,7 @@ async def read_employees(
         if is_active is not None:
             filters["is_active"] = is_active
             
-        employees = get_employees(db, filters)
+        employees = get_employees(collection, filters)
         logger.debug(f"Fetched {len(employees)} employees")
         return employees
     except Exception as e:
@@ -69,13 +69,13 @@ async def read_employees(
         raise HTTPException(status_code=500, detail=f"Failed to fetch employees: {str(e)}")
 
 @router.get("/{employee_id}", response_model=Employee)
-async def read_employee(employee_id: str, db: Database = Depends(get_db)):
+async def read_employee(employee_id: str, collection: Database = Depends(get_employees_collection)):
     """
     Retrieve a specific employee by ID.
     
     Args:
         employee_id (str): Employee ID
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Database): MongoDB collection instance, injected via dependency
         
     Returns:
         Employee: Employee details
@@ -85,7 +85,7 @@ async def read_employee(employee_id: str, db: Database = Depends(get_db)):
     """
     logger.info(f"Fetching employee with ID: {employee_id}")
     try:
-        employee = get_employee_by_id(db, employee_id)
+        employee = get_employee_by_id(collection, employee_id)
         if not employee:
             logger.warning(f"Employee not found: {employee_id}")
             raise HTTPException(status_code=404, detail="Employee not found")
@@ -100,13 +100,13 @@ async def read_employee(employee_id: str, db: Database = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch employee: {str(e)}")
 
 @router.get("/{employee_id}/details", response_model=EmployeeDetailsResponse)
-async def read_employee_details(employee_id: str, db: Database = Depends(get_db)):
+async def read_employee_details(employee_id: str, collection: Database = Depends(get_employees_collection)):
     """
     Retrieve detailed employee information including current assets, assignment history, maintenance history, and documents.
     
     Args:
         employee_id (str): Employee ID
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Database): MongoDB collection instance, injected via dependency
         
     Returns:
         EmployeeDetailsResponse: Detailed employee information
@@ -116,7 +116,7 @@ async def read_employee_details(employee_id: str, db: Database = Depends(get_db)
     """
     logger.info(f"Fetching employee details for ID: {employee_id}")
     try:
-        details = get_employee_details(db, employee_id)
+        details = get_employee_details(collection, employee_id)
         if not details:
             logger.warning(f"Employee not found: {employee_id}")
             raise HTTPException(status_code=404, detail="Employee not found")
@@ -145,13 +145,13 @@ async def read_employee_details(employee_id: str, db: Database = Depends(get_db)
         raise HTTPException(status_code=500, detail=f"Failed to fetch employee details: {str(e)}")
 
 @router.post("/", response_model=EmployeeResponse)
-async def create_new_employee(employee: EmployeeCreate, db: Database = Depends(get_db)):
+async def create_new_employee(employee: EmployeeCreate, collection: Database = Depends(get_employees_collection)):
     """
     Create a new employee.
     
     Args:
         employee (EmployeeCreate): Employee details
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Database): MongoDB collection instance, injected via dependency
         
     Returns:
         EmployeeResponse: Created employee details
@@ -161,7 +161,7 @@ async def create_new_employee(employee: EmployeeCreate, db: Database = Depends(g
     """
     logger.info(f"Creating employee: {employee.employee_id}")
     try:
-        created_employee = create_employee(db, employee)
+        created_employee = create_employee(collection, employee)
         logger.debug(f"Created employee with ID: {created_employee.id}")
         return created_employee
     except ValueError as ve:
@@ -172,14 +172,14 @@ async def create_new_employee(employee: EmployeeCreate, db: Database = Depends(g
         raise HTTPException(status_code=500, detail=f"Failed to create employee: {str(e)}")
 
 @router.put("/{employee_id}", response_model=EmployeeResponse)
-async def update_existing_employee(employee_id: str, employee: EmployeeUpdate, db: Database = Depends(get_db)):
+async def update_existing_employee(employee_id: str, employee: EmployeeUpdate, collection: Database = Depends(get_employees_collection)):
     """
     Update an existing employee.
     
     Args:
         employee_id (str): Employee ID to update
         employee (EmployeeUpdate): Updated employee details
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Database): MongoDB collection instance, injected via dependency
         
     Returns:
         EmployeeResponse: Updated employee details
@@ -189,7 +189,7 @@ async def update_existing_employee(employee_id: str, employee: EmployeeUpdate, d
     """
     logger.info(f"Updating employee with ID: {employee_id}")
     try:
-        updated_employee = update_employee(db, employee_id, employee)
+        updated_employee = update_employee(collection, employee_id, employee)
         if not updated_employee:
             logger.warning(f"Employee not found: {employee_id}")
             raise HTTPException(status_code=404, detail="Employee not found")
@@ -204,13 +204,13 @@ async def update_existing_employee(employee_id: str, employee: EmployeeUpdate, d
         raise HTTPException(status_code=500, detail=f"Failed to update employee: {str(e)}")
 
 @router.delete("/{employee_id}", response_model=dict)
-async def delete_existing_employee(employee_id: str, db: Database = Depends(get_db)):
+async def delete_existing_employee(employee_id: str, collection: Database = Depends(get_employees_collection)):
     """
     Delete an employee if no assets are assigned.
     
     Args:
         employee_id (str): Employee ID to delete
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Database): MongoDB collection instance, injected via dependency
         
     Returns:
         dict: Success message
@@ -220,7 +220,7 @@ async def delete_existing_employee(employee_id: str, db: Database = Depends(get_
     """
     logger.info(f"Deleting employee with ID: {employee_id}")
     try:
-        deleted = delete_employee(db, employee_id)
+        deleted = delete_employee(collection, employee_id)
         if not deleted:
             logger.warning(f"Employee not found: {employee_id}")
             raise HTTPException(status_code=404, detail="Employee not found")

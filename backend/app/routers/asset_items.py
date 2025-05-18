@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from pymongo.collection import Collection
 from typing import List, Optional
 from datetime import datetime
-from app.dependencies import get_db
+from app.dependencies import get_asset_items_collection
 from app.models.asset_item import (
     AssetItem, 
     AssetItemCreate, 
@@ -38,7 +38,7 @@ async def read_asset_items(
     requires_maintenance: Optional[bool] = None,
     is_active: Optional[bool] = None,
     tags: Optional[List[str]] = Query(None),
-    db: Collection = Depends(get_db)
+    collection: Collection = Depends(get_asset_items_collection)
 ):
     """
     Retrieve asset items with optional filters for category, status, assignment, serial number, department, location, or maintenance due date.
@@ -55,7 +55,7 @@ async def read_asset_items(
         requires_maintenance (Optional[bool]): Filter by maintenance requirement
         is_active (Optional[bool]): Filter by active status
         tags (Optional[List[str]]): Filter by tags
-        db (Collection): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB collection instance, injected via dependency
         
     Returns:
         List[AssetItemResponse]: List of asset items matching the filters
@@ -94,7 +94,7 @@ async def read_asset_items(
                 logger.warning(f"Invalid maintenance_due_before format: {maintenance_due_before}")
                 raise HTTPException(status_code=400, detail="Invalid maintenance_due_before format; use ISO 8601")
         
-        items = get_asset_items(db, filters)
+        items = get_asset_items(collection, filters)
         logger.debug(f"Fetched {len(items)} asset items")
         return items
     except HTTPException:
@@ -104,12 +104,12 @@ async def read_asset_items(
         raise HTTPException(status_code=500, detail=f"Failed to fetch asset items: {str(e)}")
 
 @router.get("/statistics", response_model=dict)
-async def read_asset_statistics(db: Collection = Depends(get_db)):
+async def read_asset_statistics(collection: Collection = Depends(get_asset_items_collection)):
     """
     Retrieve statistics for assets (total, assigned, unassigned, under maintenance, utilization rate).
     
     Args:
-        db (Collection): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB collection instance, injected via dependency
         
     Returns:
         dict: Asset statistics
@@ -119,7 +119,7 @@ async def read_asset_statistics(db: Collection = Depends(get_db)):
     """
     logger.info("Fetching asset statistics")
     try:
-        stats = get_asset_statistics(db)
+        stats = get_asset_statistics(collection)
         logger.debug(f"Asset statistics: {stats}")
         return stats
     except Exception as e:
@@ -127,13 +127,13 @@ async def read_asset_statistics(db: Collection = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch asset statistics: {str(e)}")
 
 @router.get("/{asset_id}", response_model=AssetItem)
-async def read_asset_item(asset_id: str, db: Collection = Depends(get_db)):
+async def read_asset_item(asset_id: str, collection: Collection = Depends(get_asset_items_collection)):
     """
     Retrieve a specific asset item by ID.
     
     Args:
         asset_id (str): Asset ID
-        db (Collection): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB collection instance, injected via dependency
         
     Returns:
         AssetItem: Asset details
@@ -143,7 +143,7 @@ async def read_asset_item(asset_id: str, db: Collection = Depends(get_db)):
     """
     logger.info(f"Fetching asset item with ID: {asset_id}")
     try:
-        item = get_asset_item_by_id(db, asset_id)
+        item = get_asset_item_by_id(collection, asset_id)
         if not item:
             logger.warning(f"Asset item not found: {asset_id}")
             raise HTTPException(status_code=404, detail="Asset item not found")
@@ -158,13 +158,13 @@ async def read_asset_item(asset_id: str, db: Collection = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch asset item: {str(e)}")
 
 @router.post("/", response_model=AssetItemResponse)
-async def create_new_asset_item(item: AssetItemCreate, db: Collection = Depends(get_db)):
+async def create_new_asset_item(item: AssetItemCreate, collection: Collection = Depends(get_asset_items_collection)):
     """
     Create a new asset item with validation for category, status, and specifications.
     
     Args:
         item (AssetItemCreate): Asset details
-        db (Collection): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB collection instance, injected via dependency
         
     Returns:
         AssetItemResponse: Created asset details
@@ -174,7 +174,7 @@ async def create_new_asset_item(item: AssetItemCreate, db: Collection = Depends(
     """
     logger.info(f"Creating asset item: {item.name}")
     try:
-        created_item = create_asset_item(db, item)
+        created_item = create_asset_item(collection, item)
         logger.debug(f"Created asset item with ID: {created_item.id}")
         return created_item
     except ValueError as ve:
@@ -185,14 +185,14 @@ async def create_new_asset_item(item: AssetItemCreate, db: Collection = Depends(
         raise HTTPException(status_code=500, detail=f"Failed to create asset item: {str(e)}")
 
 @router.put("/{asset_id}", response_model=AssetItemResponse)
-async def update_existing_asset_item(asset_id: str, item: AssetItemUpdate, db: Collection = Depends(get_db)):
+async def update_existing_asset_item(asset_id: str, item: AssetItemUpdate, collection: Collection = Depends(get_asset_items_collection)):
     """
     Update an existing asset item.
     
     Args:
         asset_id (str): Asset ID to update
         item (AssetItemUpdate): Updated asset details
-        db (Collection): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB collection instance, injected via dependency
         
     Returns:
         AssetItemResponse: Updated asset details
@@ -202,7 +202,7 @@ async def update_existing_asset_item(asset_id: str, item: AssetItemUpdate, db: C
     """
     logger.info(f"Updating asset item with ID: {asset_id}")
     try:
-        updated_item = update_asset_item(db, asset_id, item)
+        updated_item = update_asset_item(collection, asset_id, item)
         if not updated_item:
             logger.warning(f"Asset item not found: {asset_id}")
             raise HTTPException(status_code=404, detail="Asset item not found")
@@ -217,13 +217,13 @@ async def update_existing_asset_item(asset_id: str, item: AssetItemUpdate, db: C
         raise HTTPException(status_code=500, detail=f"Failed to update asset item: {str(e)}")
 
 @router.delete("/{asset_id}", response_model=dict)
-async def delete_existing_asset_item(asset_id: str, db: Collection = Depends(get_db)):
+async def delete_existing_asset_item(asset_id: str, collection: Collection = Depends(get_asset_items_collection)):
     """
     Delete an asset item if not assigned.
     
     Args:
         asset_id (str): Asset ID to delete
-        db (Collection): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB collection instance, injected via dependency
         
     Returns:
         dict: Success message
@@ -233,7 +233,7 @@ async def delete_existing_asset_item(asset_id: str, db: Collection = Depends(get
     """
     logger.info(f"Deleting asset item with ID: {asset_id}")
     try:
-        deleted = delete_asset_item(db, asset_id)
+        deleted = delete_asset_item(collection, asset_id)
         if not deleted:
             logger.warning(f"Asset item not found: {asset_id}")
             raise HTTPException(status_code=404, detail="Asset item not found")

@@ -89,8 +89,8 @@ def get_maintenance_by_id(db: Collection, maintenance_id: str) -> Optional[Maint
         maintenance = db.find_one({"id": maintenance_id})
         if not maintenance:
             logger.warning(f"Maintenance entry not found: {maintenance_id}")
-            return None
-        
+        return None
+
         # Remove _id field as we have id
         if "_id" in maintenance:
             del maintenance["_id"]
