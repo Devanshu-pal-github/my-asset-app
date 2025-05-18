@@ -203,3 +203,24 @@ AttributeError: 'AssetItemCreate' object has no attribute 'asset_name'. Did you 
 2025-05-18 12:50:14 - app.routers.asset_items - INFO - Creating asset item: Dell XPS 13
 2025-05-18 12:50:14 - app.services.asset_item_service - INFO - Creating asset: Dell XPS 13
 2025-05-18 12:50:14 - app.services.asset_item_service - INFO - Created asset with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-18 19:24:53 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 19:24:53 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 19:24:53 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 19:24:53 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 19:24:53 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 19:24:53 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 19:24:53 - app.main - INFO - All database indexes verified
+2025-05-18 19:24:53 - app.main - INFO - Server started successfully!
+2025-05-18 19:24:53 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 19:29:40 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 19:29:40 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 19:29:40 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 19:29:41 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 19:29:41 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 19:29:41 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 19:29:41 - app.main - INFO - All database indexes verified
+2025-05-18 19:29:41 - app.main - INFO - Server started successfully!
+2025-05-18 19:29:41 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 19:34:32 - app.main - INFO - Request: POST /api/maintenance-history
+2025-05-18 19:34:32 - app.main - WARNING - Request failed: POST /api/maintenance-history - Status: 404
+2025-05-18 19:36:40 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========

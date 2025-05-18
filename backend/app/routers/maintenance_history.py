@@ -20,6 +20,43 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/maintenance-history", tags=["Maintenance History"])
 
+@router.post("", response_model=MaintenanceHistoryEntry)
+async def create_maintenance_history(maintenance: MaintenanceHistoryEntry, db: Database = Depends(get_db)):
+    """
+    Create a new maintenance history entry.
+    
+    Args:
+        maintenance (MaintenanceHistoryEntry): Maintenance history details
+        db (Database): MongoDB database, injected via dependency.
+    
+    Returns:
+        MaintenanceHistoryEntry: Created maintenance history entry
+    """
+    logger.info(f"Creating maintenance history entry for asset {maintenance.asset_id}")
+    try:
+        # Insert the new maintenance history entry
+        result = db.maintenance_history.insert_one(maintenance.model_dump(exclude_unset=True))
+        
+        # Return the created entry
+        created_entry = db.maintenance_history.find_one({"_id": result.inserted_id})
+        if not created_entry:
+            raise HTTPException(status_code=404, detail="Failed to retrieve created maintenance entry")
+        
+        # Update the maintenance count in the corresponding asset item
+        db.asset_items.update_one(
+            {"id": maintenance.asset_id},
+            {"$inc": {"maintenance_count": 1}}
+        )
+        
+        logger.debug(f"Maintenance history entry created for asset {maintenance.asset_id}")
+        return MaintenanceHistoryEntry(**created_entry)
+    except ValueError as ve:
+        logger.warning(f"Invalid request: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to create maintenance history: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to create maintenance history: {str(e)}")
+
 @router.get("/asset/{asset_id}", response_model=List[MaintenanceResponse])
 async def read_maintenance_history(asset_id: str, collection: Database = Depends(get_maintenance_history_collection)):
     """
