@@ -1,0 +1,23 @@
+{
+  "id": "ASG-001",
+  "asset_id": "AST-001",
+  "asset_name": "Dell XPS 15",
+  "asset_tag": "LAP-001", 
+  "assigned_to": "EMP-001",
+  "assigned_to_name": "John Smith",
+  "assigned_by": "EMP-003",
+  "assigned_by_name": "Bob Johnson",
+  "assignment_date": "2023-08-20",
+  "expected_return_date": "2026-08-20",
+  "status": "active",
+  "is_active": true,
+  "location": "Main Office",
+  "department": "Engineering",
+  "notes": "Assigned for development work",
+  "condition_before": "New",
+  "acknowledgment": {
+    "acknowledged": true,
+    "acknowledgment_date": "2023-08-20",
+    "acknowledgment_notes": "Received in good condition"
+  }
+} 

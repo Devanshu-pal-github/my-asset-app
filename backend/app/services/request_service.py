@@ -12,6 +12,7 @@ from app.models.request_approval import (
     RequestStatus,
     RequestType,
     RequestPriority,
+    RequestComment,
     CommentCreate,
     ApprovalUpdate
 )
@@ -19,21 +20,26 @@ from app.models.utils import get_current_datetime, serialize_model, generate_uui
 
 logger = logging.getLogger(__name__)
 
-COLLECTION_NAME = "requests"
+# Explicitly define collection name to avoid confusion
+REQUESTS_COLLECTION = "requests"
 
-def get_requests(db: Database, filters: Optional[Dict[str, Any]] = None) -> List[RequestResponse]:
+def get_requests(db: Union[Database, Collection], filters: Optional[Dict[str, Any]] = None) -> List[RequestResponse]:
     """
     Retrieve requests with optional filtering.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         filters (Optional[Dict[str, Any]]): Filter criteria
         
     Returns:
         List[RequestResponse]: List of requests matching filters
     """
     query = {}
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
     # Handle special filters
     if filters:
@@ -52,7 +58,8 @@ def get_requests(db: Database, filters: Optional[Dict[str, Any]] = None) -> List
             
         if "asset_id" in filters:
             # For requests related to specific assets
-            if "asset_details.asset_id" in collection.find_one() or {}:
+            sample_doc = collection.find_one()
+            if sample_doc and "asset_details" in sample_doc and "asset_id" in sample_doc.get("asset_details", {}):
                 query["asset_details.asset_id"] = filters["asset_id"]
             else:
                 # Try checking in linked_assets array
@@ -86,18 +93,22 @@ def get_requests(db: Database, filters: Optional[Dict[str, Any]] = None) -> List
     
     return requests
 
-def get_request_by_id(db: Database, request_id: str) -> Optional[RequestResponse]:
+def get_request_by_id(db: Union[Database, Collection], request_id: str) -> Optional[RequestResponse]:
     """
     Retrieve a request by ID.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_id (str): ID of the request to retrieve
         
     Returns:
         Optional[RequestResponse]: Request if found, None otherwise
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
     query = {"id": request_id}
     doc = collection.find_one(query)
@@ -108,18 +119,22 @@ def get_request_by_id(db: Database, request_id: str) -> Optional[RequestResponse
     
     return RequestResponse(**doc)
 
-def create_request(db: Database, request_data: RequestCreate) -> RequestResponse:
+def create_request(db: Union[Database, Collection], request_data: RequestCreate) -> RequestResponse:
     """
     Create a new request.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_data (RequestCreate): Request data
         
     Returns:
         RequestResponse: Created request
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
     # Create new request with generated ID
     request = Request(
@@ -160,19 +175,23 @@ def create_request(db: Database, request_data: RequestCreate) -> RequestResponse
         logger.error(f"Failed to create request: {str(e)}")
         raise
 
-def update_request(db: Database, request_id: str, request_data: RequestUpdate) -> Optional[RequestResponse]:
+def update_request(db: Union[Database, Collection], request_id: str, request_data: RequestUpdate) -> Optional[RequestResponse]:
     """
     Update an existing request.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_id (str): ID of the request to update
         request_data (RequestUpdate): Updated request data
         
     Returns:
         Optional[RequestResponse]: Updated request if found, None otherwise
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
     # Get current request
     current_request = collection.find_one({"id": request_id})
@@ -198,140 +217,148 @@ def update_request(db: Database, request_id: str, request_data: RequestUpdate) -
         if new_status in [RequestStatus.APPROVED.value, RequestStatus.REJECTED.value]:
             update_data["completed_date"] = datetime.now().strftime("%Y-%m-%d")
     
-    # Update the document
+    # Update in MongoDB
     try:
-        result = collection.update_one(
-            {"id": request_id},
-            {"$set": update_data}
-        )
+        collection.update_one({"id": request_id}, {"$set": update_data})
         
-        if result.matched_count == 0:
-            logger.warning(f"Request not found for update: {request_id}")
-            return None
-        
-        # Handle status change actions
+        # Handle status change side effects if needed
         if status_changed:
             request_type = current_request.get("type")
             asset_details = current_request.get("asset_details", {})
             _handle_status_change(db, request_id, request_type, old_status, new_status, asset_details)
         
-        # Retrieve the updated document
+        # Get updated document
         updated_request = collection.find_one({"id": request_id})
         
         return RequestResponse(**updated_request)
     except Exception as e:
-        logger.error(f"Failed to update request: {str(e)}")
+        logger.error(f"Failed to update request {request_id}: {str(e)}")
         raise
 
-def delete_request(db: Database, request_id: str) -> bool:
+def delete_request(db: Union[Database, Collection], request_id: str) -> bool:
     """
     Delete a request.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_id (str): ID of the request to delete
         
     Returns:
-        bool: True if deleted, False if not found
+        bool: True if successful, False if request not found
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
-    # Get current request to know its type and details
-    current_request = collection.find_one({"id": request_id})
-    if not current_request:
+    # Get request to determine type for side effects
+    request = collection.find_one({"id": request_id})
+    if not request:
         logger.warning(f"Request not found for deletion: {request_id}")
         return False
     
-    # Delete the document
-    try:
-        result = collection.delete_one({"id": request_id})
-        
-        if result.deleted_count == 0:
-            logger.warning(f"Request not found for deletion: {request_id}")
-            return False
-        
-        # Update linked collections if needed
-        if current_request.get("status") == RequestStatus.PENDING.value:
-            request_type = current_request.get("type")
-            asset_details = current_request.get("asset_details", {})
-            _update_linked_collections(db, request_type, asset_details, "delete")
-        
-        return True
-    except Exception as e:
-        logger.error(f"Failed to delete request: {str(e)}")
-        raise
+    # Update linked collections if necessary
+    request_type = request.get("type")
+    asset_details = request.get("asset_details", {})
+    _update_linked_collections(db, request_type, asset_details, "delete")
+    
+    # Delete the request
+    result = collection.delete_one({"id": request_id})
+    
+    if result.deleted_count == 0:
+        logger.warning(f"Request {request_id} was not deleted")
+        return False
+    
+    logger.info(f"Request {request_id} deleted successfully")
+    return True
 
-def add_comment(db: Database, comment_data: CommentCreate) -> Optional[RequestResponse]:
+def add_comment(db: Union[Database, Collection], request_id: str, comment_data: RequestComment) -> Optional[RequestResponse]:
     """
     Add a comment to a request.
     
     Args:
-        db (Database): MongoDB database instance
-        comment_data (CommentCreate): Comment data
+        db (Union[Database, Collection]): MongoDB database instance or collection
+        request_id (str): ID of the request to add comment to
+        comment_data (RequestComment): Comment data
         
     Returns:
         Optional[RequestResponse]: Updated request if found, None otherwise
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
-    # Create comment with generated ID and current date
+    # Check if request exists
+    if not collection.find_one({"id": request_id}):
+        logger.warning(f"Request not found for comment: {request_id}")
+        return None
+    
+    # Prepare comment
     comment = {
         "id": generate_uuid(),
-        "author": comment_data.author,
+        "user_id": comment_data.user_id,
+        "user_name": comment_data.user_name,
         "content": comment_data.content,
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "author_id": comment_data.author_id,
-        "author_role": comment_data.author_role
+        "timestamp": get_current_datetime()
     }
     
-    # Update the document
-    try:
-        result = collection.update_one(
-            {"id": comment_data.request_id},
-            {
-                "$push": {"comments": comment},
-                "$set": {
-                    "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "updated_at": get_current_datetime()
-                }
+    # Update the request
+    update_result = collection.update_one(
+        {"id": request_id},
+        {
+            "$push": {"comments": comment},
+            "$set": {
+                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "updated_at": get_current_datetime()
             }
-        )
-        
-        if result.matched_count == 0:
-            logger.warning(f"Request not found for adding comment: {comment_data.request_id}")
-            return None
-        
-        # Retrieve the updated document
-        updated_request = collection.find_one({"id": comment_data.request_id})
-        
-        return RequestResponse(**updated_request)
-    except Exception as e:
-        logger.error(f"Failed to add comment: {str(e)}")
-        raise
+        }
+    )
+    
+    if update_result.modified_count == 0:
+        logger.warning(f"Failed to add comment to request {request_id}")
+        return None
+    
+    # Get updated request
+    updated_request = collection.find_one({"id": request_id})
+    return RequestResponse(**updated_request)
 
-def update_approval(db: Database, approval_data: ApprovalUpdate) -> Optional[RequestResponse]:
+def update_approval(db: Union[Database, Collection], request_id: str, approver_id: str, approve: bool, approver_name: Optional[str] = None, notes: Optional[str] = None) -> Optional[RequestResponse]:
     """
     Update approval status for a request.
     
     Args:
-        db (Database): MongoDB database instance
-        approval_data (ApprovalUpdate): Approval update data
+        db (Union[Database, Collection]): MongoDB database instance or collection
+        request_id (str): ID of the request
+        approver_id (str): ID of the approver
+        approve (bool): Whether to approve or reject
+        approver_name (Optional[str]): Name of the approver (optional)
+        notes (Optional[str]): Notes for the approval/rejection (optional)
         
     Returns:
         Optional[RequestResponse]: Updated request if found, None otherwise
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
     
     # Get current request
-    current_request = collection.find_one({"id": approval_data.request_id})
+    current_request = collection.find_one({"id": request_id})
     if not current_request:
-        logger.warning(f"Request not found for approval update: {approval_data.request_id}")
+        logger.warning(f"Request not found for approval update: {request_id}")
         return None
+    
+    # Set the approval status
+    status = RequestStatus.APPROVED if approve else RequestStatus.REJECTED
     
     # Find the approver
     approver_found = False
     for i, approver in enumerate(current_request.get("approvers", [])):
-        if approver.get("id") == approval_data.approver_id:
+        if approver.get("id") == approver_id:
             approver_found = True
             # Update approver status, date and notes
             update_field = f"approvers.{i}.status"
@@ -339,19 +366,19 @@ def update_approval(db: Database, approval_data: ApprovalUpdate) -> Optional[Req
             notes_field = f"approvers.{i}.notes"
             
             update_dict = {
-                update_field: approval_data.status.value,
+                update_field: status.value,
                 date_field: datetime.now().strftime("%Y-%m-%d"),
                 "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updated_at": get_current_datetime()
             }
             
-            if approval_data.notes:
-                update_dict[notes_field] = approval_data.notes
+            if notes:
+                update_dict[notes_field] = notes
             
             # Update the document
             try:
                 collection.update_one(
-                    {"id": approval_data.request_id},
+                    {"id": request_id},
                     {"$set": update_dict}
                 )
                 break
@@ -360,29 +387,34 @@ def update_approval(db: Database, approval_data: ApprovalUpdate) -> Optional[Req
                 raise
     
     if not approver_found:
-        logger.warning(f"Approver not found in request: {approval_data.approver_id}")
+        logger.warning(f"Approver not found in request: {approver_id}")
         return None
     
     # Check if all approvers have approved and update request status if needed
-    updated_request = collection.find_one({"id": approval_data.request_id})
+    updated_request = collection.find_one({"id": request_id})
     
     # Update the overall request status based on approvers
     _update_request_status_from_approvers(db, updated_request)
     
     # Get the final updated request
-    final_request = collection.find_one({"id": approval_data.request_id})
+    final_request = collection.find_one({"id": request_id})
     
     return RequestResponse(**final_request)
 
-def _update_request_status_from_approvers(db: Database, request_doc: Dict[str, Any]) -> None:
+def _update_request_status_from_approvers(db: Union[Database, Collection], request_doc: Dict[str, Any]) -> None:
     """
     Update the overall request status based on approver statuses.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_doc (Dict[str, Any]): Request document
     """
-    collection = db[COLLECTION_NAME]
+    # Check if db is a Database or Collection
+    if isinstance(db, Database):
+        collection = db.get_collection(REQUESTS_COLLECTION)
+    else:
+        collection = db  # db is already the collection
+        
     request_id = request_doc.get("id")
     approvers = request_doc.get("approvers", [])
     
@@ -453,7 +485,7 @@ def _update_request_status_from_approvers(db: Database, request_doc: Dict[str, A
             raise
 
 def _handle_status_change(
-    db: Database, 
+    db: Union[Database, Collection], 
     request_id: str, 
     request_type: str, 
     old_status: str, 
@@ -464,7 +496,7 @@ def _handle_status_change(
     Handle actions needed when a request status changes.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_id (str): Request ID
         request_type (str): Type of request
         old_status (str): Previous status
@@ -474,6 +506,10 @@ def _handle_status_change(
     # Only handle transitions to APPROVED or REJECTED
     if new_status not in [RequestStatus.APPROVED.value, RequestStatus.REJECTED.value]:
         return
+    
+    # For asset items collection operations, we need the full database
+    from app.dependencies import get_db
+    full_db = get_db() if isinstance(db, Collection) else db
     
     if request_type == RequestType.ASSET_REQUEST.value and new_status == RequestStatus.APPROVED.value:
         # For approved asset requests, potentially create a new asset
@@ -487,7 +523,7 @@ def _handle_status_change(
             logger.info(f"Maintenance request {request_id} approved for asset {asset_id}")
             # Update asset status to scheduled for maintenance
             try:
-                db.asset_items.update_one(
+                full_db.asset_items.update_one(
                     {"id": asset_id},
                     {"$set": {"status": "under_maintenance"}}
                 )
@@ -514,7 +550,7 @@ def _handle_status_change(
             logger.info(f"Asset return request {request_id} approved for asset {asset_id}")
             # Update asset status to available
             try:
-                db.asset_items.update_one(
+                full_db.asset_items.update_one(
                     {"id": asset_id},
                     {"$set": {"status": "available", "assigned_to": None, "assigned_to_name": None}}
                 )
@@ -523,7 +559,7 @@ def _handle_status_change(
                 raise
 
 def _update_linked_collections(
-    db: Database, 
+    db: Union[Database, Collection], 
     request_type: str, 
     asset_details: Dict[str, Any], 
     action: str
@@ -532,7 +568,7 @@ def _update_linked_collections(
     Update linked collections when creating or deleting requests.
     
     Args:
-        db (Database): MongoDB database instance
+        db (Union[Database, Collection]): MongoDB database instance or collection
         request_type (str): Type of request
         asset_details (Dict[str, Any]): Asset details from the request
         action (str): "create" or "delete"

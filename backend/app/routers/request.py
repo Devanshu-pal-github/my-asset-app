@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from pymongo.database import Database
+from pymongo.collection import Collection
 from pymongo.errors import PyMongoError
-from app.database import get_database
+from app.dependencies import get_db
 from app.models.request_approval import (
     Request,
     RequestCreate,
@@ -34,7 +35,7 @@ async def read_requests(
     asset_id: Optional[str] = None,
     created_after: Optional[str] = None,
     created_before: Optional[str] = None,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Get requests with optional filtering.
@@ -87,7 +88,7 @@ async def read_requests(
 @router.get("/{request_id}", response_model=Request)
 async def read_request(
     request_id: str,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Get a specific request by ID.
@@ -118,7 +119,7 @@ async def read_request(
 @router.post("/", response_model=Request, status_code=201)
 async def create_new_request(
     request: RequestCreate,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Create a new request.
@@ -133,8 +134,9 @@ async def create_new_request(
     Raises:
         HTTPException: If there's an error processing the request or validation fails
     """
-    logger.info(f"POST /requests/ - type: {request.request_type}, asset_id: {request.asset_id}")
+    logger.info(f"POST /requests/ - type: {request.type}")
     try:
+        # Make sure request conforms to the expected model
         result = request_service.create_request(collection, request)
         return result
     except ValueError as e:
@@ -151,7 +153,7 @@ async def create_new_request(
 async def update_existing_request(
     request_id: str,
     update: RequestUpdate,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Update an existing request.
@@ -187,7 +189,7 @@ async def update_existing_request(
 @router.delete("/{request_id}", status_code=204)
 async def delete_existing_request(
     request_id: str,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Delete a request.
@@ -216,7 +218,7 @@ async def delete_existing_request(
 async def add_comment_to_request(
     request_id: str,
     comment: RequestComment,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Add a comment to a request.
@@ -256,7 +258,7 @@ async def update_request_approval(
     approver_id: str,
     approver_name: Optional[str] = None,
     comment: Optional[str] = None,
-    collection: Database = Depends(get_requests_collection)
+    collection: Collection = Depends(get_requests_collection)
 ):
     """
     Update approval status for a request.

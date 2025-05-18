@@ -53,10 +53,10 @@ def setup_logging(
         "app",
         "app.main",
         "app.dependencies",
-        "app.database",
-        "app.routers",
+        "app.models",
         "app.services",
-        "app.api"
+        "app.routers",
+        "app.utils"
     ]
     
     # Define specific module loggers
@@ -67,7 +67,7 @@ def setup_logging(
         "app.routers.documents",
         "app.routers.employees",
         "app.routers.maintenance_history",
-        "app.routers.request_approval"
+        "app.routers.request"
     ]
     
     service_modules = [
@@ -195,4 +195,18 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         Configured logger instance
     """
-    return logging.getLogger(name) 
+    return logging.getLogger(name)
+
+def get_default_loggers():
+    """
+    Get a list of default loggers to configure
+    """
+    return [
+        "app.main",
+        "app.dependencies",
+        "app.models",
+        "app.services",
+        "app.routers",
+        "app.utils",
+        "app"
+    ] 

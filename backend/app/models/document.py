@@ -50,7 +50,7 @@ class Document(BaseModel):
     
     # File Information
     file_name: str = Field(..., description="Original file name")
-    file_type: str = Field(..., description="File type, e.g., 'pdf', 'docx'")
+    file_type: Optional[str] = Field(None, description="File type, e.g., 'pdf', 'docx'")
     file_size: Optional[int] = Field(None, description="File size in bytes")
     file_url: str = Field(..., description="URL to access the file")
     thumbnail_url: Optional[str] = Field(None, description="URL to thumbnail, if available")
@@ -100,6 +100,12 @@ class Document(BaseModel):
     daysUntilExpiry: Optional[int] = Field(None, description="Days until document expiry")
     
     model_config = model_config
+    
+    # Add post-initialization logic to extract file type if not provided
+    def model_post_init(self, __context):
+        if not self.file_type and self.file_name and '.' in self.file_name:
+            # Extract file type from file name if not provided
+            self.file_type = self.file_name.split('.')[-1].lower()
 
 # For document creation
 class DocumentCreate(BaseModel):
@@ -108,7 +114,7 @@ class DocumentCreate(BaseModel):
     document_type: DocumentType
     status: DocumentStatus = DocumentStatus.ACTIVE
     file_name: str
-    file_type: str
+    file_type: Optional[str] = None
     file_size: Optional[int] = None
     file_url: str
     thumbnail_url: Optional[str] = None
@@ -135,6 +141,12 @@ class DocumentCreate(BaseModel):
     downloadUrl: Optional[str] = None
     
     model_config = model_config
+    
+    # Add validation to auto-set file_type if not provided
+    def model_post_init(self, __context):
+        if not self.file_type and self.file_name and '.' in self.file_name:
+            # Extract file type from file name if not provided
+            self.file_type = self.file_name.split('.')[-1].lower()
 
 # For document updates
 class DocumentUpdate(BaseModel):
@@ -185,7 +197,7 @@ class DocumentResponse(BaseModel):
     document_type: str
     status: str
     file_name: str
-    file_type: str
+    file_type: Optional[str] = None
     file_url: str
     upload_date: str
     expiry_date: Optional[str] = None

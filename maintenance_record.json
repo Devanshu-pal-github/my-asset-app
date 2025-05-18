@@ -1,0 +1,27 @@
+{
+  "id": "MAINT-001",
+  "asset_id": "AST-001",
+  "asset_name": "Dell XPS 15",
+  "asset_tag": "LAP-001",
+  "maintenance_type": "preventive",
+  "status": "completed",
+  "date_reported": "2023-06-15",
+  "date_scheduled": "2023-06-20",
+  "date_completed": "2023-06-20",
+  "technician": {
+    "id": "EMP-003",
+    "name": "Bob Johnson",
+    "contact": "+1-555-7890"
+  },
+  "cost": 120.50,
+  "parts_replaced": [
+    {
+      "name": "Cooling Fan",
+      "part_number": "CF-123",
+      "cost": 45.99,
+      "quantity": 1
+    }
+  ],
+  "notes": "Regular maintenance service to clean dust and replace thermal paste.",
+  "documents": []
+} 

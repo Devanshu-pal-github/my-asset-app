@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from pymongo.database import Database
 from pymongo.errors import PyMongoError
-from app.database import get_database
+from app.dependencies import get_db
 from app.models.document import (
     Document,
     DocumentCreate,
@@ -106,6 +106,7 @@ async def read_document(
 @router.post("/", response_model=Document, status_code=201)
 async def create_new_document(
     document: DocumentCreate,
+    skip_validation: bool = False,
     collection: Database = Depends(get_documents_collection)
 ):
     """
@@ -113,6 +114,7 @@ async def create_new_document(
     
     Args:
         document: Document creation data
+        skip_validation: If True, skip validation of asset and employee existence
         collection: Documents collection
         
     Returns:
@@ -123,7 +125,7 @@ async def create_new_document(
     """
     logger.info("POST /documents/")
     try:
-        result = document_service.create_document(collection, document)
+        result = document_service.create_document(collection, document, skip_validation)
         return result
     except ValueError as e:
         logger.warning(f"Validation error in create_new_document: {str(e)}")
@@ -198,4 +200,39 @@ async def delete_existing_document(
         raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
         logger.error(f"Error in delete_existing_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/import", response_model=Document, status_code=201)
+async def import_document(
+    document: DocumentCreate,
+    collection: Database = Depends(get_documents_collection)
+):
+    """
+    Import a document without strict validation of asset/employee existence.
+    Use this endpoint when importing documents where assets might be added later.
+    
+    Args:
+        document: Document creation data
+        collection: Documents collection
+        
+    Returns:
+        Created Document object
+    
+    Raises:
+        HTTPException: If there's an error processing the request or validation fails
+    """
+    logger.info("POST /documents/import")
+    try:
+        # Skip validation of asset and employee references
+        result = document_service.create_document(collection, document, skip_validation=True)
+        logger.info(f"Document imported successfully with ID: {result.id}")
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in import_document: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except PyMongoError as e:
+        logger.error(f"Database error in import_document: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        logger.error(f"Error in import_document: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

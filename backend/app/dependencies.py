@@ -136,7 +136,16 @@ def get_employees_collection(db: Database = Depends(get_db)) -> Collection:
     return db["employees"]
 
 def get_documents_collection(db: Database = Depends(get_db)) -> Collection:
-    return db["documents"]
+    """
+    Provides the documents collection.
+    
+    Note: Ensures we're using 'documents' not 'documents.documents'
+    """
+    # Always use the explicitly named collection
+    collection_name = "documents"
+    
+    # Return the explicitly named collection
+    return db.get_collection(collection_name)  # Using get_collection instead of [] notation
 
 def get_assignment_history_collection(db: Database = Depends(get_db)) -> Collection:
     return db["assignment_history"]

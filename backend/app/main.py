@@ -11,7 +11,7 @@ from app.routers import (
     documents, 
     assignment_history, 
     maintenance_history, 
-    request_approval
+    request
 )
 from typing import Any
 from enum import Enum
@@ -114,7 +114,7 @@ app.include_router(employees, prefix="/api", tags=["Employees"])
 app.include_router(documents, prefix="/api", tags=["Documents"])
 app.include_router(assignment_history, prefix="/api", tags=["Assignment History"])
 app.include_router(maintenance_history, prefix="/api", tags=["Maintenance History"])
-app.include_router(request_approval, prefix="/api", tags=["Request Approval"])
+app.include_router(request, prefix="/api", tags=["Requests"])
 # Temporarily comment out analytics router
 # app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"])
 
@@ -133,7 +133,7 @@ async def startup_event():
     required_collections = [
         "asset_categories", "asset_items", "employees", 
         "documents", "assignment_history", "maintenance_history", 
-        "request_approval"
+        "requests"
     ]
     
     for collection in required_collections:

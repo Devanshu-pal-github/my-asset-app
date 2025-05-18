@@ -9,7 +9,7 @@ router_modules = [
     "documents",
     "employees",
     "maintenance_history",
-    "request_approval"
+    "request"
 ]
 
 # Get logger instances from our centralized configuration
@@ -25,7 +25,7 @@ from .employees import router as employees
 from .documents import router as documents
 from .assignment_history import router as assignment_history
 from .maintenance_history import router as maintenance_history
-from .request_approval import router as request_approval
+from .request import router as request
 
 __all__ = [
     "asset_categories",
@@ -34,5 +34,5 @@ __all__ = [
     "documents",
     "employees",
     "maintenance_history",
-    "request_approval"
+    "request"
 ]

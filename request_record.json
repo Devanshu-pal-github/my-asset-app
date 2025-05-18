@@ -1,0 +1,39 @@
+{
+  "type": "asset_request",
+  "title": "New Laptop Request",
+  "requestor": {
+    "id": "EMP-001",
+    "name": "John Smith",
+    "department": "Engineering",
+    "position": "Software Developer",
+    "email": "john.smith@company.com",
+    "phone": "555-1234"
+  },
+  "date_submitted": "2023-08-15",
+  "status": "pending",
+  "priority": "medium",
+  "asset_details": {
+    "category": "Laptop",
+    "specifications": "16GB RAM, 512GB SSD, i7 processor",
+    "purpose": "Development work requiring virtual machines"
+  },
+  "description": "Need a new development laptop with higher specifications to handle multiple virtual environments simultaneously.",
+  "department": "Engineering",
+  "location": "Main Office",
+  "due_date": "2023-09-01",
+  "approvers": [
+    {
+      "id": "EMP-002",
+      "name": "Jane Doe",
+      "role": "Department Manager",
+      "status": "pending"
+    },
+    {
+      "id": "EMP-003",
+      "name": "Bob Johnson",
+      "role": "IT Manager",
+      "status": "pending"
+    }
+  ],
+  "comments": []
+} 

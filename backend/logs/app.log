@@ -224,3 +224,267 @@ AttributeError: 'AssetItemCreate' object has no attribute 'asset_name'. Did you 
 2025-05-18 19:34:32 - app.main - INFO - Request: POST /api/maintenance-history
 2025-05-18 19:34:32 - app.main - WARNING - Request failed: POST /api/maintenance-history - Status: 404
 2025-05-18 19:36:40 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 19:36:50 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 19:36:50 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 19:36:50 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 19:36:51 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 19:36:51 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 19:36:51 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 19:36:51 - app.main - INFO - All database indexes verified
+2025-05-18 19:36:51 - app.main - INFO - Server started successfully!
+2025-05-18 19:36:51 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 19:37:12 - app.main - INFO - Request: POST /api/maintenance-history
+2025-05-18 19:37:12 - app.routers.maintenance_history - INFO - Creating maintenance history entry for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-18 19:40:56 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 19:41:07 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 19:41:07 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 19:41:07 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 19:41:07 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 19:41:07 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 19:41:07 - app.main - INFO - Creating collection: departments
+2025-05-18 19:41:07 - app.main - INFO - Creating collection: vendors
+2025-05-18 19:41:07 - app.main - INFO - Creating collection: locations
+2025-05-18 19:41:08 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 19:41:08 - app.main - INFO - All database indexes verified
+2025-05-18 19:41:08 - app.main - INFO - Server started successfully!
+2025-05-18 19:41:08 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 20:04:21 - app.main - INFO - Request: POST /api/documents
+2025-05-18 20:04:22 - app.main - INFO - Request: POST /api/documents/
+2025-05-18 20:04:22 - app.routers.documents - INFO - POST /documents/
+2025-05-18 20:04:22 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:04:22 - app.services.document_service - WARNING - Asset not found: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-18 20:04:22 - app.services.document_service - ERROR - Error creating document: Asset not found
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 104, in create_document
+    raise ValueError("Asset not found")
+ValueError: Asset not found
+2025-05-18 20:04:22 - app.routers.documents - WARNING - Validation error in create_new_document: Asset not found
+2025-05-18 20:04:22 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-18 20:12:15 - app.main - INFO - Request: POST /api/asset-categories
+2025-05-18 20:12:15 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-18 20:12:15 - app.routers.asset_categories - INFO - Creating asset category: Monitors
+2025-05-18 20:12:15 - app.services.asset_category_service - INFO - Creating category: Monitors
+2025-05-18 20:12:15 - app.services.asset_category_service - INFO - Created category with ID: 1052ff57-e6ce-4238-b623-914a51cf1d38
+2025-05-18 20:12:46 - app.main - INFO - Request: POST /api/employees
+2025-05-18 20:12:46 - app.main - INFO - Request: POST /api/employees/
+2025-05-18 20:12:46 - app.routers.employees - INFO - Creating employee: EMP002
+2025-05-18 20:12:46 - app.services.employee_service - INFO - Creating employee: John Doe
+2025-05-18 20:12:46 - app.services.employee_service - INFO - Created employee with ID: a35cdcd3-5a2d-4f7f-b2df-3f67cd5fdaa1
+2025-05-18 20:13:02 - app.main - INFO - Request: POST /api/asset-items 
+2025-05-18 20:13:02 - app.main - WARNING - Request failed: POST /api/asset-items  - Status: 404
+2025-05-18 20:13:10 - app.main - INFO - Request: POST /api/asset-items 
+2025-05-18 20:13:10 - app.main - WARNING - Request failed: POST /api/asset-items  - Status: 404
+2025-05-18 20:18:38 - app.main - INFO - Request: POST /api/documents
+2025-05-18 20:18:38 - app.main - INFO - Request: POST /api/documents/
+2025-05-18 20:18:38 - app.routers.documents - INFO - POST /documents/
+2025-05-18 20:18:38 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:18:39 - app.services.document_service - WARNING - Asset not found: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-18 20:18:39 - app.services.document_service - ERROR - Error creating document: Asset not found
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 104, in create_document
+    raise ValueError("Asset not found")
+ValueError: Asset not found
+2025-05-18 20:18:39 - app.routers.documents - WARNING - Validation error in create_new_document: Asset not found
+2025-05-18 20:18:39 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-18 20:18:44 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 20:18:55 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 20:18:55 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 20:18:55 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 20:18:55 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 20:18:55 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 20:18:55 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 20:18:55 - app.main - INFO - All database indexes verified
+2025-05-18 20:18:55 - app.main - INFO - Server started successfully!
+2025-05-18 20:18:55 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 20:19:57 - app.main - INFO - Request: POST /api/documents
+2025-05-18 20:19:57 - app.main - INFO - Request: POST /api/documents/
+2025-05-18 20:19:57 - app.routers.documents - INFO - POST /documents/
+2025-05-18 20:19:57 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:19:57 - app.services.document_service - WARNING - Asset not found: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-18 20:19:57 - app.services.document_service - ERROR - Error creating document: Asset not found
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 104, in create_document
+    raise ValueError("Asset not found")
+ValueError: Asset not found
+2025-05-18 20:19:57 - app.routers.documents - WARNING - Validation error in create_new_document: Asset not found
+2025-05-18 20:19:57 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-18 20:22:11 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 20:22:23 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 20:22:23 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 20:22:23 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 20:22:24 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 20:22:24 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 20:22:24 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 20:22:24 - app.main - INFO - All database indexes verified
+2025-05-18 20:22:24 - app.main - INFO - Server started successfully!
+2025-05-18 20:22:24 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 20:24:26 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:24:26 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 20:24:26 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:24:27 - app.services.document_service - INFO - Created document with ID: DOC-D60D66D4
+2025-05-18 20:24:27 - app.routers.documents - INFO - Document imported successfully with ID: DOC-D60D66D4
+2025-05-18 20:26:03 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:26:03 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 20:26:03 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:26:03 - app.services.document_service - WARNING - Document with file_url https://storage.company.com/documents/invoices/dell_xps13_invoice.pdf already exists
+2025-05-18 20:26:03 - app.services.document_service - ERROR - Error creating document: Document with file_url https://storage.company.com/documents/invoices/dell_xps13_invoice.pdf already exists
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 124, in create_document
+    raise ValueError(f"Document with file_url {document.file_url} already exists")
+ValueError: Document with file_url https://storage.company.com/documents/invoices/dell_xps13_invoice.pdf already exists
+2025-05-18 20:26:03 - app.routers.documents - WARNING - Validation error in import_document: Document with file_url https://storage.company.com/documents/invoices/dell_xps13_invoice.pdf already exists
+2025-05-18 20:26:03 - app.main - WARNING - Request failed: POST /api/documents/import - Status: 400
+2025-05-18 20:26:15 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:26:15 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 20:26:15 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.WARRANTY
+2025-05-18 20:26:15 - app.services.document_service - INFO - Created document with ID: DOC-090477D7
+2025-05-18 20:26:15 - app.routers.documents - INFO - Document imported successfully with ID: DOC-090477D7
+2025-05-18 20:26:22 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:26:22 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 20:26:22 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: 3a142936-dcb9-4962-9c9b-94995d6eb1f3, type: DocumentType.CONTRACT
+2025-05-18 20:26:22 - app.services.document_service - INFO - Created document with ID: DOC-A0F23CD8
+2025-05-18 20:26:22 - app.routers.documents - INFO - Document imported successfully with ID: DOC-A0F23CD8
+2025-05-18 20:26:29 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:26:29 - app.main - WARNING - Request failed: POST /api/documents/import - Status: 422
+2025-05-18 20:26:46 - app.main - INFO - Request: POST /api/requests
+2025-05-18 20:26:46 - app.main - INFO - Request: POST /api/requests/
+2025-05-18 20:26:46 - app.main - ERROR - Request failed: POST /api/requests/ - Error: 'RequestCreate' object has no attribute 'request_type'
+2025-05-18 20:26:57 - app.main - INFO - Request: POST /api/requests
+2025-05-18 20:26:57 - app.main - INFO - Request: POST /api/requests/
+2025-05-18 20:26:57 - app.main - ERROR - Request failed: POST /api/requests/ - Error: 'RequestCreate' object has no attribute 'request_type'
+2025-05-18 20:44:18 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:44:18 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 20:44:18 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:44:18 - app.services.document_service - INFO - Created document with ID: DOC-07CC8339
+2025-05-18 20:44:18 - app.routers.documents - INFO - Document imported successfully with ID: DOC-07CC8339
+2025-05-18 20:47:32 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 20:47:42 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 20:47:42 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 20:47:42 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 20:47:42 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 20:47:42 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 20:47:42 - app.main - INFO - Creating collection: request_approval
+2025-05-18 20:47:42 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 20:47:42 - app.main - INFO - All database indexes verified
+2025-05-18 20:47:42 - app.main - INFO - Server started successfully!
+2025-05-18 20:47:42 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 20:50:22 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 20:50:36 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 20:50:36 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 20:50:36 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 20:50:37 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 20:50:37 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 20:50:37 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 20:50:37 - app.main - INFO - All database indexes verified
+2025-05-18 20:50:37 - app.main - INFO - Server started successfully!
+2025-05-18 20:50:37 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 20:50:42 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 20:50:42 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 20:50:42 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 20:50:42 - app.services.document_service - INFO - Created document with ID: DOC-387CB58A
+2025-05-18 20:50:42 - app.routers.documents - INFO - Document imported successfully with ID: DOC-387CB58A
+2025-05-18 21:01:28 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 21:01:28 - app.main - WARNING - Request failed: POST /api/documents/import - Status: 422
+2025-05-18 21:01:37 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 21:04:19 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 21:04:19 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 21:04:19 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 21:04:19 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 21:04:19 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 21:04:19 - app.main - INFO - Creating collection: request_approval
+2025-05-18 21:04:19 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 21:04:19 - app.main - INFO - All database indexes verified
+2025-05-18 21:04:19 - app.main - INFO - Server started successfully!
+2025-05-18 21:04:19 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 21:04:26 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 21:04:26 - app.main - WARNING - Request failed: POST /api/documents/import - Status: 422
+2025-05-18 21:07:50 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 21:08:02 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 21:08:02 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 21:08:02 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 21:08:02 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 21:08:02 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 21:08:02 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 21:08:02 - app.main - INFO - All database indexes verified
+2025-05-18 21:08:02 - app.main - INFO - Server started successfully!
+2025-05-18 21:08:02 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 21:08:18 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 21:08:18 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 21:08:18 - app.services.document_service - INFO - Creating document - asset_id: AST-001, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 21:08:18 - app.services.document_service - ERROR - Error creating document: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 138, in create_document
+    collection = db.get_collection(DOCUMENTS_COLLECTION)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 407, in __call__
+    raise TypeError(
+    ...<3 lines>...
+    )
+TypeError: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+2025-05-18 21:08:18 - app.routers.documents - WARNING - Validation error in import_document: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+2025-05-18 21:08:18 - app.main - WARNING - Request failed: POST /api/documents/import - Status: 400
+2025-05-18 21:29:51 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 21:30:00 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 21:30:00 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 21:30:00 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 21:30:00 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 21:30:00 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 21:30:00 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 21:30:01 - app.main - INFO - All database indexes verified
+2025-05-18 21:30:01 - app.main - INFO - Server started successfully!
+2025-05-18 21:30:01 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 21:30:04 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 21:30:04 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 21:30:04 - app.services.document_service - INFO - Creating document - asset_id: AST-001, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 21:30:04 - app.services.document_service - INFO - Created document with ID: DOC-FE4A50C4
+2025-05-18 21:30:04 - app.routers.documents - INFO - Document imported successfully with ID: DOC-FE4A50C4
+2025-05-18 21:30:52 - app.main - INFO - Request: POST /api/documents/import
+2025-05-18 21:30:52 - app.routers.documents - INFO - POST /documents/import
+2025-05-18 21:30:52 - app.services.document_service - INFO - Creating document - asset_id: AST-001, employee_id: None, type: DocumentType.INVOICE
+2025-05-18 21:30:52 - app.services.document_service - WARNING - Document with file_url https://storage.example.com/documents/invoice_123456.pdf already exists
+2025-05-18 21:30:52 - app.services.document_service - ERROR - Error creating document: Document with file_url https://storage.example.com/documents/invoice_123456.pdf already exists
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 152, in create_document
+    raise ValueError(f"Document with file_url {document.file_url} already exists")
+ValueError: Document with file_url https://storage.example.com/documents/invoice_123456.pdf already exists
+2025-05-18 21:30:52 - app.routers.documents - WARNING - Validation error in import_document: Document with file_url https://storage.example.com/documents/invoice_123456.pdf already exists
+2025-05-18 21:30:52 - app.main - WARNING - Request failed: POST /api/documents/import - Status: 400
+2025-05-18 22:07:04 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 22:31:06 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 22:31:06 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 22:31:06 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 22:31:06 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 22:31:06 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 22:31:06 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 22:31:06 - app.main - INFO - All database indexes verified
+2025-05-18 22:31:06 - app.main - INFO - Server started successfully!
+2025-05-18 22:31:06 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 22:33:14 - app.main - INFO - Request: POST /api/requests/
+2025-05-18 22:33:14 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSET_REQUEST
+2025-05-18 22:33:14 - app.routers.request - ERROR - Error in create_new_request: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\request.py", line 139, in create_new_request
+    result = request_service.create_request(collection, request)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\request_service.py", line 127, in create_request
+    collection = db.get_collection(REQUESTS_COLLECTION)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 407, in __call__
+    raise TypeError(
+    ...<3 lines>...
+    )
+TypeError: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+2025-05-18 22:33:14 - app.main - WARNING - Request failed: POST /api/requests/ - Status: 500
+2025-05-18 22:37:16 - app.main - INFO - Request: POST /api/requests/
+2025-05-18 22:37:16 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSET_REQUEST
+2025-05-18 22:37:16 - app.routers.request - ERROR - Error in create_new_request: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\request.py", line 139, in create_new_request
+    result = request_service.create_request(collection, request)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\request_service.py", line 127, in create_request
+    db (Union[Database, Collection]): MongoDB database instance or collection
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 407, in __call__
+    raise TypeError(
+    ...<3 lines>...
+    )
+TypeError: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
+2025-05-18 22:37:16 - app.main - WARNING - Request failed: POST /api/requests/ - Status: 500
+2025-05-19 01:28:46 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========

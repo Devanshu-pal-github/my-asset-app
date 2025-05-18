@@ -53,12 +53,9 @@ class Approver(BaseModel):
 
 # Comment Schema
 class RequestComment(BaseModel):
-    id: str = Field(default_factory=generate_uuid, description="Comment ID")
-    author: str = Field(..., description="Name of comment author")
+    user_id: str = Field(..., description="ID of the comment author")
+    user_name: str = Field(..., description="Name of the comment author")
     content: str = Field(..., description="Comment content")
-    date: str = Field(..., description="Date of comment")
-    author_id: Optional[str] = Field(None, description="ID of comment author")
-    author_role: Optional[str] = Field(None, description="Role of comment author")
 
     model_config = model_config
 

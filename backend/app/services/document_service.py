@@ -12,8 +12,12 @@ from app.models.document import (
 )
 from app.models.utils import get_current_datetime, serialize_model
 import logging
+from app.dependencies import get_db
 
 logger = logging.getLogger(__name__)
+
+# Explicitly define collection name to avoid confusion
+DOCUMENTS_COLLECTION = "documents"
 
 def get_documents(db: Database, filters: Dict[str, Any]) -> List[DocumentResponse]:
     """
@@ -35,7 +39,10 @@ def get_documents(db: Database, filters: Dict[str, Any]) -> List[DocumentRespons
                 if value is not None:
                     query[key] = value
         
-        documents = list(db.documents.find(query).sort("created_at", -1))
+        # Use the collection directly
+        # collection = db.get_collection(DOCUMENTS_COLLECTION)
+        collection = db
+        documents = list(collection.find(query).sort("created_at", -1))
         result = []
         for doc in documents:
             # Ensure id is properly formatted
@@ -62,7 +69,10 @@ def get_document_by_id(db: Database, document_id: str) -> Optional[Document]:
     """
     logger.info(f"Fetching document with ID: {document_id}")
     try:
-        document = db.documents.find_one({"id": document_id})
+        # Use the collection directly
+        # collection = db.get_collection(DOCUMENTS_COLLECTION)
+        collection = db
+        document = collection.find_one({"id": document_id})
         if not document:
             logger.warning(f"Document not found: {document_id}")
             return None
@@ -75,13 +85,14 @@ def get_document_by_id(db: Database, document_id: str) -> Optional[Document]:
         logger.error(f"Error fetching document {document_id}: {str(e)}", exc_info=True)
         raise
 
-def create_document(db: Database, document: DocumentCreate) -> Document:
+def create_document(db: Database, document: DocumentCreate, skip_validation: bool = False) -> Document:
     """
     Create a new document with validation.
     
     Args:
         db (Database): MongoDB database instance
         document (DocumentCreate): Document to create
+        skip_validation (bool): If True, skip validation of asset and employee existence
         
     Returns:
         Document: The created document
@@ -96,27 +107,46 @@ def create_document(db: Database, document: DocumentCreate) -> Document:
             logger.warning("At least one of asset_id or employee_id required")
             raise ValueError("At least one of asset_id or employee_id must be provided")
         
-        # Validate associations
-        if document.asset_id:
-            asset = db.asset_items.find_one({"id": document.asset_id})
-            if not asset:
-                logger.warning(f"Asset not found: {document.asset_id}")
-                raise ValueError("Asset not found")
+        # Ensure file_type is set if not provided
+        if not document.file_type and document.file_name and '.' in document.file_name:
+            document.file_type = document.file_name.split('.')[-1].lower()
+            logger.debug(f"Extracted file_type from filename: {document.file_type}")
         
-        if document.employee_id:
-            emp = db.employees.find_one({"id": document.employee_id})
-            if not emp:
-                logger.warning(f"Employee not found: {document.employee_id}")
-                raise ValueError("Employee not found")
+        # If still no file_type, set a default
+        if not document.file_type:
+            document.file_type = "unknown"
+            logger.debug("Set default file_type to 'unknown'")
         
-        if document.uploaded_by:
-            uploader = db.employees.find_one({"id": document.uploaded_by})
-            if not uploader:
-                logger.warning(f"Uploader not found: {document.uploaded_by}")
-                raise ValueError("Uploader not found")
+        # Validate associations if validation is not skipped
+        if not skip_validation:
+            # Get the database from dependencies since 'db' is now a collection
+            validation_db = get_db()
+            
+            if document.asset_id:
+                asset = validation_db.asset_items.find_one({"id": document.asset_id})
+                if not asset:
+                    logger.warning(f"Asset not found: {document.asset_id}")
+                    raise ValueError("Asset not found")
+            
+            if document.employee_id:
+                emp = validation_db.employees.find_one({"id": document.employee_id})
+                if not emp:
+                    logger.warning(f"Employee not found: {document.employee_id}")
+                    raise ValueError("Employee not found")
+            
+            if document.uploaded_by:
+                uploader = validation_db.employees.find_one({"id": document.uploaded_by})
+                if not uploader:
+                    logger.warning(f"Uploader not found: {document.uploaded_by}")
+                    raise ValueError("Uploader not found")
         
-        # Check for duplicate file_url
-        existing = db.documents.find_one({"file_url": document.file_url})
+        # Get the documents collection
+        # IMPORTANT FIX: The collection is already passed from router dependency
+        # collection = db.get_collection(DOCUMENTS_COLLECTION)
+        collection = db  # db is already the documents collection
+        
+        # Check for duplicate file_url - use explicit collection
+        existing = collection.find_one({"file_url": document.file_url})
         if existing:
             logger.warning(f"Document with file_url {document.file_url} already exists")
             raise ValueError(f"Document with file_url {document.file_url} already exists")
@@ -133,19 +163,23 @@ def create_document(db: Database, document: DocumentCreate) -> Document:
         _id = doc_dict.pop("id")  # Remove id temporarily for MongoDB _id
         doc_dict["_id"] = _id  # Use as MongoDB _id
         
-        # Insert document
-        result = db.documents.insert_one(doc_dict)
+        # Insert document - use explicit collection
+        result = collection.insert_one(doc_dict)
         logger.debug(f"Inserted document with ID: {result.inserted_id}")
         
         # Update related collections
         if document.asset_id:
-            db.asset_items.update_one(
+            # Get the database from dependencies since 'db' is now a collection
+            asset_db = get_db()
+            asset_db.asset_items.update_one(
                 {"id": document.asset_id},
                 {"$push": {"documents": {"id": doc.id, "name": doc.name, "document_type": doc.document_type.value}}}
             )
         
         if document.employee_id:
-            db.employees.update_one(
+            # Get the database from dependencies since 'db' is now a collection
+            employee_db = get_db()
+            employee_db.employees.update_one(
                 {"id": document.employee_id},
                 {"$push": {"documents": {"id": doc.id, "name": doc.name, "document_type": doc.document_type.value}}}
             )
@@ -179,8 +213,13 @@ def update_document(db: Database, document_id: str, update: DocumentUpdate) -> O
     """
     logger.info(f"Updating document {document_id}")
     try:
-        # Check if document exists
-        document = db.documents.find_one({"id": document_id})
+        # Get the documents collection
+        # IMPORTANT FIX: The collection is already passed from router dependency
+        # collection = db.get_collection(DOCUMENTS_COLLECTION)
+        collection = db  # db is already the documents collection
+        
+        # Check if document exists - use explicit collection
+        document = collection.find_one({"id": document_id})
         if not document:
             logger.warning(f"Document not found: {document_id}")
             return None
@@ -194,14 +233,14 @@ def update_document(db: Database, document_id: str, update: DocumentUpdate) -> O
         # Always update the updated_at field
         update_dict["updated_at"] = get_current_datetime()
         
-        # Update document
-        db.documents.update_one(
+        # Update document - use explicit collection
+        collection.update_one(
             {"id": document_id},
             {"$set": update_dict}
         )
         
-        # Get updated document
-        updated_document = db.documents.find_one({"id": document_id})
+        # Get updated document - use explicit collection
+        updated_document = collection.find_one({"id": document_id})
         updated_document["id"] = str(updated_document["_id"])
         del updated_document["_id"]
         
@@ -227,27 +266,36 @@ def delete_document(db: Database, document_id: str) -> bool:
     """
     logger.info(f"Deleting document {document_id}")
     try:
-        # Get document to find its associations
-        document = db.documents.find_one({"id": document_id})
+        # Get the documents collection
+        # IMPORTANT FIX: The collection is already passed from router dependency
+        # collection = db.get_collection(DOCUMENTS_COLLECTION)
+        collection = db  # db is already the documents collection
+        
+        # Get document to find its associations - use explicit collection
+        document = collection.find_one({"id": document_id})
         if not document:
             logger.warning(f"Document not found: {document_id}")
             return False
         
         # Remove document references from associated collections
         if document.get("asset_id"):
-            db.asset_items.update_one(
+            # Get the database from dependencies since 'db' is now a collection
+            asset_db = get_db()
+            asset_db.asset_items.update_one(
                 {"id": document["asset_id"]},
                 {"$pull": {"documents": {"id": document_id}}}
             )
         
         if document.get("employee_id"):
-            db.employees.update_one(
+            # Get the database from dependencies since 'db' is now a collection
+            employee_db = get_db()
+            employee_db.employees.update_one(
                 {"id": document["employee_id"]},
                 {"$pull": {"documents": {"id": document_id}}}
             )
         
-        # Delete the document
-        result = db.documents.delete_one({"id": document_id})
+        # Delete the document - use explicit collection
+        result = collection.delete_one({"id": document_id})
         
         if result.deleted_count == 0:
             logger.warning(f"Failed to delete document {document_id}")
