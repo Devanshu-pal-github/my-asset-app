@@ -113,3 +113,30 @@ Traceback (most recent call last):
     raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
 AttributeError: 'EmployeeCreate' object has no attribute 'email'
 2025-05-18 12:16:48 - app.main - WARNING - Request failed: POST /api/employees/ - Status: 500
+2025-05-18 12:22:51 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-18 12:23:08 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-18 12:23:08 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-18 12:23:08 - app.main - INFO - Registering routers with prefix /api
+2025-05-18 12:23:08 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-18 12:23:08 - app.main - INFO - MongoDB connection verified successfully
+2025-05-18 12:23:08 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-18 12:23:08 - app.main - INFO - All database indexes verified
+2025-05-18 12:23:08 - app.main - INFO - Server started successfully!
+2025-05-18 12:23:08 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-18 12:23:16 - app.main - INFO - Request: POST /api/employees/
+2025-05-18 12:23:16 - app.routers.employees - INFO - Creating employee: EMP001
+2025-05-18 12:23:16 - app.services.employee_service - INFO - Creating employee: Alice Smith
+2025-05-18 12:23:17 - app.services.employee_service - INFO - Created employee with ID: 3a142936-dcb9-4962-9c9b-94995d6eb1f3
+2025-05-18 12:31:43 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-18 12:31:44 - app.routers.asset_items - INFO - Creating asset item: Dell XPS 13
+2025-05-18 12:31:44 - app.routers.asset_items - ERROR - Failed to create asset item: 'AssetItemCreate' object has no attribute 'asset_name'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\asset_items.py", line 177, in create_new_asset_item
+    created_item = create_asset_item(collection, item)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 141, in create_asset_item
+    logger.info(f"Creating asset: {asset.asset_name}")
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssetItemCreate' object has no attribute 'asset_name'. Did you mean: 'asset_tag'?
+2025-05-18 12:31:44 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 500

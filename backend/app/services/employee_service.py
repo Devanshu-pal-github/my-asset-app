@@ -230,11 +230,11 @@ def create_employee(db: Collection, employee: EmployeeCreate) -> EmployeeRespons
         employee_dict = employee.model_dump(exclude_none=True)
         
         # Check if employee with email already exists
-        if employee.email:
-            existing = db.find_one({"email": employee.email})
+        if employee.contact and employee.contact.email:
+            existing = db.find_one({"email": employee.contact.email})
             if existing:
-                logger.warning(f"Employee with email already exists: {employee.email}")
-                raise ValueError(f"Employee with email '{employee.email}' already exists")
+                logger.warning(f"Employee with email already exists: {employee.contact.email}")
+                raise ValueError(f"Employee with email '{employee.contact.email}' already exists")
         
         # Check if employee with employee_id already exists
         if employee.employee_id:
@@ -330,14 +330,14 @@ def update_employee(db: Collection, employee_id: str, employee: EmployeeUpdate) 
         employee_dict = employee.model_dump(exclude_unset=True, exclude_none=True)
         
         # Check for duplicate email
-        if "email" in employee_dict and employee_dict["email"]:
+        if "contact" in employee_dict and employee_dict["contact"] and employee_dict["contact"].get("email"):
             existing = db.find_one({
-                "email": employee_dict["email"], 
+                "email": employee_dict["contact"]["email"], 
                 "id": {"$ne": employee_id}
             })
             if existing:
-                logger.warning(f"Employee with email already exists: {employee_dict['email']}")
-                raise ValueError(f"Employee with email '{employee_dict['email']}' already exists")
+                logger.warning(f"Employee with email already exists: {employee_dict['contact']['email']}")
+                raise ValueError(f"Employee with email '{employee_dict['contact']['email']}' already exists")
         
         # Check for duplicate employee_id
         if "employee_id" in employee_dict and employee_dict["employee_id"]:
