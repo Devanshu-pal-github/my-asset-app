@@ -118,7 +118,7 @@ def get_asset_item_by_id(db: Collection, asset_id: str) -> Optional[AssetItemRes
             
         # Convert to AssetItemResponse
         asset_response = AssetItemResponse(**asset)
-        logger.debug(f"Fetched asset: {asset_response.asset_name}")
+        logger.debug(f"Fetched asset: {asset_response.name}")
         return asset_response
     except OperationFailure as e:
         logger.error(f"Database operation failed: {str(e)}", exc_info=True)
@@ -138,7 +138,7 @@ def create_asset_item(db: Collection, asset: AssetItemCreate) -> AssetItemRespon
     Returns:
         AssetItemResponse: The created asset
     """
-    logger.info(f"Creating asset: {asset.asset_name}")
+    logger.info(f"Creating asset: {asset.name}")
     try:
         # Convert to dict, excluding None values
         asset_dict = asset.model_dump(exclude_none=True)
@@ -210,7 +210,7 @@ def create_asset_item(db: Collection, asset: AssetItemCreate) -> AssetItemRespon
         
         # Insert the asset
         result = db.insert_one(asset_dict)
-        logger.debug(f"Inserted asset: {asset.asset_name} with ID: {asset_dict['id']}")
+        logger.debug(f"Inserted asset: {asset.name} with ID: {asset_dict['id']}")
         
         # Add a history entry for this creation
         edit_entry = {
@@ -367,7 +367,7 @@ def update_asset_item(db: Collection, asset_id: str, asset: AssetItemUpdate) -> 
         
         # Convert to AssetItemResponse
         asset_response = AssetItemResponse(**updated_asset)
-        logger.debug(f"Updated asset: {asset_response.asset_name}")
+        logger.debug(f"Updated asset: {asset_response.name}")
         return asset_response
     except OperationFailure as e:
         logger.error(f"Database operation failed: {str(e)}", exc_info=True)
