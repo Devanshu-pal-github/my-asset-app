@@ -13,6 +13,7 @@ from app.models.assignment_history import (
     AssignmentType
 )
 from app.models.utils import generate_uuid, get_current_datetime, serialize_model
+from dateutil.parser import parse
 
 logger = logging.getLogger(__name__)
 
@@ -174,30 +175,61 @@ def assign_asset_to_employee(
                 # Check assignment policies
                 policies = category.get("assignment_policies", {})
                 
-                # Check department restrictions if applicable
-                assignable_to = policies.get("assignable_to")
-                if assignable_to and assignable_to != "All Departments":
+                # Check if assignment type is allowed
+                allowed_types = policies.get("allowed_assignment_types", [])
+                if allowed_types and assignment.assignment_type not in allowed_types:
+                    logger.warning(f"Assignment type {assignment.assignment_type} not allowed for category {category_id}")
+                    raise ValueError(f"Assignment type '{assignment.assignment_type}' not allowed for this asset category")
+                
+                # Check if employee's department is allowed
+                assignable_to = policies.get("assignable_to_departments", None)
+                if assignable_to and employee:
                     employee_dept = employee.get("department", "")
-                    if employee_dept != assignable_to:
+                    # FIX: Add bypass check
+                    bypass_policy = getattr(assignment, 'bypass_policy', False)
+                    bypass_reason = getattr(assignment, 'bypass_policy_reason', None)
+                    
+                    if employee_dept != assignable_to and not bypass_policy:
                         logger.warning(f"Employee department {employee_dept} not allowed to be assigned assets from category {category_id}")
                         raise ValueError(f"Employee in department '{employee_dept}' cannot be assigned assets from category '{category.get('category_name', 'Unknown')}'")
+                    elif employee_dept != assignable_to and bypass_policy:
+                        # Log the bypass but allow the assignment
+                        logger.warning(f"Bypassing department restriction for employee {assignment.employee_id} (dept: {employee_dept}) to asset {assignment.asset_id} from category {category.get('category_name', 'Unknown')}. Reason: {bypass_reason}")
         
         # Create assignment history entry
         current_time = get_current_datetime()
         
         # Calculate end date if assignment has a duration
         end_date = None
-        if assignment.duration and assignment.duration > 0:
-            if assignment.duration_unit == "days":
+        if hasattr(assignment, 'duration') and assignment.duration and assignment.duration > 0:
+            if hasattr(assignment, 'duration_unit') and assignment.duration_unit:
+                duration_unit = assignment.duration_unit
+            else:
+                # Default to days if no unit specified
+                duration_unit = "days"
+                
+            if duration_unit == "days":
                 end_date = current_time + timedelta(days=assignment.duration)
-            elif assignment.duration_unit == "weeks":
+            elif duration_unit == "weeks":
                 end_date = current_time + timedelta(weeks=assignment.duration)
-            elif assignment.duration_unit == "months":
+            elif duration_unit == "months":
                 # Approximate months as 30 days
                 end_date = current_time + timedelta(days=30 * assignment.duration)
-            elif assignment.duration_unit == "years":
+            elif duration_unit == "years":
                 # Approximate years as 365 days
                 end_date = current_time + timedelta(days=365 * assignment.duration)
+        elif hasattr(assignment, 'expected_return_date') and assignment.expected_return_date:
+            try:
+                # Parse expected_return_date string to datetime
+                end_date = parse(assignment.expected_return_date)
+            except Exception as e:
+                logger.warning(f"Failed to parse expected_return_date: {e}")
+                # Use default 1 year if parsing fails
+                end_date = current_time + timedelta(days=365)
+        else:
+            # Default to 1 year if no duration or return date specified
+            end_date = current_time + timedelta(days=365)
+            logger.info("No duration or expected_return_date specified, defaulting to 1 year")
         
         assignment_dict = {
             "id": generate_uuid(),

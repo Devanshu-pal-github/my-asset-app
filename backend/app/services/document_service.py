@@ -13,6 +13,7 @@ from app.models.document import (
 from app.models.utils import get_current_datetime, serialize_model
 import logging
 from app.dependencies import get_db
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -148,8 +149,17 @@ def create_document(db: Database, document: DocumentCreate, skip_validation: boo
         # Check for duplicate file_url - use explicit collection
         existing = collection.find_one({"file_url": document.file_url})
         if existing:
-            logger.warning(f"Document with file_url {document.file_url} already exists")
-            raise ValueError(f"Document with file_url {document.file_url} already exists")
+            # FIX: Instead of raising an error, make the URL unique by adding a timestamp
+            timestamp = int(time.time() * 1000)  # Millisecond timestamp
+            
+            # Extract base URL and extension
+            if "." in document.file_url:
+                base, ext = document.file_url.rsplit(".", 1)
+                document.file_url = f"{base}_{timestamp}.{ext}"
+            else:
+                document.file_url = f"{document.file_url}_{timestamp}"
+                
+            logger.info(f"Made URL unique by adding timestamp: {document.file_url}")
         
         # Create a full Document from DocumentCreate
         doc = Document(
@@ -187,8 +197,8 @@ def create_document(db: Database, document: DocumentCreate, skip_validation: boo
         logger.info(f"Created document with ID: {doc.id}")
         return doc
     except DuplicateKeyError:
-        logger.warning(f"Duplicate file_url: {document.file_url}")
-        raise ValueError(f"Document with file_url {document.file_url} already exists")
+        logger.warning(f"Duplicate key error for file_url: {document.file_url}")
+        raise ValueError(f"Document with ID or name already exists")
     except PyMongoError as e:
         logger.error(f"Database error creating document: {str(e)}", exc_info=True)
         raise

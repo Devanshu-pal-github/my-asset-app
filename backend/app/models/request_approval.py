@@ -158,8 +158,14 @@ class RequestCreate(BaseModel):
     department: Optional[str] = None
     location: Optional[str] = None
     due_date: Optional[str] = None
-    approvers: Optional[List[Approver]] = None
-    comments: Optional[List[RequestComment]] = None
+    approvers: Optional[List[Approver]] = Field(default_factory=list)
+    comments: Optional[List[RequestComment]] = Field(default_factory=list)
+    reference_number: Optional[str] = None
+    approval_path: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    attachments: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    linked_assets: Optional[List[str]] = Field(default_factory=list)
+    linked_employees: Optional[List[str]] = Field(default_factory=list)
+    is_active: Optional[bool] = True
     
     model_config = model_config
 

@@ -488,3 +488,509 @@ Traceback (most recent call last):
 TypeError: 'Collection' object is not callable. If you meant to call the 'get_collection' method on a 'Collection' object it is failing because no such method exists.
 2025-05-18 22:37:16 - app.main - WARNING - Request failed: POST /api/requests/ - Status: 500
 2025-05-19 01:28:46 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 01:28:56 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 01:28:56 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 01:28:56 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 01:28:56 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 01:28:56 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 01:28:56 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 01:28:56 - app.main - INFO - All database indexes verified
+2025-05-19 01:28:56 - app.main - INFO - Server started successfully!
+2025-05-19 01:28:56 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 01:29:08 - app.main - INFO - Request: POST /api/requests/
+2025-05-19 01:29:08 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSET_REQUEST
+2025-05-19 01:34:09 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 01:34:19 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 01:34:19 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 01:34:19 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 01:34:20 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 01:34:20 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 01:34:20 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 01:34:20 - app.main - INFO - All database indexes verified
+2025-05-19 01:34:20 - app.main - INFO - Server started successfully!
+2025-05-19 01:34:20 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 05:24:54 - app.main - INFO - Request: POST /api/v1/categories
+2025-05-19 05:24:54 - app.main - WARNING - Request failed: POST /api/v1/categories - Status: 404
+2025-05-19 05:25:03 - app.main - INFO - Request: POST /api/categories
+2025-05-19 05:25:03 - app.main - WARNING - Request failed: POST /api/categories - Status: 404
+2025-05-19 05:40:05 - app.main - INFO - Request: POST /api/asset-categories
+2025-05-19 05:40:05 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-19 05:40:05 - app.routers.asset_categories - INFO - Creating asset category: Software Licenses
+2025-05-19 05:40:05 - app.services.asset_category_service - INFO - Creating category: Software Licenses
+2025-05-19 05:40:05 - app.services.asset_category_service - INFO - Created category with ID: 8211a835-bed3-4aab-89b6-a020b07d41cc
+2025-05-19 05:42:33 - app.main - INFO - Request: POST /api/asset-categories
+2025-05-19 05:42:33 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-19 05:42:33 - app.routers.asset_categories - INFO - Creating asset category: Mobile Phones
+2025-05-19 05:42:33 - app.services.asset_category_service - INFO - Creating category: Mobile Phones
+2025-05-19 05:42:33 - app.services.asset_category_service - INFO - Created category with ID: 4ffde1a3-b8f6-41c3-8894-ee1385360845
+2025-05-19 05:42:59 - app.main - INFO - Request: POST /api/asset-items
+2025-05-19 05:42:59 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 05:42:59 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 422
+2025-05-19 05:44:07 - app.main - INFO - Request: POST /api/asset-items
+2025-05-19 05:44:07 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 05:44:07 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 422
+2025-05-19 05:44:39 - app.main - INFO - Request: POST /api/employees
+2025-05-19 05:44:39 - app.main - INFO - Request: POST /api/employees/
+2025-05-19 05:44:39 - app.routers.employees - INFO - Creating employee: EMP003
+2025-05-19 05:44:39 - app.services.employee_service - INFO - Creating employee: Sarah Johnson
+2025-05-19 05:44:39 - app.services.employee_service - INFO - Created employee with ID: 50428004-84a3-44e5-ae0c-a7e5cccdedfa
+2025-05-19 05:45:51 - app.main - INFO - Request: POST /api/employees
+2025-05-19 05:45:51 - app.main - INFO - Request: POST /api/employees/
+2025-05-19 05:45:51 - app.routers.employees - INFO - Creating employee: EMP004
+2025-05-19 05:45:51 - app.services.employee_service - INFO - Creating employee: Michael Brown
+2025-05-19 05:45:51 - app.services.employee_service - INFO - Created employee with ID: fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 05:46:21 - app.main - INFO - Request: POST /api/documents
+2025-05-19 05:46:21 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 05:46:21 - app.routers.documents - INFO - POST /documents/
+2025-05-19 05:46:21 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 05:46:21 - app.services.document_service - WARNING - Uploader not found: EMP001
+2025-05-19 05:46:21 - app.services.document_service - ERROR - Error creating document: Uploader not found
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 141, in create_document
+    raise ValueError("Uploader not found")
+ValueError: Uploader not found
+2025-05-19 05:46:21 - app.routers.documents - WARNING - Validation error in create_new_document: Uploader not found
+2025-05-19 05:46:21 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 13:10:58 - app.main - INFO - Request: POST /api/documents
+2025-05-19 13:10:58 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 13:10:58 - app.routers.documents - INFO - POST /documents/
+2025-05-19 13:10:58 - app.services.document_service - INFO - Creating document - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 13:10:58 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/warranty_dell_xps13.pdf
+2025-05-19 13:10:58 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/warranty_dell_xps13.pdf already exists
+2025-05-19 13:10:58 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 13:11:18 - app.main - INFO - Request: POST /api/maintenance-history/
+2025-05-19 13:11:18 - app.main - INFO - Request: POST /api/maintenance-history
+2025-05-19 13:11:18 - app.routers.maintenance_history - INFO - Creating maintenance history entry for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-19 13:11:41 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-19 13:11:41 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-19 13:12:01 - app.main - INFO - Request: POST /api/requests/
+2025-05-19 13:12:01 - app.main - WARNING - Request failed: POST /api/requests/ - Status: 422
+2025-05-19 16:17:14 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 16:17:14 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 16:17:14 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 16:17:14 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 16:17:14 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 16:17:14 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 16:17:15 - app.main - INFO - All database indexes verified
+2025-05-19 16:17:15 - app.main - INFO - Server started successfully!
+2025-05-19 16:17:15 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 16:18:18 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 16:18:18 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 422
+2025-05-19 16:18:45 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:18:45 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 422
+2025-05-19 16:18:49 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:18:49 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:18:49 - app.services.document_service - INFO - Creating document - asset_id: None, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:18:49 - app.services.document_service - WARNING - At least one of asset_id or employee_id required
+2025-05-19 16:18:49 - app.services.document_service - ERROR - Error creating document: At least one of asset_id or employee_id must be provided
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 108, in create_document
+    raise ValueError("At least one of asset_id or employee_id must be provided")
+ValueError: At least one of asset_id or employee_id must be provided
+2025-05-19 16:18:49 - app.routers.documents - WARNING - Validation error in create_new_document: At least one of asset_id or employee_id must be provided
+2025-05-19 16:18:49 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:19:22 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-19 16:19:22 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-19 16:19:38 - app.main - INFO - Request: POST /api/requests/
+2025-05-19 16:19:38 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSET_REQUEST
+2025-05-19 16:20:01 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 16:20:01 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 422
+2025-05-19 16:20:22 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 16:20:22 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 422
+2025-05-19 16:26:08 - app.main - INFO - Request: GET /docs
+2025-05-19 16:26:09 - app.main - INFO - Request: GET /openapi.json
+2025-05-19 16:31:46 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 16:31:56 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 16:31:56 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 16:31:56 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 16:31:56 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 16:31:56 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 16:31:56 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 16:31:56 - app.main - INFO - All database indexes verified
+2025-05-19 16:31:56 - app.main - INFO - Server started successfully!
+2025-05-19 16:31:56 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 16:32:03 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-19 16:32:04 - app.routers.asset_categories - INFO - Creating asset category: Network Equipment
+2025-05-19 16:32:04 - app.services.asset_category_service - INFO - Creating category: Network Equipment
+2025-05-19 16:32:04 - app.services.asset_category_service - INFO - Created category with ID: 5c2d5cc3-5d45-4a1d-8c52-56c5bfd7182b
+2025-05-19 16:32:21 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 16:32:21 - app.routers.asset_items - INFO - Creating asset item: Cisco Catalyst 2960-X
+2025-05-19 16:32:21 - app.services.asset_item_service - INFO - Creating asset: Cisco Catalyst 2960-X
+2025-05-19 16:32:21 - app.services.asset_item_service - WARNING - Category not found: [NETWORK_EQUIPMENT_CATEGORY_ID]
+2025-05-19 16:32:21 - app.routers.asset_items - WARNING - Failed to create asset item: Category with ID '[NETWORK_EQUIPMENT_CATEGORY_ID]' does not exist
+2025-05-19 16:32:21 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 400
+2025-05-19 16:32:58 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 16:32:58 - app.routers.asset_items - INFO - Creating asset item: Cisco Catalyst 2960-X
+2025-05-19 16:32:58 - app.services.asset_item_service - INFO - Creating asset: Cisco Catalyst 2960-X
+2025-05-19 16:32:59 - app.services.asset_item_service - INFO - Created asset with ID: 76ad2e00-5c0d-4e3c-9307-5114330e425c
+2025-05-19 16:33:17 - app.main - INFO - Request: POST /api/employees/
+2025-05-19 16:33:17 - app.routers.employees - INFO - Creating employee: EMP005
+2025-05-19 16:33:17 - app.services.employee_service - INFO - Creating employee: David Garcia
+2025-05-19 16:33:18 - app.services.employee_service - INFO - Created employee with ID: 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 16:33:34 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:33:34 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:33:34 - app.services.document_service - INFO - Creating document - asset_id: [CISCO_SWITCH_ASSET_ID], employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:33:34 - app.services.document_service - WARNING - Asset not found: [CISCO_SWITCH_ASSET_ID]
+2025-05-19 16:33:34 - app.services.document_service - ERROR - Error creating document: Asset not found
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\document_service.py", line 129, in create_document
+    raise ValueError("Asset not found")
+ValueError: Asset not found
+2025-05-19 16:33:34 - app.routers.documents - WARNING - Validation error in create_new_document: Asset not found
+2025-05-19 16:33:34 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:34:30 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:34:30 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:34:30 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:34:30 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/cisco_warranty_2960x.pdf
+2025-05-19 16:34:30 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/cisco_warranty_2960x.pdf already exists
+2025-05-19 16:34:30 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:39:09 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 16:39:09 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 422
+2025-05-19 16:40:46 - app.main - INFO - Request: POST /api/maintenance-history
+2025-05-19 16:40:46 - app.routers.maintenance_history - INFO - Creating maintenance history entry for asset 76ad2e00-5c0d-4e3c-9307-5114330e425c
+2025-05-19 16:40:46 - app.routers.maintenance_history - ERROR - Failed to create maintenance history: E11000 duplicate key error collection: asset_management.maintenance_history index: id_1 dup key: { id: null }, full error: {'index': 0, 'code': 11000, 'errmsg': 'E11000 duplicate key error collection: asset_management.maintenance_history index: id_1 dup key: { id: null }', 'keyPattern': {'id': 1}, 'keyValue': {'id': None}}
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\maintenance_history.py", line 38, in create_maintenance_history
+    result = db.maintenance_history.insert_one(maintenance.model_dump(exclude_unset=True))
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 870, in insert_one
+    self._insert_one(
+    ~~~~~~~~~~~~~~~~^
+        document,
+        ^^^^^^^^^
+    ...<5 lines>...
+        comment=comment,
+        ^^^^^^^^^^^^^^^^
+    ),
+    ^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 810, in _insert_one
+    self._database.client._retryable_write(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        acknowledged, _insert_command, session, operation=_Op.INSERT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\mongo_client.py", line 1898, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\mongo_client.py", line 1784, in _retry_with_session
+    return self._retry_internal(
+           ~~~~~~~~~~~~~~~~~~~~^
+        func=func,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        operation_id=operation_id,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\_csot.py", line 120, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\mongo_client.py", line 1830, in _retry_internal
+    ).run()
+      ~~~^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\mongo_client.py", line 2554, in run
+    return self._read() if self._is_read else self._write()
+                                              ~~~~~~~~~~~^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\mongo_client.py", line 2676, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\synchronous\collection.py", line 808, in _insert_command
+    _check_write_command_response(result)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\helpers_shared.py", line 285, in _check_write_command_response
+    _raise_last_write_error(write_errors)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymongo\helpers_shared.py", line 255, in _raise_last_write_error
+    raise DuplicateKeyError(error.get("errmsg"), 11000, error)
+pymongo.errors.DuplicateKeyError: E11000 duplicate key error collection: asset_management.maintenance_history index: id_1 dup key: { id: null }, full error: {'index': 0, 'code': 11000, 'errmsg': 'E11000 duplicate key error collection: asset_management.maintenance_history index: id_1 dup key: { id: null }', 'keyPattern': {'id': 1}, 'keyValue': {'id': None}}
+2025-05-19 16:40:47 - app.main - WARNING - Request failed: POST /api/maintenance-history - Status: 500
+2025-05-19 16:42:09 - app.main - INFO - Request: POST /api/requests/
+2025-05-19 16:42:09 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSET_REQUEST
+2025-05-19 16:42:37 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-19 16:42:37 - app.routers.asset_categories - INFO - Creating asset category: Office Furniture
+2025-05-19 16:42:37 - app.services.asset_category_service - INFO - Creating category: Office Furniture
+2025-05-19 16:42:37 - app.services.asset_category_service - INFO - Created category with ID: b26222e4-7867-4c78-a3e3-17abd46d6897
+2025-05-19 16:43:17 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-19 16:43:17 - app.routers.asset_items - INFO - Creating asset item: Herman Miller Aeron Chair
+2025-05-19 16:43:17 - app.services.asset_item_service - INFO - Creating asset: Herman Miller Aeron Chair
+2025-05-19 16:43:18 - app.services.asset_item_service - INFO - Created asset with ID: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac
+2025-05-19 16:44:24 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:44:24 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:44:24 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:44:24 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/herman_miller_warranty.pdf
+2025-05-19 16:44:24 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/herman_miller_warranty.pdf already exists
+2025-05-19 16:44:24 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:45:25 - app.main - INFO - Request: POST /api/requests/
+2025-05-19 16:45:25 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSET_REQUEST
+2025-05-19 16:46:23 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 16:46:23 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 422
+2025-05-19 16:53:26 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:53:26 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:53:26 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:53:26 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/cisco_warranty_2960x_v2.pdf
+2025-05-19 16:53:26 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/cisco_warranty_2960x_v2.pdf already exists
+2025-05-19 16:53:26 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:53:49 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:53:49 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:53:49 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:53:50 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/cisco_warranty_2960x_v2.pdf
+2025-05-19 16:53:50 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/cisco_warranty_2960x_v2.pdf already exists
+2025-05-19 16:53:50 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:54:01 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:54:01 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:54:01 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:54:01 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/herman_miller_warranty_v2.pdf
+2025-05-19 16:54:01 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/herman_miller_warranty_v2.pdf already exists
+2025-05-19 16:54:01 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:54:12 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 16:54:12 - app.routers.documents - INFO - POST /documents/
+2025-05-19 16:54:12 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 16:54:12 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/documents/heerman_miller_warranty_v2.pdf
+2025-05-19 16:54:12 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/documents/heerman_miller_warranty_v2.pdf already exists
+2025-05-19 16:54:12 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 16:54:44 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 16:54:44 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 16:54:44 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee None
+2025-05-19 16:54:44 - app.services.assignment_history_service - WARNING - Employee not found: None
+2025-05-19 16:54:44 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee with ID None not found
+2025-05-19 16:54:44 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 16:55:17 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 16:55:17 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 16:55:17 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee None
+2025-05-19 16:55:17 - app.services.assignment_history_service - WARNING - Employee not found: None
+2025-05-19 16:55:17 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee with ID None not found
+2025-05-19 16:55:17 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 16:56:02 - app.main - INFO - Request: POST /api/maintenance-history
+2025-05-19 16:56:02 - app.routers.maintenance_history - INFO - Creating maintenance history entry for asset 76ad2e00-5c0d-4e3c-9307-5114330e425c
+2025-05-19 16:56:22 - app.main - INFO - Request: POST /api/maintenance-history
+2025-05-19 16:56:22 - app.routers.maintenance_history - INFO - Creating maintenance history entry for asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac
+2025-05-19 17:03:50 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:03:50 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:03:50 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:03:50 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/docs/cisco_2960x_manual_1234.pdf
+2025-05-19 17:03:50 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/docs/cisco_2960x_manual_1234.pdf already exists
+2025-05-19 17:03:50 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:04:00 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:04:00 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:04:00 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:04:00 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/docs/aeron_assembly_guide_5678.pdf
+2025-05-19 17:04:00 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/docs/aeron_assembly_guide_5678.pdf already exists
+2025-05-19 17:04:00 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:04:28 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:04:28 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 422
+2025-05-19 17:04:45 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:04:45 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 422
+2025-05-19 17:05:28 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:05:28 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 422
+2025-05-19 17:05:46 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:05:46 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 422
+2025-05-19 17:07:02 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:07:02 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:07:02 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:07:02 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/docs/cisco_2960x_technical_manual_unique1.pdf
+2025-05-19 17:07:02 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/docs/cisco_2960x_technical_manual_unique1.pdf already exists
+2025-05-19 17:07:02 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:07:13 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 17:07:22 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 17:07:22 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 17:07:22 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 17:07:22 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 17:07:22 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 17:07:22 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 17:07:22 - app.main - INFO - All database indexes verified
+2025-05-19 17:07:22 - app.main - INFO - Server started successfully!
+2025-05-19 17:07:22 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 17:07:25 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:07:25 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:07:25 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:07:25 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/docs/cisco_2960x_technical_manual_unique1.pdf
+2025-05-19 17:07:25 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/docs/cisco_2960x_technical_manual_unique1.pdf already exists
+2025-05-19 17:07:25 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:07:32 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:07:32 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:07:32 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:07:32 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/docs/aeron_chair_manual_unique2.pdf
+2025-05-19 17:07:32 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/docs/aeron_chair_manual_unique2.pdf already exists
+2025-05-19 17:07:32 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:07:54 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:07:54 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:07:54 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:07:54 - app.services.assignment_history_service - WARNING - Employee department IT not allowed to be assigned assets from category 5c2d5cc3-5d45-4a1d-8c52-56c5bfd7182b
+2025-05-19 17:07:55 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee in department 'IT' cannot be assigned assets from category 'Network Equipment'
+2025-05-19 17:07:55 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 17:08:19 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:08:19 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 17:08:19 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 17:08:19 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'duration'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 190, in assign_asset_to_employee
+    if assignment.duration and assignment.duration > 0:
+       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'duration'. Did you mean: 'location'?
+2025-05-19 17:08:19 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'duration'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 190, in assign_asset_to_employee
+    if assignment.duration and assignment.duration > 0:
+       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'duration'. Did you mean: 'location'?
+2025-05-19 17:08:19 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 17:09:46 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:09:46 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:09:46 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:09:46 - app.services.assignment_history_service - WARNING - Employee department IT not allowed to be assigned assets from category 5c2d5cc3-5d45-4a1d-8c52-56c5bfd7182b
+2025-05-19 17:09:46 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee in department 'IT' cannot be assigned assets from category 'Network Equipment'
+2025-05-19 17:09:46 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 17:10:01 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 17:10:10 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 17:10:10 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 17:10:10 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 17:10:10 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 17:10:10 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 17:10:10 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 17:10:11 - app.main - INFO - All database indexes verified
+2025-05-19 17:10:11 - app.main - INFO - Server started successfully!
+2025-05-19 17:10:11 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 17:10:15 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:10:15 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:10:15 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:10:15 - app.services.assignment_history_service - WARNING - Employee department IT not allowed to be assigned assets from category 5c2d5cc3-5d45-4a1d-8c52-56c5bfd7182b
+2025-05-19 17:10:15 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee in department 'IT' cannot be assigned assets from category 'Network Equipment'
+2025-05-19 17:10:15 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 17:10:23 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:10:23 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 17:10:23 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 17:10:23 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'duration'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 190, in assign_asset_to_employee
+    if assignment.duration and assignment.duration > 0:
+       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'duration'. Did you mean: 'location'?
+2025-05-19 17:10:23 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'duration'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 190, in assign_asset_to_employee
+    if assignment.duration and assignment.duration > 0:
+       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'duration'. Did you mean: 'location'?
+2025-05-19 17:10:23 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 17:10:37 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:10:37 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:10:37 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:10:38 - app.services.document_service - WARNING - Duplicate file_url: https://storage.example.com/docs/cisco_manual_20250519170923.pdf
+2025-05-19 17:10:38 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url https://storage.example.com/docs/cisco_manual_20250519170923.pdf already exists
+2025-05-19 17:10:38 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:10:58 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:10:58 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:10:58 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:10:59 - app.services.assignment_history_service - WARNING - Employee department IT not allowed to be assigned assets from category 5c2d5cc3-5d45-4a1d-8c52-56c5bfd7182b
+2025-05-19 17:10:59 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee in department 'IT' cannot be assigned assets from category 'Network Equipment'
+2025-05-19 17:10:59 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 17:11:10 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:11:10 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:11:10 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:11:10 - app.services.document_service - WARNING - Duplicate file_url: mongodb://custom/document/cisco_manual_1590483726.pdf
+2025-05-19 17:11:10 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url mongodb://custom/document/cisco_manual_1590483726.pdf already exists
+2025-05-19 17:11:10 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:11:17 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:11:17 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:11:17 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 17:11:17 - app.services.document_service - WARNING - Duplicate file_url: mongodb://custom/document/aeron_warranty_8273649152.pdf
+2025-05-19 17:11:17 - app.routers.documents - WARNING - Validation error in create_new_document: Document with file_url mongodb://custom/document/aeron_warranty_8273649152.pdf already exists
+2025-05-19 17:11:17 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:15:47 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 17:15:56 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 17:15:56 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 17:15:56 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 17:15:57 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 17:15:57 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 17:15:57 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 17:15:57 - app.main - INFO - All database indexes verified
+2025-05-19 17:15:57 - app.main - INFO - Server started successfully!
+2025-05-19 17:15:57 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 17:16:08 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:16:08 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:16:08 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:16:08 - app.services.document_service - WARNING - Duplicate key error for file_url: https://storage.example.com/docs/cisco_switch_manual_v1.pdf
+2025-05-19 17:16:08 - app.routers.documents - WARNING - Validation error in create_new_document: Document with ID or name already exists
+2025-05-19 17:16:08 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:16:31 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:16:31 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:16:31 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee None
+2025-05-19 17:16:31 - app.services.assignment_history_service - WARNING - Employee not found: None
+2025-05-19 17:16:31 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee with ID None not found
+2025-05-19 17:16:31 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 17:23:19 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:23:19 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:23:19 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:23:19 - app.services.document_service - WARNING - Duplicate key error for file_url: https://storage.example.com/docs/cisco_catalyst_guide_v23_1716211982.pdf
+2025-05-19 17:23:19 - app.routers.documents - WARNING - Validation error in create_new_document: Document with ID or name already exists
+2025-05-19 17:23:19 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:23:40 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:23:40 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 422
+2025-05-19 17:23:50 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:23:50 - app.routers.assignment_history - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:23:50 - app.services.assignment_history_service - INFO - Assigning asset 76ad2e00-5c0d-4e3c-9307-5114330e425c to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 17:23:50 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 17:23:50 - app.routers.assignment_history - ERROR - Failed to assign asset 76ad2e00-5c0d-4e3c-9307-5114330e425c: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 17:23:50 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 17:24:24 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:24:24 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:24:24 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 17:24:24 - app.services.document_service - WARNING - Duplicate key error for file_url: https://storage.example.com/docs/aeron_warranty_cert_1716211983.pdf
+2025-05-19 17:24:24 - app.routers.documents - WARNING - Validation error in create_new_document: Document with ID or name already exists
+2025-05-19 17:24:24 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:24:37 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 17:24:37 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 17:24:37 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 17:24:37 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 17:24:37 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 17:24:37 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 17:28:10 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:28:10 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:28:10 - app.services.document_service - INFO - Creating document - asset_id: 76ad2e00-5c0d-4e3c-9307-5114330e425c, employee_id: None, type: DocumentType.MANUAL
+2025-05-19 17:28:10 - app.services.document_service - WARNING - Duplicate key error for file_url: https://storage.example.com/docs/cisco-catalyst-2960x-manual-e8f293a7dc146b89.pdf
+2025-05-19 17:28:10 - app.routers.documents - WARNING - Validation error in create_new_document: Document with ID or name already exists
+2025-05-19 17:28:10 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
+2025-05-19 17:28:17 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========

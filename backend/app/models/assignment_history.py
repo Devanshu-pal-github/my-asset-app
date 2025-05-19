@@ -154,6 +154,12 @@ class AssignmentCreate(BaseModel):
     entity_type: Optional[str] = None
     condition_at_assignment: Optional[str] = None
     
+    # Added missing fields
+    duration: Optional[int] = None
+    duration_unit: Optional[str] = "days"
+    bypass_policy: Optional[bool] = False
+    bypass_policy_reason: Optional[str] = None
+    
     # Aliases for frontend compatibility
     assigned_at: Optional[str] = None
     notes: Optional[str] = None
