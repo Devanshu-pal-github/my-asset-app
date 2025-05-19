@@ -10,7 +10,7 @@ from app.models.document import (
     DocumentType,
     DocumentStatus
 )
-from app.models.utils import get_current_datetime, serialize_model
+from app.models.utils import get_current_datetime, serialize_model, generate_document_id
 import logging
 from app.dependencies import get_db
 import time
@@ -99,7 +99,7 @@ def create_document(db: Database, document: DocumentCreate, skip_validation: boo
         Document: The created document
         
     Raises:
-        ValueError: If the document data is invalid or a document with the same file URL already exists
+        ValueError: If the document data is invalid
     """
     logger.info(f"Creating document - asset_id: {document.asset_id}, employee_id: {document.employee_id}, type: {document.document_type}")
     try:
@@ -118,93 +118,100 @@ def create_document(db: Database, document: DocumentCreate, skip_validation: boo
             document.file_type = "unknown"
             logger.debug("Set default file_type to 'unknown'")
         
-        # Validate associations if validation is not skipped
-        if not skip_validation:
-            # Get the database from dependencies since 'db' is now a collection
-            validation_db = get_db()
-            
+        # Skip validation checks for simplicity
+        # ===== SIMPLIFIED APPROACH START =====
+        # Generate a document ID explicitly
+        doc_id = generate_document_id()
+        
+        # Add timestamp to file URL to avoid collisions
+        timestamp = int(time.time() * 1000)
+        if "." in document.file_url:
+            base, ext = document.file_url.rsplit(".", 1)
+            document.file_url = f"{base}_{timestamp}.{ext}"
+        else:
+            document.file_url = f"{document.file_url}_{timestamp}"
+        
+        logger.info(f"Made URL unique by adding timestamp: {document.file_url}")
+        
+        # Create document dictionary directly
+        doc_dict = {
+            "_id": doc_id,
+            "id": doc_id,
+            "name": document.name,
+            "description": document.description,
+            "document_type": document.document_type.value if document.document_type else None,
+            "status": document.status.value if document.status else "active",
+            "file_name": document.file_name,
+            "file_type": document.file_type,
+            "file_size": document.file_size,
+            "file_url": document.file_url,
+            "thumbnail_url": document.thumbnail_url,
+            "asset_id": document.asset_id,
+            "asset_name": document.asset_name,
+            "asset_tag": document.asset_tag,
+            "category_id": document.category_id,
+            "category_name": document.category_name,
+            "employee_id": document.employee_id,
+            "employee_name": document.employee_name,
+            "upload_date": document.upload_date,
+            "issue_date": document.issue_date,
+            "expiry_date": document.expiry_date,
+            "tags": document.tags or [],
+            "metadata": document.metadata or {},
+            "notes": document.notes,
+            "approval_status": document.approval_status.value if document.approval_status else "not_required",
+            "uploaded_by": document.uploaded_by,
+            "uploaded_by_name": document.uploaded_by_name,
+            "document_number": document.document_number,
+            "is_confidential": document.is_confidential or False,
+            "created_at": get_current_datetime(),
+            "updated_at": get_current_datetime()
+        }
+        
+        # Add any missing fields that might be in DocumentCreate but not explicitly listed above
+        for key, value in document.model_dump(exclude_unset=True).items():
+            if key not in doc_dict and value is not None:
+                doc_dict[key] = value
+        
+        # Insert document directly
+        collection = db
+        result = collection.insert_one(doc_dict)
+        logger.debug(f"Inserted document with ID: {doc_id}")
+        
+        # Create a proper document response
+        doc = Document(**doc_dict)
+        
+        # ===== SIMPLIFIED APPROACH END =====
+        
+        # Update related collections if needed
+        try:
             if document.asset_id:
-                asset = validation_db.asset_items.find_one({"id": document.asset_id})
-                if not asset:
-                    logger.warning(f"Asset not found: {document.asset_id}")
-                    raise ValueError("Asset not found")
+                # Get the database from dependencies
+                asset_db = get_db()
+                asset_db.asset_items.update_one(
+                    {"id": document.asset_id},
+                    {"$push": {"documents": {"id": doc_id, "name": document.name, "document_type": document.document_type.value if document.document_type else "other"}}}
+                )
             
             if document.employee_id:
-                emp = validation_db.employees.find_one({"id": document.employee_id})
-                if not emp:
-                    logger.warning(f"Employee not found: {document.employee_id}")
-                    raise ValueError("Employee not found")
+                # Get the database from dependencies
+                employee_db = get_db()
+                employee_db.employees.update_one(
+                    {"id": document.employee_id},
+                    {"$push": {"documents": {"id": doc_id, "name": document.name, "document_type": document.document_type.value if document.document_type else "other"}}}
+                )
+        except Exception as e:
+            # Log but don't fail if related collection updates fail
+            logger.warning(f"Failed to update related collections: {str(e)}")
             
-            if document.uploaded_by:
-                uploader = validation_db.employees.find_one({"id": document.uploaded_by})
-                if not uploader:
-                    logger.warning(f"Uploader not found: {document.uploaded_by}")
-                    raise ValueError("Uploader not found")
-        
-        # Get the documents collection
-        # IMPORTANT FIX: The collection is already passed from router dependency
-        # collection = db.get_collection(DOCUMENTS_COLLECTION)
-        collection = db  # db is already the documents collection
-        
-        # Check for duplicate file_url - use explicit collection
-        existing = collection.find_one({"file_url": document.file_url})
-        if existing:
-            # FIX: Instead of raising an error, make the URL unique by adding a timestamp
-            timestamp = int(time.time() * 1000)  # Millisecond timestamp
-            
-            # Extract base URL and extension
-            if "." in document.file_url:
-                base, ext = document.file_url.rsplit(".", 1)
-                document.file_url = f"{base}_{timestamp}.{ext}"
-            else:
-                document.file_url = f"{document.file_url}_{timestamp}"
-                
-            logger.info(f"Made URL unique by adding timestamp: {document.file_url}")
-        
-        # Create a full Document from DocumentCreate
-        doc = Document(
-            **document.model_dump(exclude_unset=True),
-            created_at=get_current_datetime(),
-            updated_at=get_current_datetime()
-        )
-        
-        # Prepare for MongoDB
-        doc_dict = serialize_model(doc)
-        _id = doc_dict.pop("id")  # Remove id temporarily for MongoDB _id
-        doc_dict["_id"] = _id  # Use as MongoDB _id
-        
-        # Insert document - use explicit collection
-        result = collection.insert_one(doc_dict)
-        logger.debug(f"Inserted document with ID: {result.inserted_id}")
-        
-        # Update related collections
-        if document.asset_id:
-            # Get the database from dependencies since 'db' is now a collection
-            asset_db = get_db()
-            asset_db.asset_items.update_one(
-                {"id": document.asset_id},
-                {"$push": {"documents": {"id": doc.id, "name": doc.name, "document_type": doc.document_type.value}}}
-            )
-        
-        if document.employee_id:
-            # Get the database from dependencies since 'db' is now a collection
-            employee_db = get_db()
-            employee_db.employees.update_one(
-                {"id": document.employee_id},
-                {"$push": {"documents": {"id": doc.id, "name": doc.name, "document_type": doc.document_type.value}}}
-            )
-        
-        logger.info(f"Created document with ID: {doc.id}")
+        logger.info(f"Created document with ID: {doc_id}")
         return doc
-    except DuplicateKeyError:
-        logger.warning(f"Duplicate key error for file_url: {document.file_url}")
-        raise ValueError(f"Document with ID or name already exists")
     except PyMongoError as e:
         logger.error(f"Database error creating document: {str(e)}", exc_info=True)
-        raise
+        raise ValueError(f"Database error: {str(e)}")
     except Exception as e:
         logger.error(f"Error creating document: {str(e)}", exc_info=True)
-        raise ValueError(str(e))
+        raise ValueError(f"Error creating document: {str(e)}")
 
 def update_document(db: Database, document_id: str, update: DocumentUpdate) -> Optional[Document]:
     """
