@@ -1452,3 +1452,231 @@ pymongo.errors.DuplicateKeyError: E11000 duplicate key error collection: asset_m
 2025-05-19 17:54:53 - app.routers.documents - WARNING - Validation error in create_new_document: Could not create document after retry: E11000 duplicate key error collection: asset_management.documents index: id_1 dup key: { id: null }, full error: {'index': 0, 'code': 11000, 'errmsg': 'E11000 duplicate key error collection: asset_management.documents index: id_1 dup key: { id: null }', 'keyPattern': {'id': 1}, 'keyValue': {'id': None}}
 2025-05-19 17:54:53 - app.main - WARNING - Request failed: POST /api/documents/ - Status: 400
 2025-05-19 17:57:41 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 17:57:53 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 17:57:53 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 17:57:53 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 17:57:53 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 17:57:53 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 17:57:53 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 17:57:53 - app.main - INFO - All database indexes verified
+2025-05-19 17:57:53 - app.main - INFO - Server started successfully!
+2025-05-19 17:57:53 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 17:57:59 - app.main - INFO - Request: POST /api/documents
+2025-05-19 17:57:59 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:57:59 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:57:59 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: None, type: DocumentType.WARRANTY
+2025-05-19 17:57:59 - app.services.document_service - INFO - Made URL unique by adding timestamp: https://storage.company.com/documents/warranties/aeron_chair_warranty_1747657679346.pdf
+2025-05-19 17:57:59 - app.services.document_service - INFO - Created document with ID: DOC-103721D5
+2025-05-19 17:58:08 - app.main - INFO - Request: POST /api/documents
+2025-05-19 17:58:08 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:58:08 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:58:08 - app.services.document_service - INFO - Creating document - asset_id: None, employee_id: 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390, type: DocumentType.CERTIFICATE
+2025-05-19 17:58:08 - app.services.document_service - INFO - Made URL unique by adding timestamp: https://storage.company.com/documents/certifications/david_garcia_ccna_1747657688339.pdf
+2025-05-19 17:58:08 - app.services.document_service - INFO - Created document with ID: DOC-6E4B461D
+2025-05-19 17:58:18 - app.main - INFO - Request: POST /api/documents
+2025-05-19 17:58:18 - app.main - INFO - Request: POST /api/documents/
+2025-05-19 17:58:18 - app.routers.documents - INFO - POST /documents/
+2025-05-19 17:58:18 - app.services.document_service - INFO - Creating document - asset_id: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac, employee_id: fefbcf5d-90a8-4129-9272-8413b843212a, type: DocumentType.CONTRACT
+2025-05-19 17:58:18 - app.services.document_service - INFO - Made URL unique by adding timestamp: https://storage.company.com/documents/assignments/chair_assignment_michael_brown_1747657698982.pdf
+2025-05-19 17:58:19 - app.services.document_service - INFO - Created document with ID: DOC-70C3A29B
+2025-05-19 18:02:04 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 18:02:13 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 18:02:13 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 18:02:13 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 18:02:13 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 18:02:13 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 18:02:13 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 18:02:14 - app.main - INFO - All database indexes verified
+2025-05-19 18:02:14 - app.main - INFO - Server started successfully!
+2025-05-19 18:02:14 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 18:02:41 - app.main - INFO - Request: POST /api/requests
+2025-05-19 18:02:41 - app.main - INFO - Request: POST /api/requests/
+2025-05-19 18:02:41 - app.routers.request - INFO - POST /requests/ - type: RequestType.ASSIGNMENT_APPROVAL
+2025-05-19 18:07:26 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:07:26 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:07:26 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:07:26 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:07:26 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:07:26 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 18:07:40 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 18:07:49 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 18:07:49 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 18:07:49 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 18:07:49 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 18:07:49 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 18:07:49 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 18:07:49 - app.main - INFO - All database indexes verified
+2025-05-19 18:07:49 - app.main - INFO - Server started successfully!
+2025-05-19 18:07:49 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 18:07:53 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:07:53 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:07:53 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:07:53 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:07:53 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:07:53 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 18:08:08 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:08:08 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:08:08 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:08:08 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:08:08 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:08:08 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 18:08:14 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:08:14 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 18:08:14 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 18:08:14 - app.services.assignment_history_service - ERROR - Error assigning asset: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:08:14 - app.routers.assignment_history - ERROR - Failed to assign asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac: 'AssignmentCreate' object has no attribute 'checked_out_condition'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 66, in assign_asset
+    updated_asset = assign_asset_to_employee(collection, assignment)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 254, in assign_asset_to_employee
+    "checked_out_condition": assignment.checked_out_condition or "good",
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentCreate' object has no attribute 'checked_out_condition'. Did you mean: 'checkout_condition'?
+2025-05-19 18:08:14 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 500
+2025-05-19 18:08:31 - app.main - INFO - Request: POST /api/assignment-history/unassign
+2025-05-19 18:08:31 - app.routers.assignment_history - INFO - Unassigning asset with assignment ID ASSIGNMENT_ID_FROM_RESPONSE
+2025-05-19 18:08:31 - app.routers.assignment_history - ERROR - Failed to unassign assignment ASSIGNMENT_ID_FROM_RESPONSE: 'AssignmentReturn' object has no attribute 'asset_id'
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\routers\assignment_history.py", line 93, in unassign_asset
+    updated_asset = unassign_employee_from_asset(collection, return_data)
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\assignment_history_service.py", line 354, in unassign_employee_from_asset
+    logger.info(f"Unassigning asset {assignment.asset_id}")
+                                     ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 892, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'AssignmentReturn' object has no attribute 'asset_id'
+2025-05-19 18:08:31 - app.main - WARNING - Request failed: POST /api/assignment-history/unassign - Status: 500
+2025-05-19 18:11:53 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:11:53 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:11:53 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee None
+2025-05-19 18:11:53 - app.services.assignment_history_service - WARNING - Employee not found: None
+2025-05-19 18:11:53 - app.routers.assignment_history - WARNING - Failed to assign asset: Employee with ID None not found
+2025-05-19 18:11:53 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 18:12:06 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 18:12:14 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 18:12:14 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 18:12:14 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 18:12:14 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 18:12:14 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 18:12:14 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 18:12:15 - app.main - INFO - All database indexes verified
+2025-05-19 18:12:15 - app.main - INFO - Server started successfully!
+2025-05-19 18:12:15 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-19 18:12:18 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:12:18 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:12:18 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:12:18 - app.services.assignment_history_service - INFO - Updated asset status to assigned: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac
+2025-05-19 18:12:18 - app.services.assignment_history_service - INFO - Updated employee has_assigned_assets: fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:12:18 - app.routers.assignment_history - WARNING - Failed to assign asset: 9 validation errors for AssetItem
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 19, 12, 42, 18, 574000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+documents.0.doc_id
+  Field required [type=missing, input_value={'id': 'DOC-103721D5', 'n...ument_type': 'warranty'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.0.type
+  Field required [type=missing, input_value={'id': 'DOC-103721D5', 'n...ument_type': 'warranty'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.0.url
+  Field required [type=missing, input_value={'id': 'DOC-103721D5', 'n...ument_type': 'warranty'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.0.upload_date
+  Field required [type=missing, input_value={'id': 'DOC-103721D5', 'n...ument_type': 'warranty'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.1.doc_id
+  Field required [type=missing, input_value={'id': 'DOC-70C3A29B', 'n...ument_type': 'contract'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.1.type
+  Field required [type=missing, input_value={'id': 'DOC-70C3A29B', 'n...ument_type': 'contract'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.1.url
+  Field required [type=missing, input_value={'id': 'DOC-70C3A29B', 'n...ument_type': 'contract'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+documents.1.upload_date
+  Field required [type=missing, input_value={'id': 'DOC-70C3A29B', 'n...ument_type': 'contract'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+2025-05-19 18:12:18 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 18:12:34 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:12:34 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:12:34 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee fefbcf5d-90a8-4129-9272-8413b843212a
+2025-05-19 18:12:34 - app.services.assignment_history_service - WARNING - Asset already assigned: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac
+2025-05-19 18:12:34 - app.routers.assignment_history - WARNING - Failed to assign asset: Asset with ID 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac is already assigned
+2025-05-19 18:12:34 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 18:12:42 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-19 18:12:42 - app.routers.assignment_history - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 18:12:42 - app.services.assignment_history_service - INFO - Assigning asset 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac to employee 1be3bc7d-a769-4a40-b2ea-0d2dc1b57390
+2025-05-19 18:12:42 - app.services.assignment_history_service - WARNING - Asset already assigned: 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac
+2025-05-19 18:12:42 - app.routers.assignment_history - WARNING - Failed to assign asset: Asset with ID 4d38e2ff-9d4d-482b-9d8c-429022d0f1ac is already assigned
+2025-05-19 18:12:42 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 400
+2025-05-19 18:14:44 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-19 18:14:57 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-19 18:14:57 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-19 18:14:57 - app.main - INFO - Registering routers with prefix /api
+2025-05-19 18:14:57 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-19 18:14:57 - app.main - INFO - MongoDB connection verified successfully
+2025-05-19 18:14:57 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-19 18:14:57 - app.main - INFO - All database indexes verified
+2025-05-19 18:14:57 - app.main - INFO - Server started successfully!
+2025-05-19 18:14:57 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-20 15:00:33 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-20 15:00:33 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 422
+2025-05-20 15:00:42 - app.main - INFO - Request: POST /api/assignment-history/assign
+2025-05-20 15:00:42 - app.main - WARNING - Request failed: POST /api/assignment-history/assign - Status: 422
+2025-05-20 15:00:45 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
