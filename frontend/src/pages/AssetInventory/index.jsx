@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAssetCategories } from "../../store/slices/assetCategorySlice";
 import logger from "../../utils/logger";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import EditAssetForm from "./components/EditAssetForm";
@@ -90,16 +92,16 @@ const AllottedCategories = ({
 
         return (
           <div
-            key={category._id}
+            key={category.id || category._id}
             className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md hover:scale-102 transition-all duration-200 max-w-[300px] md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.5rem)] min-h-[370px] flex flex-col"
           >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-bold text-gray-900">
-                  {category.category_name}
+                  {category.category_name || category.name}
                 </h3>
                 <p className="text-sm text-gray-500 capitalize">
-                  {category.category_type}
+                  {category.category_type || "Category"}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -201,12 +203,12 @@ const AllottedCategories = ({
             </div>
             <div className="mt-4 flex justify-between items-center">
               <p className="text-base font-bold text-gray-900">
-                {category.total_cost?.toLocaleString("en-IN", {
+                {category.total_cost?.toLocaleString("en-US", {
                   style: "currency",
-                  currency: "INR",
-                }) || "₹0"}
+                  currency: "USD",
+                }) || "$0"}
               </p>
-              <Link to={`/asset-inventory/${category._id}`}>
+              <Link to={`/asset-inventory/${category.id || category._id}`}>
                 <button className="text-blue-600 hover:underline hover:scale-102 text-sm transition-all duration-200">
                   View Details
                 </button>
@@ -222,13 +224,19 @@ const AllottedCategories = ({
 const AssetInventory = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  
+  // Get categories from Redux store
+  const { 
+    categories: reduxCategories, 
+    loading: categoriesLoading, 
+    error: categoriesError 
+  } = useSelector((state) => state.assetCategories);
 
-  // State management for categories and employees (mock data for now)
-  const [categories, setCategories] = useState(initialMockCategories);
-  const [employees, setEmployees] = useState(mockEmployees);
-  const [searchTerm, setSearchTerm] = useState(""); // Search term for categories
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null); // Filter by category
-  const [employeeSearchTerm, setEmployeeSearchTerm] = useState(""); // Search term for employees in the modal
+  // State management for categories and employees
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null);
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
   const [showBulkAllotModal, setShowBulkAllotModal] = useState(false);
   const [showAllotmentModal, setShowAllotmentModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -247,13 +255,18 @@ const AssetInventory = () => {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [categoryToView, setCategoryToView] = useState(null);
 
+  // Mock employees data (to be replaced with API call)
+  const [employees, setEmployees] = useState(mockEmployees);
+
+  // Fetch categories from API on component mount
+  useEffect(() => {
+    logger.info("Fetching asset categories from API");
+    dispatch(fetchAssetCategories());
+  }, [dispatch]);
+
   // Handle new category from AddCategory
   useEffect(() => {
     if (location.state?.newCategory) {
-      setCategories((prev) => [
-        ...prev,
-        { _id: `cat${prev.length + 1}`, ...location.state.newCategory },
-      ]);
       setNotification({
         type: "success",
         message: "Category added successfully",
@@ -265,22 +278,22 @@ const AssetInventory = () => {
     }
   }, [location, navigate]);
 
-  // Compute top card stats
-  const totalAssets = categories.reduce(
+  // Compute top card stats from actual data
+  const totalAssets = reduxCategories.reduce(
     (sum, cat) => sum + (cat.total_assets || 0),
     0
   );
-  const assignedAssets = categories.reduce(
+  const assignedAssets = reduxCategories.reduce(
     (sum, cat) => sum + (cat.assigned_assets || 0),
     0
   );
-  const totalCost = categories.reduce(
+  const totalCost = reduxCategories.reduce(
     (sum, cat) => sum + (cat.total_cost || 0),
     0
   );
 
   // Filter categories based on search term and selected category
-  const filteredCategories = categories.filter((category) => {
+  const filteredCategories = reduxCategories.filter((category) => {
     const matchesSearch = category.category_name
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -351,7 +364,7 @@ const AssetInventory = () => {
   const confirmAllotment = async (employeeId) => {
     try {
       logger.info("Allotting item", {
-        categoryId: selectedCategory._id,
+        categoryId: selectedCategory._id || selectedCategory.id,
         employeeId,
       });
       setNotification({
@@ -360,17 +373,10 @@ const AssetInventory = () => {
       });
       setShowAllotmentModal(false);
       setSelectedCategory(null);
-      // Update the mock data to reflect the new assignment
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat._id === selectedCategory._id
-            ? {
-                ...cat,
-                assigned_assets: (cat.assigned_assets || 0) + 1,
-              }
-            : cat
-        )
-      );
+      
+      // Instead of directly updating the state (which we can't do with Redux),
+      // we'll fetch the categories again to get the latest data
+      dispatch(fetchAssetCategories());
     } catch (err) {
       logger.error("Allotment failed", { error: err.message });
       setNotification({
@@ -415,31 +421,31 @@ const AssetInventory = () => {
   };
 
   const handleUpdateCategory = (updatedCategory) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat._id === categoryToEdit._id ? { ...cat, ...updatedCategory } : cat
-      )
-    );
+    // In a real implementation, you would call an API to update the category
+    // and then dispatch an action to update the Redux store
+    // For now, we'll just fetch all categories again
+    dispatch(fetchAssetCategories());
     setShowEditModal(false);
     setCategoryToEdit(null);
     setNotification({
       type: "success",
       message: "Category updated successfully",
     });
-    logger.info("Category updated", { categoryId: categoryToEdit._id });
+    logger.info("Category updated", { categoryId: categoryToEdit._id || categoryToEdit.id });
   };
 
   const handleConfirmDelete = () => {
-    setCategories((prev) =>
-      prev.filter((cat) => cat._id !== categoryToDelete._id)
-    );
+    // In a real implementation, you would call an API to delete the category
+    // and then dispatch an action to update the Redux store
+    // For now, we'll just fetch all categories again
+    dispatch(fetchAssetCategories());
     setShowDeleteModal(false);
     setCategoryToDelete(null);
     setNotification({
       type: "success",
       message: "Category deleted successfully",
     });
-    logger.info("Category deleted", { categoryId: categoryToDelete._id });
+    logger.info("Category deleted", { categoryId: categoryToDelete._id || categoryToDelete.id });
   };
 
   return (
@@ -457,6 +463,26 @@ const AssetInventory = () => {
             </p>
           </div>
         </div>
+
+        {/* Loading state */}
+        {categoriesLoading && (
+          <div className="text-center py-4">
+            <p className="text-gray-600">Loading asset categories...</p>
+          </div>
+        )}
+
+        {/* Error state */}
+        {categoriesError && (
+          <div className="text-center py-4">
+            <p className="text-red-600">Error: {categoriesError}</p>
+            <button
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              onClick={() => dispatch(fetchAssetCategories())}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Top Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -480,9 +506,9 @@ const AssetInventory = () => {
             <h3 className="text-sm font-medium text-gray-500">Total Value</h3>
             <div className="flex items-center gap-2 mt-2">
               <p className="text-3xl font-bold text-gray-900">
-                {totalCost.toLocaleString("en-IN", {
+                {totalCost.toLocaleString("en-US", {
                   style: "currency",
-                  currency: "INR",
+                  currency: "USD",
                 })}
               </p>
             </div>
@@ -506,7 +532,7 @@ const AssetInventory = () => {
                 selectedCategory: value,
               });
             }}
-            categories={categories}
+            categories={reduxCategories}
           />
           <div className="flex gap-4">
             <button
@@ -784,7 +810,7 @@ const AssetInventory = () => {
         <h2 className="text-xl font-bold text-gray-900 mb-4">
           Regular Categories
         </h2>
-        {regularCategories.length === 0 ? (
+        {regularCategories.length === 0 && !categoriesLoading ? (
           <div className="text-gray-600 mb-8">
             No regular categories available.
           </div>
@@ -802,16 +828,16 @@ const AssetInventory = () => {
 
               return (
                 <div
-                  key={category._id}
+                  key={category.id || category._id}
                   className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md hover:scale-102 transition-all duration-200 max-w-[300px] md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.5rem)] min-h-[370px] flex flex-col"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">
-                        {category.category_name}
+                        {category.category_name || category.name}
                       </h3>
                       <p className="text-sm text-gray-500 capitalize">
-                        {category.category_type}
+                        {category.category_type || "Category"}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -904,12 +930,12 @@ const AssetInventory = () => {
                     </div>
                   </div>
                   <div className="mt-auto flex gap-3">
-                    <Link to={`/asset-inventory/${category._id}/assign`}>
+                    <Link to={`/asset-inventory/${category.id || category._id}/assign`}>
                       <button className="bg-blue-600 hover:bg-blue-700 hover:scale-102 text-white text-sm font-medium py-2 px-4 rounded-md transition-all duration-200">
                         Assign Asset
                       </button>
                     </Link>
-                    <Link to={`/asset-inventory/${category._id}/unassign`}>
+                    <Link to={`/asset-inventory/${category.id || category._id}/unassign`}>
                       <button className="bg-red-400 hover:bg-red-500 hover:scale-102 text-white text-sm font-medium py-2 px-4 rounded-md transition-all duration-200">
                         Unassign Asset
                       </button>
@@ -917,12 +943,12 @@ const AssetInventory = () => {
                   </div>
                   <div className="mt-4 flex justify-between items-center">
                     <p className="text-base font-bold text-gray-900">
-                      {category.total_cost?.toLocaleString("en-IN", {
+                      {category.total_cost?.toLocaleString("en-US", {
                         style: "currency",
-                        currency: "INR",
-                      }) || "₹0"}
+                        currency: "USD",
+                      }) || "$0"}
                     </p>
-                    <Link to={`/asset-inventory/${category._id}`}>
+                    <Link to={`/asset-inventory/${category.id || category._id}`}>
                       <button className="text-blue-600 hover:underline hover:scale-102 text-sm transition-all duration-200">
                         View Details
                       </button>
@@ -938,7 +964,7 @@ const AssetInventory = () => {
         <h2 className="text-xl font-bold text-gray-900 mb-4">
           Allotted Categories
         </h2>
-        {allottedCategories.length === 0 ? (
+        {allottedCategories.length === 0 && !categoriesLoading ? (
           <div className="text-gray-600">No allotted categories available.</div>
         ) : (
           <AllottedCategories
