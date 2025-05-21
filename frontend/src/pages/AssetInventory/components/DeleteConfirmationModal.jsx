@@ -38,7 +38,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, selectedAssets })
               <div className="flex justify-between">
                 <span className="text-sm text-gray-500">Total Value</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {asset.total_cost?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                  {asset.total_cost?.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                 </span>
               </div>
             </div>

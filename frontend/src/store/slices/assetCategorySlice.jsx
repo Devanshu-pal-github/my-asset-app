@@ -44,11 +44,25 @@ export const fetchAssetCategories = createAsyncThunk(
         return res.json();
       });
       
+      // Log the raw response to see what's coming from the backend
+      console.log('Raw response from API:', response);
+      
       logger.info('Asset categories response received');
       console.log('Asset categories response in slice:', response);
       
       const data = Array.isArray(response) ? response : [];
       logger.info('Asset categories processed:', { count: data.length });
+      
+      // Log some details about the data to help with troubleshooting
+      if (data.length > 0) {
+        logger.debug('First category details:', { 
+          id: data[0].id,
+          name: data[0].category_name, 
+          type: data[0].category_type,
+          hasPolicies: Array.isArray(data[0].policies) && data[0].policies.length > 0,
+          policies: data[0].policies
+        });
+      }
       
       // Map the backend fields to frontend fields, ensuring all required fields are present
       return data.map(cat => ({
@@ -61,6 +75,9 @@ export const fetchAssetCategories = createAsyncThunk(
         name: cat.category_name || cat.name || '', // Alias for category_name
         category_type: cat.category_type || '',
         description: cat.description || '',
+        
+        // Preserve the policies array - ensure it's an array
+        policies: Array.isArray(cat.policies) ? [...cat.policies] : [],
         
         // Statistics fields
         total_assets: cat.total_assets || 0,
@@ -147,7 +164,6 @@ export const fetchAssetCategories = createAsyncThunk(
         total_value: cat.total_cost || 0,
         assigned_count: cat.assigned_assets || 0,
         maintenance_count: cat.under_maintenance || 0,
-        policies: cat.policies || [],
       }));
     } catch (error) {
       const errorDetails = {
@@ -177,7 +193,7 @@ export const addAssetCategory = createAsyncThunk(
         category_name: category.category_name || category.name,
         category_type: category.category_type,
         description: category.description,
-        policies: category.policies || [],
+        policies: Array.isArray(category.policies) ? [...category.policies] : (category.policies || []),
         
         // Boolean flags
         is_active: category.is_active,
@@ -266,7 +282,7 @@ export const updateAssetCategory = createAsyncThunk(
         category_name: category.category_name || category.name,
         category_type: category.category_type,
         description: category.description,
-        policies: category.policies,
+        policies: Array.isArray(category.policies) ? [...category.policies] : (category.policies || []),
         
         // Boolean flags
         is_active: category.is_active,

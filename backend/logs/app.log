@@ -3032,3 +3032,280 @@ TypeError: 'Collection' object is not callable. If you meant to call the 'find' 
 2025-05-21 11:29:17 - app.main - INFO - Request: GET /api/asset-categories/
 2025-05-21 11:29:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
 2025-05-21 11:29:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:32:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:32:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:32:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:41:43 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:41:43 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:41:43 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:41:53 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:41:53 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:41:53 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:41:57 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:41:57 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:41:57 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:46:21 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:46:21 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:46:21 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:46:24 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-21 11:46:40 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-21 11:46:40 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-21 11:46:40 - app.main - INFO - Registering routers with prefix /api
+2025-05-21 11:46:40 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-21 11:46:40 - app.main - INFO - MongoDB connection verified successfully
+2025-05-21 11:46:40 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-21 11:46:40 - app.main - INFO - All database indexes verified
+2025-05-21 11:46:40 - app.main - INFO - Server started successfully!
+2025-05-21 11:46:40 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-21 11:46:47 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:46:47 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:46:47 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:46:48 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:46:48 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:46:48 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:47:00 - app.main - INFO - Request: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:47:00 - app.routers.asset_categories - INFO - Updating asset category with ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:47:00 - app.services.asset_category_service - INFO - Updating category ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:47:00 - app.main - ERROR - Request failed: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a - Error: 1 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='9c8c1a9f-603f-480d-8d99-badd29588abb', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-21 11:47:02 - app.main - INFO - Request: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:47:02 - app.routers.asset_categories - INFO - Updating asset category with ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:47:02 - app.services.asset_category_service - INFO - Updating category ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:47:03 - app.main - ERROR - Request failed: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a - Error: 2 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='9c8c1a9f-603f-480d-8d99-badd29588abb', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 1), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='c5c0969c-b235-4bd3-a852-bf3c114a55f8', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-21 11:47:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:47:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:47:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:47:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:47:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:47:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:47:29 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:47:29 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:47:29 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:47:36 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:47:36 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:47:36 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:47:37 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:47:37 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:47:37 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:48:08 - app.main - INFO - Request: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:48:08 - app.routers.asset_categories - INFO - Updating asset category with ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:48:08 - app.services.asset_category_service - INFO - Updating category ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:48:08 - app.main - ERROR - Request failed: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a - Error: 3 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='9c8c1a9f-603f-480d-8d99-badd29588abb', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 1), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='c5c0969c-b235-4bd3-a852-bf3c114a55f8', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 2), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='dc28f5d9-aab4-400b-a50c-551b975ff3c6', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-21 11:48:14 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:48:14 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:48:14 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:48:36 - app.main - INFO - Request: DELETE /api/asset-categories/4ffde1a3-b8f6-41c3-8894-ee1385360845
+2025-05-21 11:48:36 - app.routers.asset_categories - INFO - Deleting asset category with ID: 4ffde1a3-b8f6-41c3-8894-ee1385360845
+2025-05-21 11:48:36 - app.services.asset_category_service - INFO - Deleting category ID: 4ffde1a3-b8f6-41c3-8894-ee1385360845
+2025-05-21 11:48:39 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:48:39 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:48:39 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:48:40 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:48:40 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:48:40 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:51:53 - app.main - INFO - Request: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:51:53 - app.routers.asset_categories - INFO - Updating asset category with ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:51:53 - app.services.asset_category_service - INFO - Updating category ID: 958d338a-8828-495f-88c7-04d52049cb8a
+2025-05-21 11:51:53 - app.main - ERROR - Request failed: PUT /api/asset-categories/958d338a-8828-495f-88c7-04d52049cb8a - Error: 4 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='9c8c1a9f-603f-480d-8d99-badd29588abb', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 1), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='c5c0969c-b235-4bd3-a852-bf3c114a55f8', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 2), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='dc28f5d9-aab4-400b-a50c-551b975ff3c6', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 3), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='92375412-a9f9-4787-b416-202e605f57e5', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-21 11:52:05 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:52:05 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:52:05 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:52:05 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:52:05 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:52:05 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:55:58 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:55:58 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:55:58 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 11:55:58 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 11:55:58 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 11:55:58 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:02:22 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-21 12:02:22 - app.routers.asset_categories - INFO - Creating asset category: hello world
+2025-05-21 12:02:22 - app.services.asset_category_service - INFO - Creating category: hello world
+2025-05-21 12:02:23 - app.services.asset_category_service - INFO - Created category with ID: 99f1e373-9e13-4e61-9b58-090a311f1a4f
+2025-05-21 12:02:23 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:02:23 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:02:23 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:02:27 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:02:27 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:02:27 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:02:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:02:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:02:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:03:17 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:03:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:03:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:06:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:06:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:06:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:12:01 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:12:01 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:12:01 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:12:05 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:12:05 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:12:05 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:13:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:13:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:13:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:13:13 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:13:13 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:13:13 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:16:19 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:16:19 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:16:19 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:16:20 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:16:20 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:16:20 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:17:39 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:17:39 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:17:39 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:17:52 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:17:52 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:17:52 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:21:34 - app.main - INFO - Request: PUT /api/asset-categories/99f1e373-9e13-4e61-9b58-090a311f1a4f
+2025-05-21 12:21:34 - app.routers.asset_categories - INFO - Updating asset category with ID: 99f1e373-9e13-4e61-9b58-090a311f1a4f
+2025-05-21 12:21:34 - app.services.asset_category_service - INFO - Updating category ID: 99f1e373-9e13-4e61-9b58-090a311f1a4f
+2025-05-21 12:21:34 - app.main - ERROR - Request failed: PUT /api/asset-categories/99f1e373-9e13-4e61-9b58-090a311f1a4f - Error: 1 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='e1745554-8478-4f3d-9a8d-2deade1e542c', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, policies, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-21 12:21:40 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:21:40 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:21:40 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:21:41 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:21:41 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:21:41 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:23:45 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:23:45 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:23:45 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:32:50 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:32:50 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:32:50 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:33:46 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:33:46 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:33:46 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:33:56 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:33:56 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:33:56 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:33:59 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:33:59 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:33:59 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:34:01 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:34:01 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:34:01 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:38:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:38:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:38:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:38:08 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-21 12:38:21 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-21 12:38:21 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-21 12:38:21 - app.main - INFO - Registering routers with prefix /api
+2025-05-21 12:38:22 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-21 12:38:22 - app.main - INFO - MongoDB connection verified successfully
+2025-05-21 12:38:22 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-21 12:38:22 - app.main - INFO - All database indexes verified
+2025-05-21 12:38:22 - app.main - INFO - Server started successfully!
+2025-05-21 12:38:22 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-21 12:38:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:38:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:38:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:38:29 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:38:29 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:38:29 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:39:52 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:39:52 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:39:52 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:39:53 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:39:53 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:39:53 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:41:27 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:41:27 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:41:27 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:41:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:41:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:41:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:51:33 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:51:33 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:51:33 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:51:33 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:51:33 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:51:33 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:53:50 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:53:50 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:53:50 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:53:50 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:53:50 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:53:50 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:18 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:18 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:18 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:19 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:19 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:19 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:29 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:29 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:29 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:48 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:48 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:48 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:54:49 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:54:49 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:54:49 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:08 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:08 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:08 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:46 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:46 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:46 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:47 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:55:47 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:55:47 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:55:48 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-21 12:55:59 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-21 12:55:59 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-21 12:55:59 - app.main - INFO - Registering routers with prefix /api
+2025-05-21 12:55:59 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-21 12:55:59 - app.main - INFO - MongoDB connection verified successfully
+2025-05-21 12:55:59 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-21 12:55:59 - app.main - INFO - All database indexes verified
+2025-05-21 12:55:59 - app.main - INFO - Server started successfully!
+2025-05-21 12:55:59 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-21 12:56:08 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:56:08 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:56:08 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-21 12:56:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-21 12:56:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-21 12:56:09 - app.services.asset_category_service - INFO - Fetching all asset categories

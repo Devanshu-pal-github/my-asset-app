@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAssetCategories } from "../../store/slices/assetCategorySlice";
+import { fetchAssetCategories, updateAssetCategory, deleteAssetCategory } from "../../store/slices/assetCategorySlice";
 import logger from "../../utils/logger";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import EditAssetForm from "./components/EditAssetForm";
@@ -101,7 +101,7 @@ const AllottedCategories = ({
                   {category.category_name || category.name}
                 </h3>
                 <p className="text-sm text-gray-500 capitalize">
-                  {category.category_type || "Category"}
+                  {category.category_type ? category.category_type.charAt(0).toUpperCase() + category.category_type.slice(1) : "Category"}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -367,6 +367,10 @@ const AssetInventory = () => {
         categoryId: selectedCategory._id || selectedCategory.id,
         employeeId,
       });
+      
+      // Here we'd typically call an API endpoint to assign the allotted item
+      // Since we're still setting up the API, we'll just show a success notification
+      
       setNotification({
         type: "success",
         message: "Successfully allotted to employee",
@@ -374,14 +378,13 @@ const AssetInventory = () => {
       setShowAllotmentModal(false);
       setSelectedCategory(null);
       
-      // Instead of directly updating the state (which we can't do with Redux),
-      // we'll fetch the categories again to get the latest data
+      // Refresh categories to get updated data
       dispatch(fetchAssetCategories());
     } catch (err) {
       logger.error("Allotment failed", { error: err.message });
       setNotification({
         type: "error",
-        message: "Allotment failed",
+        message: "Allotment failed: " + (err.message || "Unknown error"),
       });
     }
   };
@@ -397,18 +400,36 @@ const AssetInventory = () => {
 
   // Handlers for modals
   const handleViewDetails = (category) => {
-    setCategoryToView(category);
+    // Ensure we're working with a clean copy of the category object
+    const categoryWithPolicies = {
+      ...category,
+      // Ensure policies is always an array
+      policies: Array.isArray(category.policies) ? category.policies : []
+    };
+
+    setCategoryToView(categoryWithPolicies);
     setShowDetailsModal(true);
     logger.info("Opening details modal for category", {
-      categoryId: category._id,
+      categoryId: category._id || category.id,
+      categoryName: category.category_name || category.name,
+      policies: categoryWithPolicies.policies,
     });
   };
 
   const handleEdit = (category) => {
-    setCategoryToEdit(category);
+    // Ensure we're working with a clean copy of the category object
+    const categoryWithPolicies = {
+      ...category,
+      // Ensure policies is always an array
+      policies: Array.isArray(category.policies) ? category.policies : []
+    };
+    
+    setCategoryToEdit(categoryWithPolicies);
     setShowEditModal(true);
     logger.info("Opening edit modal for category", {
-      categoryId: category._id,
+      categoryId: category._id || category.id,
+      categoryName: category.category_name || category.name,
+      policies: categoryWithPolicies.policies,
     });
   };
 
@@ -421,31 +442,64 @@ const AssetInventory = () => {
   };
 
   const handleUpdateCategory = (updatedCategory) => {
-    // In a real implementation, you would call an API to update the category
-    // and then dispatch an action to update the Redux store
-    // For now, we'll just fetch all categories again
-    dispatch(fetchAssetCategories());
-    setShowEditModal(false);
-    setCategoryToEdit(null);
-    setNotification({
-      type: "success",
-      message: "Category updated successfully",
+    logger.info("Updating category with ID:", {
+      categoryId: categoryToEdit._id || categoryToEdit.id,
+      updatedData: updatedCategory,
     });
-    logger.info("Category updated", { categoryId: categoryToEdit._id || categoryToEdit.id });
+
+    if (!categoryToEdit) {
+      logger.error("No category selected for updating");
+      return;
+    }
+
+    dispatch(updateAssetCategory({
+      id: categoryToEdit._id || categoryToEdit.id,
+      category: {
+        ...updatedCategory,
+        policies: Array.isArray(updatedCategory.policies) 
+          ? updatedCategory.policies.filter(policy => policy.trim() !== "") 
+          : []
+      }
+    }))
+      .unwrap()
+      .then(() => {
+        setNotification({
+          type: "success",
+          message: "Category updated successfully",
+        });
+        setShowEditModal(false);
+        logger.info("Category updated successfully");
+        dispatch(fetchAssetCategories()); // Refresh categories
+      })
+      .catch((error) => {
+        setNotification({
+          type: "error",
+          message: `Failed to update category: ${error}`,
+        });
+        logger.error("Failed to update category:", { error });
+      });
   };
 
   const handleConfirmDelete = () => {
-    // In a real implementation, you would call an API to delete the category
-    // and then dispatch an action to update the Redux store
-    // For now, we'll just fetch all categories again
-    dispatch(fetchAssetCategories());
-    setShowDeleteModal(false);
-    setCategoryToDelete(null);
-    setNotification({
-      type: "success",
-      message: "Category deleted successfully",
-    });
-    logger.info("Category deleted", { categoryId: categoryToDelete._id || categoryToDelete.id });
+    // Delete the category using the Redux deleteAssetCategory action
+    dispatch(deleteAssetCategory(categoryToDelete.id || categoryToDelete._id))
+      .unwrap()
+      .then(() => {
+        setShowDeleteModal(false);
+        setCategoryToDelete(null);
+        setNotification({
+          type: "success",
+          message: "Category deleted successfully",
+        });
+        logger.info("Category deleted", { categoryId: categoryToDelete.id || categoryToDelete._id });
+      })
+      .catch((error) => {
+        logger.error("Failed to delete category", { error });
+        setNotification({
+          type: "error",
+          message: `Failed to delete category: ${error.message || "Unknown error"}`,
+        });
+      });
   };
 
   return (
@@ -837,7 +891,7 @@ const AssetInventory = () => {
                         {category.category_name || category.name}
                       </h3>
                       <p className="text-sm text-gray-500 capitalize">
-                        {category.category_type || "Category"}
+                        {category.category_type ? category.category_type.charAt(0).toUpperCase() + category.category_type.slice(1) : "Category"}
                       </p>
                     </div>
                     <div className="flex gap-2">
