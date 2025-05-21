@@ -47,7 +47,86 @@ const AssetTable = ({
     return uuidRegex.test(id) || prefixedIdRegex.test(id) || objectIdRegex.test(id);
   };
 
-  const getSafeId = (item) => item.id || (item._id && isValidObjectId(item._id) ? item._id : item.asset_tag || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const getSafeId = (item) => {
+    const id = item.asset_id || item.id || item._id;
+    return isValidObjectId(id) ? id : `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const formatStatus = (status) => {
+    if (!status) return "-";
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      logger.error("Error formatting date", { dateString, error });
+      return dateString;
+    }
+  };
+
+  const renderCellContent = (item, col) => {
+    switch (col) {
+      case "asset_id":
+        return item.asset_id || "-";
+      case "name":
+        return item.name || "-";
+      case "serial_number":
+        return item.serial_number || "-";
+      case "status":
+        return formatStatus(item.status);
+      case "specifications":
+        return renderSpecifications(item);
+      case "current_assignment_date":
+        return formatDate(item.current_assignment_date);
+      case "purchase_date":
+        return formatDate(item.purchase_date);
+      case "warranty_until":
+        return formatDate(item.warranty_until);
+      case "actions":
+        return (
+          <div className="flex gap-2">
+            <Link
+              to={`/asset/${getSafeId(item)}`}
+              className="text-blue-600 hover:text-blue-800"
+              onClick={() =>
+                logger.info("Navigating to asset detail", {
+                  assetId: getSafeId(item),
+                })
+              }
+            >
+              View Details
+            </Link>
+          </div>
+        );
+      default:
+        return item[col] || "-";
+    }
+  };
+
+  const getColumnHeader = (col) => {
+    const headers = {
+      asset_id: "Asset ID",
+      name: "Asset Name",
+      serial_number: "Serial Number",
+      status: "Status",
+      specifications: "Specifications",
+      current_assignment_date: "Assigned Date",
+      purchase_date: "Purchase Date",
+      warranty_until: "Warranty Until",
+      actions: "Actions",
+    };
+    return headers[col] || col.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+  };
+
+  const isSortableColumn = (col) => ["asset_id", "name", "status", "current_assignment_date", "purchase_date"].includes(col);
 
   return (
     <div>
@@ -59,60 +138,25 @@ const AssetTable = ({
               <th
                 key={col}
                 className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                  col === "asset_tag" || col === "name" ? "cursor-pointer" : ""
+                  isSortableColumn(col) ? "cursor-pointer hover:bg-gray-200" : ""
                 }`}
-                onClick={() =>
-                  (col === "asset_tag" || col === "name") && onSort(col)
-                }
+                onClick={() => isSortableColumn(col) && onSort(col)}
               >
-                {col === "asset_tag" && (
-                  <>
-                    Asset ID{" "}
-                    {sortField === "asset_tag" &&
-                      (sortOrder === "asc" ? "↑" : "↓")}
-                  </>
-                )}
-                {col === "name" && (
-                  <>
-                    Asset Name{" "}
-                    {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
-                  </>
-                )}
-                {col === "serial_number" && "Serial Number"}
-                {col === "status" && "Status"}
-                {col === "specifications" && "Specifications"}
-                {col === "actions" && "Actions"}
+                {getColumnHeader(col)}{" "}
+                {sortField === col && (sortOrder === "asc" ? "↑" : "↓")}
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((item) => (
-            <tr key={getSafeId(item)}>
+            <tr key={getSafeId(item)} className="hover:bg-gray-50">
               {columns.map((col) => (
                 <td
                   key={col}
                   className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                 >
-                  {col === "specifications" ? (
-                    renderSpecifications(item)
-                  ) : col === "actions" ? (
-                    <div className="flex gap-2">
-                      <Link
-                        to={`/asset/${getSafeId(item)}`}
-                        className="text-blue-600 hover:text-blue-800"
-                        onClick={() =>
-                          logger.info("Navigating to asset detail", {
-                            assetId: getSafeId(item),
-                          })
-                        }
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                  ) : (
-                    item[col] || "-"
-                  )}
+                  {renderCellContent(item, col)}
                 </td>
               ))}
             </tr>
