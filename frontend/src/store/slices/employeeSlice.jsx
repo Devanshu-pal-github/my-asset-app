@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import logger from '../../utils/logger';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const axiosInstance = axios.create({ timeout: 30000 });
 
 const withRetry = async (fn, retries = 3, delay = 1000) => {

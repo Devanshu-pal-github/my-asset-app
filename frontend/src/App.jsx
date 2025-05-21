@@ -4,6 +4,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { fetchAssetCategories } from "./store/slices/assetCategorySlice";
 import Layout from "./components/Layout.jsx";
 import AssetInventory from "./pages/AssetInventory/index.jsx";
 import AddAssetForm from "./pages/AssetInventory/components/AddAssetForm.jsx";
@@ -34,35 +37,62 @@ const mockAddAssetItem = (item) => {
 
 logger.debug("Rendering App component");
 
+// Create an AppContent component to use hooks
+const AppContent = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    logger.debug("App initialized - fetching asset categories");
+    console.log("App initialized - fetching asset categories");
+    
+    // Fetch asset categories when the app initializes
+    dispatch(fetchAssetCategories())
+      .then((result) => {
+        if (result.type.endsWith('/fulfilled')) {
+          logger.info("Successfully fetched asset categories on app init");
+          console.log("Successfully fetched asset categories on app init:", result.payload);
+        }
+      })
+      .catch((error) => {
+        logger.error("Failed to fetch asset categories on app init:", { error });
+        console.error("Failed to fetch asset categories on app init:", error);
+      });
+  }, [dispatch]);
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Navigate to="/asset-inventory" replace />} />
+        <Route path="asset-inventory">
+          <Route index element={<AssetInventory />} />
+          <Route path="add-category" element={<AddAssetForm />} />
+          <Route path=":categoryId" element={<AssetTablePage />} />
+          <Route path=":categoryId/add-item" element={<AddItemPage />} />
+          <Route path=":categoryId/add-allotted-items" element={<AddAllottedItems />} />
+          <Route path=":categoryId/bulk-upload" element={<BulkUploadPage assetCategories={mockCategories} addAssetItem={mockAddAssetItem} />} /> {/* New route */}
+          <Route path=":categoryId/assign" element={<AssetAssignmentTable />} />
+          <Route path=":categoryId/assign/:assetId" element={<EmployeeAssignment />} />
+          <Route path=":categoryId/unassign" element={<AssetUnassignmentTable />} />
+          <Route path=":categoryId/unassign/:assetId" element={<EmployeeUnassignment />} />
+        </Route>
+        <Route path="asset/:assetId" element={<AssetDetail />} />
+        <Route path="employee-assets" element={<EmployeeAssets />} />
+        <Route path="employee-profile/:id" element={<EmployeeDetails />} />
+        <Route path="maintenance" element={<Maintenance />} />
+        <Route path="requests-approvals" element={<RequestsApprovals />} />
+        <Route path="reports-analytics" element={<ReportsAnalytics />} />
+        <Route path="*" element={<Navigate to="/asset-inventory" replace />} />
+      </Route>
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <BrowserRouter
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/asset-inventory" replace />} />
-          <Route path="asset-inventory">
-            <Route index element={<AssetInventory />} />
-            <Route path="add-category" element={<AddAssetForm />} />
-            <Route path=":categoryId" element={<AssetTablePage />} />
-            <Route path=":categoryId/add-item" element={<AddItemPage />} />
-            <Route path=":categoryId/add-allotted-items" element={<AddAllottedItems />} />
-            <Route path=":categoryId/bulk-upload" element={<BulkUploadPage assetCategories={mockCategories} addAssetItem={mockAddAssetItem} />} /> {/* New route */}
-            <Route path=":categoryId/assign" element={<AssetAssignmentTable />} />
-            <Route path=":categoryId/assign/:assetId" element={<EmployeeAssignment />} />
-            <Route path=":categoryId/unassign" element={<AssetUnassignmentTable />} />
-            <Route path=":categoryId/unassign/:assetId" element={<EmployeeUnassignment />} />
-          </Route>
-          <Route path="asset/:assetId" element={<AssetDetail />} />
-          <Route path="employee-assets" element={<EmployeeAssets />} />
-          <Route path="employee-profile/:id" element={<EmployeeDetails />} />
-          <Route path="maintenance" element={<Maintenance />} />
-          <Route path="requests-approvals" element={<RequestsApprovals />} />
-          <Route path="reports-analytics" element={<ReportsAnalytics />} />
-          <Route path="*" element={<Navigate to="/asset-inventory" replace />} />
-        </Route>
-      </Routes>
+      <AppContent />
     </BrowserRouter>
   );
 }

@@ -11,6 +11,7 @@ from app.services.asset_category_service import (
     delete_asset_category
 )
 import logging
+from pymongo.collection import Collection
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/asset-categories", tags=["Asset Categories"])
 async def read_asset_categories(
     category_type: Optional[str] = None,
     is_active: Optional[bool] = None,
-    db: Database = Depends(get_db)
+    collection: Collection = Depends(get_asset_categories_collection)
 ):
     """
     Retrieve all asset categories with optional filters for category_type and is_active.
@@ -29,7 +30,7 @@ async def read_asset_categories(
     Args:
         category_type (Optional[str]): Filter by category type
         is_active (Optional[bool]): Filter by active status
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB asset_categories collection, injected via dependency
         
     Returns:
         List[AssetCategoryResponse]: List of asset categories matching the filters
@@ -45,7 +46,7 @@ async def read_asset_categories(
         if is_active is not None:
             filters["is_active"] = is_active
             
-        categories = get_asset_categories(db, filters)
+        categories = get_asset_categories(collection, filters)
         logger.debug(f"Fetched {len(categories)} categories")
         return categories
     except Exception as e:
@@ -53,13 +54,13 @@ async def read_asset_categories(
         raise HTTPException(status_code=500, detail=f"Failed to fetch categories: {str(e)}")
 
 @router.get("/{category_id}", response_model=AssetCategoryResponse)
-async def read_asset_category(category_id: str, db: Database = Depends(get_db)):
+async def read_asset_category(category_id: str, collection: Collection = Depends(get_asset_categories_collection)):
     """
     Retrieve a specific asset category by ID with computed statistics.
     
     Args:
         category_id (str): Asset category ID
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB asset_categories collection, injected via dependency
         
     Returns:
         AssetCategoryResponse: Asset category details
@@ -69,7 +70,7 @@ async def read_asset_category(category_id: str, db: Database = Depends(get_db)):
     """
     logger.info(f"Fetching asset category with ID: {category_id}")
     try:
-        category = get_asset_category_by_id(db, category_id)
+        category = get_asset_category_by_id(collection, category_id)
         if not category:
             logger.warning(f"Category not found: {category_id}")
             raise HTTPException(status_code=404, detail="Asset category not found")
@@ -111,14 +112,14 @@ async def create_new_asset_category(category: AssetCategoryCreate, collection: D
         raise HTTPException(status_code=500, detail=f"Failed to create category: {str(e)}")
 
 @router.put("/{category_id}", response_model=AssetCategoryResponse)
-async def update_existing_asset_category(category_id: str, category: AssetCategoryUpdate, db: Database = Depends(get_db)):
+async def update_existing_asset_category(category_id: str, category: AssetCategoryUpdate, collection: Collection = Depends(get_asset_categories_collection)):
     """
     Update an existing asset category.
     
     Args:
         category_id (str): Asset category ID to update
         category (AssetCategoryUpdate): Updated category details
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB asset_categories collection, injected via dependency
         
     Returns:
         AssetCategoryResponse: Updated asset category
@@ -128,7 +129,7 @@ async def update_existing_asset_category(category_id: str, category: AssetCatego
     """
     logger.info(f"Updating asset category with ID: {category_id}")
     try:
-        updated_category = update_asset_category(db, category_id, category)
+        updated_category = update_asset_category(collection, category_id, category)
         if not updated_category:
             logger.warning(f"Category not found: {category_id}")
             raise HTTPException(status_code=404, detail="Asset category not found")
@@ -143,13 +144,13 @@ async def update_existing_asset_category(category_id: str, category: AssetCatego
         raise HTTPException(status_code=500, detail=f"Failed to update category: {str(e)}")
 
 @router.delete("/{category_id}", response_model=dict)
-async def delete_existing_asset_category(category_id: str, db: Database = Depends(get_db)):
+async def delete_existing_asset_category(category_id: str, collection: Collection = Depends(get_asset_categories_collection)):
     """
     Delete an asset category if no assets are associated.
     
     Args:
         category_id (str): Asset category ID to delete
-        db (Database): MongoDB database instance, injected via dependency
+        collection (Collection): MongoDB asset_categories collection, injected via dependency
         
     Returns:
         dict: Success message
@@ -159,7 +160,7 @@ async def delete_existing_asset_category(category_id: str, db: Database = Depend
     """
     logger.info(f"Deleting asset category with ID: {category_id}")
     try:
-        deleted = delete_asset_category(db, category_id)
+        deleted = delete_asset_category(collection, category_id)
         if not deleted:
             logger.warning(f"Category not found: {category_id}")
             raise HTTPException(status_code=404, detail="Asset category not found")
