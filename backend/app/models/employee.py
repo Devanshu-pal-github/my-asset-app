@@ -216,6 +216,6 @@ class EmployeeResponse(BaseModel):
     department_id: Optional[str] = None
     job_title: Optional[str] = None
     is_active: Optional[bool] = None
-    assigned_assets: Optional[int] = None  # Alias for total_assigned_assets or assigned_assets_count
+    assigned_assets: Optional[List[AssignedAsset]] = None  # Changed from int to List[AssignedAsset]
     
     model_config = model_config

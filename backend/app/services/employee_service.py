@@ -87,7 +87,12 @@ def get_employees(
                 "has_active_assignment": True
             })
             
-            employee["assigned_assets_count"] = assigned_assets_count
+            # Set total_assigned_assets
+            employee["total_assigned_assets"] = assigned_assets_count
+            
+            # Ensure assigned_assets is a list of AssignedAsset objects
+            if "assigned_assets" not in employee or not isinstance(employee["assigned_assets"], list):
+                employee["assigned_assets"] = []
             
             # Convert to EmployeeResponse
             employee_response = EmployeeResponse(**employee)
