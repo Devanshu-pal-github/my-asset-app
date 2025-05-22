@@ -9,6 +9,8 @@ import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice'
 import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
 import axios from 'axios';
 import logger from '../../../utils/logger';
+import { createAssignment } from '../../../store/slices/assignmentHistorySlice';
+import { fetchAssetItemById } from '../../../store/slices/assetItemSlice';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -49,6 +51,9 @@ const EmployeeAssignment = ({ visible, onHide, categoryId, assetId, onAssignment
   const { categories = [], loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.assetCategories);
   const [categoryDetails, setCategoryDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [assignmentNotes, setAssignmentNotes] = useState('');
+  const [notification, setNotification] = useState(null);
 
   const fetchData = useCallback(async () => {
     if (!isValidObjectId(categoryId)) {
@@ -100,52 +105,86 @@ const EmployeeAssignment = ({ visible, onHide, categoryId, assetId, onAssignment
     };
   }, [fetchData, visible]);
 
-  const handleAssignClick = async (employee) => {
-    logger.info('Assign button clicked', {
-      employeeId: employee.id,
-      employeeName: `${employee.first_name} ${employee.last_name}`,
-      assetId,
-    });
-
+  const handleAssign = async () => {
     try {
-      const assignmentResponse = await axios.post(`${API_URL}/assignment-history/`, {
-        asset_id: assetId,
-        assigned_to: [employee.id],
-        department: employee.department,
-        condition: currentAsset.condition || 'Excellent',
-        assignment_date: new Date().toISOString(),
-        is_active: 1,
-        notes: `Assigned to ${employee.first_name} ${employee.last_name} for ${currentCategory.name || 'Unknown Category'}`,
-      });
-      logger.info('Assignment history created', { assignmentId: assignmentResponse.data.id });
+      if (!selectedEmployee || !assetId) {
+        throw new Error('Please select an employee and asset to assign');
+      }
 
-      toast.current?.show({
-        severity: 'success',
-        summary: 'Assignment Successful',
-        detail: `Asset ${currentAsset.name || 'Unknown Asset'} assigned to ${employee.first_name} ${employee.last_name}`,
-        life: 3000,
+      logger.info('Creating new assignment', {
+        assetId,
+        employeeId: selectedEmployee._id || selectedEmployee.id,
+        employeeName: selectedEmployee.name || `${selectedEmployee.first_name} ${selectedEmployee.last_name}`
       });
 
-      onAssignmentSuccess();
+      // Get category for department
+      const categoryDetails = currentCategory || { name: 'Unknown Category' };
+      
+      // Get full employee name
+      const employeeName = selectedEmployee.name || 
+        `${selectedEmployee.first_name} ${selectedEmployee.last_name}`;
+
+      // Prepare detailed notes
+      const notes = assignmentNotes || 
+        `Assigned to ${employeeName} for ${categoryDetails.name}`;
+        
+      const result = await dispatch(createAssignment({
+        assetId,
+        employeeId: selectedEmployee._id || selectedEmployee.id,
+        assignmentNotes: notes,
+        assignmentType: 'PERMANENT',
+        startDate: new Date().toISOString(),
+        endDate: null,
+        department: selectedEmployee.department || currentAsset?.department || 'Unknown',
+        condition: currentAsset?.condition || 'Good'
+      })).unwrap();
+      
+      logger.info('Assignment created successfully', {
+        assignmentId: result.id,
+        employee: employeeName,
+        asset: currentAsset?.name || 'Unknown Asset'
+      });
+
+      // Show success message
+      if (toast.current) {
+        toast.current.show({
+          severity: 'success',
+          summary: 'Assignment Successful',
+          detail: `Asset ${currentAsset?.name || 'Unknown Asset'} assigned to ${employeeName}`,
+          life: 3000,
+        });
+      }
+
+      // Refresh asset details
+      dispatch(fetchAssetItemById(assetId));
+
+      // Reset form
+      setSelectedEmployee(null);
+      setAssignmentNotes('');
+      
+      // Notify parent component of success
+      if (onAssignmentSuccess) {
+        onAssignmentSuccess();
+      }
+      
+      // Close modal
       onHide();
     } catch (error) {
-      logger.error('Failed to assign asset', {
-        error: error.response?.data?.detail || error.message,
-        employeeId: employee.id,
-        assetId,
+      logger.error('Failed to assign asset', { 
+        error: error.message, 
+        assetId, 
+        employeeId: selectedEmployee?._id
       });
-      let errorMessage = 'Failed to assign asset';
-      if (error.response?.status === 422) {
-        errorMessage = error.response.data.detail.map((err) => `${err.loc.join('.')}: ${err.msg}`).join('; ');
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
+      
+      // Show error message
+      if (toast.current) {
+        toast.current.show({
+          severity: 'error',
+          summary: 'Assignment Failed',
+          detail: error.message || 'Failed to assign asset to employee',
+          life: 3000,
+        });
       }
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Assignment Failed',
-        detail: errorMessage,
-        life: 3000,
-      });
     }
   };
 

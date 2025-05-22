@@ -16647,3 +16647,943 @@ current_assignment_date
   Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
     For further information visit https://errors.pydantic.dev/2.10/v/string_type
 2025-05-22 13:22:57 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:27:48 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:27:48 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:27:48 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:27:51 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:27:51 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:27:51 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:27:54 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:27:54 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:27:54 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:28:06 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:28:06 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:28:06 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:28:12 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:28:12 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:28:12 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:28:15 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:28:15 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:28:15 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:28:18 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:28:18 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:28:18 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:28:20 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:28:20 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:28:20 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:29:15 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:29:15 - app.routers.asset_items - INFO - Fetching asset items - category_id: p3q4r5s6-t7u8-4v9w-0x1y-2z3a4b5c6d7e, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:29:15 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:29:41 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:29:41 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:29:41 - app.routers.asset_items - INFO - Fetching asset items - category_id: p3q4r5s6-t7u8-4v9w-0x1y-2z3a4b5c6d7e, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:29:41 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:29:41 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:29:41 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:36:33 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:36:33 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:36:33 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:36:53 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:36:53 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:36:53 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:36:55 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:36:55 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:36:55 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:39:53 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 13:40:06 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 13:40:06 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 13:40:06 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 13:40:06 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 13:40:06 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 13:40:06 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 13:40:06 - app.main - INFO - All database indexes verified
+2025-05-22 13:40:06 - app.main - INFO - Server started successfully!
+2025-05-22 13:40:06 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 13:41:08 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:41:08 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:41:08 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:41:11 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:41:11 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:41:11 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:41:38 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:41:38 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:41:38 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:41:40 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:41:40 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:41:40 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:41:43 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:41:43 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:41:43 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:41:43 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:41:43 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:41:43 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:41:45 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:41:45 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:41:45 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:41:47 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:41:47 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:41:47 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:41:47 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:41:47 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:41:47 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:41:48 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:41:48 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:41:48 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:41:50 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:41:50 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:41:50 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:41:50 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:41:50 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:41:50 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:42:00 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:00 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:01 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:01 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:02 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:02 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:03 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:03 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:03 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:03 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:03 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:03 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:03 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:03 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:04 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:04 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:04 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:04 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:05 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:05 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:06 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:06 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:06 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:42:06 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:42:16 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:42:16 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:42:16 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:42:16 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:42:16 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:42:16 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:42:17 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:42:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:42:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:42:19 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:42:19 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:42:19 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:42:19 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:42:19 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:42:19 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:42:21 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:42:21 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:42:21 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:42:21 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:42:21 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:42:23 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:42:23 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:42:23 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:42:23 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:42:25 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:42:25 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:42:25 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:42:27 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:42:27 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:42:27 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:42:30 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:42:30 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:42:30 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:42:31 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:42:31 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:42:31 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:42:31 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:42:31 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:42:31 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:42:33 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:42:33 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:42:33 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:42:33 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:42:34 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:42:34 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:43:31 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 13:43:40 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 13:43:40 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 13:43:40 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 13:43:41 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 13:43:41 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 13:43:41 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 13:43:41 - app.main - INFO - All database indexes verified
+2025-05-22 13:43:41 - app.main - INFO - Server started successfully!
+2025-05-22 13:43:41 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 13:43:44 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:43:44 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:43:44 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:43:46 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:43:46 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:43:46 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:43:46 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:43:46 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:43:46 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:44:06 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:06 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:07 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:07 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:07 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:07 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:07 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:07 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:08 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:08 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:08 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:08 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:09 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:09 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:10 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:10 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 13:44:10 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:10 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 13:44:16 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:44:16 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:44:16 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:44:17 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:44:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:44:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:44:20 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:44:20 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:44:20 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:44:22 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:44:22 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:44:22 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:44:27 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:44:27 - app.routers.asset_items - INFO - Fetching asset items - category_id: a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:44:27 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:44:27 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:44:27 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:44:27 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:44:31 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:44:31 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:44:31 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:44:39 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:44:39 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:44:39 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:44:39 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:44:39 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:44:39 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:44:41 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:44:41 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:44:41 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:49:44 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:49:44 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:49:44 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:49:44 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:49:45 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:49:45 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:49:46 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:49:46 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:49:46 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:49:48 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:49:48 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:49:48 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:49:48 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:49:48 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:49:48 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:49:49 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:49:49 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:49:49 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:49:54 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:49:54 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:49:54 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:49:56 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:49:56 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:49:56 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:49:58 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:49:58 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:49:58 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:49:58 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:49:59 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:49:59 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:01:30 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:01:30 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:01:30 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:01:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:01:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:01:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:01:35 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:01:35 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:01:35 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:02:12 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:02:12 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:02:12 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:02:12 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:02:12 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:02:12 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:02:14 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:02:14 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:02:14 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:02:16 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:02:16 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:02:16 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:02:16 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:02:17 - app.routers.asset_items - INFO - Fetching asset items - category_id: a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:02:17 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:02:17 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:02:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:02:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:02:20 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:02:20 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:02:20 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:02:20 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:02:21 - app.routers.asset_items - INFO - Fetching asset items - category_id: t1u2v3w4-x5y6-4z7a-8b9c-0d1e2f3g4h5i, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:02:21 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:02:21 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:02:21 - app.routers.asset_items - INFO - Fetching asset items - category_id: t1u2v3w4-x5y6-4z7a-8b9c-0d1e2f3g4h5i, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:02:21 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:02:21 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:02:21 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:02:21 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:02:22 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:02:22 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:02:22 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:02:25 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:02:25 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:02:25 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:02:39 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:02:39 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:02:39 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:02:39 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:02:39 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:02:39 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:02:40 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:02:40 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:02:40 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:39:50 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:39:50 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:39:50 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:39:52 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:39:52 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:39:52 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:45:00 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 14:45:09 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 14:45:09 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 14:45:09 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 14:45:09 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 14:45:09 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 14:45:10 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 14:45:10 - app.main - INFO - All database indexes verified
+2025-05-22 14:45:10 - app.main - INFO - Server started successfully!
+2025-05-22 14:45:10 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 14:45:15 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:45:15 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:45:15 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:45:17 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:45:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:45:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:45:20 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:45:20 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:45:20 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:45:20 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:45:20 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:45:20 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:45:21 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:45:21 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:45:21 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:45:23 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:45:23 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:45:23 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:45:23 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:45:23 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:45:23 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:45:24 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:45:24 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:45:24 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:45:26 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:45:26 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:45:26 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:45:26 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:45:28 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:45:28 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:45:34 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 14:45:34 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 14:45:35 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 14:45:35 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 14:45:37 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 14:45:37 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 14:48:51 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:48:51 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:48:51 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:48:51 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:48:52 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:48:52 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:49:00 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:49:00 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:49:00 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:49:00 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:49:00 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:49:00 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:50:16 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:50:16 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:50:16 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:50:20 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:50:20 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:50:20 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:50:20 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:50:20 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:50:20 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:50:31 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:50:31 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:50:31 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:50:44 - app.main - INFO - Request: PUT /api/asset-categories/c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r
+2025-05-22 14:50:44 - app.routers.asset_categories - INFO - Updating asset category with ID: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r
+2025-05-22 14:50:44 - app.services.asset_category_service - INFO - Updating category ID: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r
+2025-05-22 14:50:44 - app.main - ERROR - Request failed: PUT /api/asset-categories/c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r - Error: 3 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='d2e3f4g5-h6i7-4j8k-9l0m-1n2o3p4q5r6s', type='edit', edit_date='2025-05-21', change_type='Category Creation', details='Created new category: Chairs', notes='Added via API on 2025-05-21 at 05:11 PM IST')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 1), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='dda86534-41e3-4c3b-9387-69ee0ab6bf27', type='edit', edit_date='2025-05-21', change_type='Category Update', details='Updated category fields: category_name, category_type, description, policies, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 2), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='f8b6d801-e8da-4ed7-9c73-f05a1b1b3464', type='edit', edit_date='2025-05-22', change_type='Category Update', details='Updated category fields: category_name, category_type, description, policies, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-22 14:50:55 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:50:55 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:50:55 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:50:55 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:50:55 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:50:55 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:51:01 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 14:51:01 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 14:51:02 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 14:51:02 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 14:51:04 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 14:51:04 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 404
+2025-05-22 14:51:09 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:51:09 - app.routers.asset_items - INFO - Fetching asset items - category_id: c1d2e3f4-g5h6-4i7j-8k9l-0m1n2o3p4q5r, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:51:09 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:51:09 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:51:09 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:51:09 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:51:11 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:51:11 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:51:11 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:51:13 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:51:13 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:51:13 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:51:22 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 14:51:32 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 14:51:32 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 14:51:32 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 14:51:32 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 14:51:32 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 14:51:32 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 14:51:32 - app.main - INFO - All database indexes verified
+2025-05-22 14:51:32 - app.main - INFO - Server started successfully!
+2025-05-22 14:51:32 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 14:51:33 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:51:33 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:51:33 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:51:35 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:51:35 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:51:35 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:51:37 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:51:37 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:51:37 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:51:39 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:51:39 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:51:39 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:51:42 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 14:51:42 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 14:51:42 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 14:51:42 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 14:51:42 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 14:51:42 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 14:52:03 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 14:52:03 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 14:52:03 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 14:56:55 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 14:57:04 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 14:57:04 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 14:57:04 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 14:57:04 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 14:57:04 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 14:57:04 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 14:57:05 - app.main - INFO - All database indexes verified
+2025-05-22 14:57:05 - app.main - INFO - Server started successfully!
+2025-05-22 14:57:05 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 14:57:35 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 14:57:35 - app.routers.asset_categories - INFO - Creating asset category: Speakers
+2025-05-22 14:57:35 - app.services.asset_category_service - INFO - Creating category: Speakers
+2025-05-22 14:57:35 - app.services.asset_category_service - INFO - Created category with ID: f5d1783d-4517-4208-b9a4-48c220e37f37
+2025-05-22 14:58:22 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-22 14:58:22 - app.routers.asset_items - INFO - Creating asset item: JBL Bluetooth Conference Speaker
+2025-05-22 14:58:22 - app.services.asset_item_service - INFO - Creating asset: JBL Bluetooth Conference Speaker
+2025-05-22 14:58:22 - app.services.asset_item_service - WARNING - Category not found: f5d1783d-4517-4208-b9a4-48c220e37f37
+2025-05-22 14:58:22 - app.routers.asset_items - WARNING - Failed to create asset item: Category with ID 'f5d1783d-4517-4208-b9a4-48c220e37f37' does not exist
+2025-05-22 14:58:22 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 400
+2025-05-22 15:00:04 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-22 15:00:04 - app.routers.asset_items - INFO - Creating asset item: JBL Bluetooth Conference Speaker
+2025-05-22 15:00:04 - app.services.asset_item_service - INFO - Creating asset: JBL Bluetooth Conference Speaker
+2025-05-22 15:00:04 - app.services.asset_item_service - WARNING - Category not found: f5d1783d-4517-4208-b9a4-48c220e37f37
+2025-05-22 15:00:04 - app.routers.asset_items - WARNING - Failed to create asset item: Category with ID 'f5d1783d-4517-4208-b9a4-48c220e37f37' does not exist
+2025-05-22 15:00:04 - app.main - WARNING - Request failed: POST /api/asset-items/ - Status: 400
+2025-05-22 15:00:52 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:00:52 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:00:52 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:00:53 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:00:53 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:00:53 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:01:42 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:01:42 - app.routers.asset_items - INFO - Fetching asset items - category_id: a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:01:42 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:01:44 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:01:44 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:01:44 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:05:01 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:05:01 - app.routers.asset_items - INFO - Fetching asset items - category_id: a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:05:01 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:05:57 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:05:57 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:05:57 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:05:59 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:05:59 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:05:59 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:06:00 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:00 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:00 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:00 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:00 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:00 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 15:06:00 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 15:06:00 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 15:06:00 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 15:06:01 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:01 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:01 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:01 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:01 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:01 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 15:06:03 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:03 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:03 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:03 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:03 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:03 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:04 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:04 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:04 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 15:06:06 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 15:06:06 - app.routers.maintenance_history - INFO - Fetching all maintenance history entries
+2025-05-22 15:06:06 - app.services.maintenance_history_service - INFO - Fetching all maintenance history entries
+2025-05-22 15:06:16 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:06:16 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:06:16 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:06:18 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:06:18 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:06:18 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:06:19 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:19 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 15:06:19 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:19 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:19 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:19 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:19 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 15:06:19 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 15:06:19 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 15:06:20 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:20 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:20 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:20 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:20 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:20 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 15:06:22 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:22 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:22 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:22 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:22 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 15:06:22 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 15:06:22 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:22 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:22 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 15:06:32 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:06:32 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:06:32 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:09:49 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 15:09:49 - app.routers.asset_categories - INFO - Creating asset category: Speakers
+2025-05-22 15:09:49 - app.services.asset_category_service - INFO - Creating category: Speakers
+2025-05-22 15:09:49 - app.services.asset_category_service - INFO - Created category with ID: 00d13910-f691-45e4-a3e2-4967d5eec5af
+2025-05-22 15:10:50 - app.main - INFO - Request: POST /api/asset-items/
+2025-05-22 15:10:50 - app.routers.asset_items - INFO - Creating asset item: JBL Bluetooth Conference Speaker
+2025-05-22 15:10:50 - app.services.asset_item_service - INFO - Creating asset: JBL Bluetooth Conference Speaker
+2025-05-22 15:10:51 - app.services.asset_item_service - INFO - Created asset with ID: ebbdeabe-97d1-4173-b210-68f06768b98a
+2025-05-22 15:11:10 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:11:10 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:11:10 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:11:12 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:11:12 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:11:12 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:11:16 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:11:16 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:11:16 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:11:19 - app.main - INFO - Request: GET /api/asset-items/ebbdeabe-97d1-4173-b210-68f06768b98a
+2025-05-22 15:11:19 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 15:11:19 - app.routers.documents - INFO - GET /documents/ - asset_id: ebbdeabe-97d1-4173-b210-68f06768b98a, employee_id: None, document_type: None
+2025-05-22 15:11:19 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': 'ebbdeabe-97d1-4173-b210-68f06768b98a'}
+2025-05-22 15:11:19 - app.routers.asset_items - INFO - Fetching asset item with ID: ebbdeabe-97d1-4173-b210-68f06768b98a
+2025-05-22 15:11:19 - app.services.asset_item_service - INFO - Fetching asset item ID: ebbdeabe-97d1-4173-b210-68f06768b98a
+2025-05-22 15:11:45 - app.main - INFO - Request: POST /api/employees/
+2025-05-22 15:11:45 - app.routers.employees - INFO - Creating employee: EMP-201
+2025-05-22 15:11:45 - app.services.employee_service - INFO - Creating employee: John Smith
+2025-05-22 15:11:45 - app.services.employee_service - INFO - Created employee with ID: a79f6e67-f3c2-4226-9eb3-21582d6ca0d7
+2025-05-22 15:11:53 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:11:53 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:11:53 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:13:37 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:13:37 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:13:37 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:13:42 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:13:42 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:13:42 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:13:42 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:13:42 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:13:42 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:13:44 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:13:44 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:13:44 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:18:12 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 15:18:21 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 15:18:21 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 15:18:21 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 15:18:21 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 15:18:21 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 15:18:21 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 15:18:21 - app.main - INFO - All database indexes verified
+2025-05-22 15:18:21 - app.main - INFO - Server started successfully!
+2025-05-22 15:18:21 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 15:18:29 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:18:29 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:18:29 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:18:30 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:18:30 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:18:30 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:18:48 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:18:48 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:18:48 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:18:48 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:18:49 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:18:49 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:18:57 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 15:18:57 - app.routers.assignment_history - INFO - Creating new assignment - asset None to None
+2025-05-22 15:18:57 - app.routers.assignment_history - ERROR - Missing required fields: asset_id=None, assigned_to=None
+2025-05-22 15:18:57 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 400
+2025-05-22 15:18:58 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 15:18:58 - app.routers.assignment_history - INFO - Creating new assignment - asset None to None
+2025-05-22 15:18:58 - app.routers.assignment_history - ERROR - Missing required fields: asset_id=None, assigned_to=None
+2025-05-22 15:18:58 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 400
+2025-05-22 15:19:00 - app.main - INFO - Request: POST /api/assignment-history/
+2025-05-22 15:19:00 - app.routers.assignment_history - INFO - Creating new assignment - asset None to None
+2025-05-22 15:19:00 - app.routers.assignment_history - ERROR - Missing required fields: asset_id=None, assigned_to=None
+2025-05-22 15:19:00 - app.main - WARNING - Request failed: POST /api/assignment-history/ - Status: 400
+2025-05-22 15:25:06 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:25:06 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:25:06 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:25:06 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:25:07 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:25:07 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:25:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:25:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:25:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:25:36 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:25:36 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:25:36 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:25:36 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:25:36 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:25:36 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:26:38 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:26:38 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:26:38 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:26:38 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:26:39 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:26:39 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:26:43 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:26:43 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:26:43 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:26:43 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:26:45 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:26:45 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:29:43 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 15:29:54 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 15:29:54 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 15:29:54 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 15:29:54 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 15:29:54 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 15:29:54 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 15:29:54 - app.main - INFO - All database indexes verified
+2025-05-22 15:29:54 - app.main - INFO - Server started successfully!
+2025-05-22 15:29:54 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 15:30:13 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:30:13 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:30:13 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:30:15 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:30:15 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:30:15 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:30:19 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:30:19 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:30:19 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:30:19 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:30:19 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:30:19 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:30:49 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:30:49 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:30:49 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:30:49 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:30:49 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:30:50 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:30:50 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:30:51 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:30:51 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:30:57 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:30:57 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:30:57 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:31:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:31:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:31:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:31:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:31:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:31:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:31:11 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:31:11 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:31:11 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:31:11 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:31:13 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:31:13 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:36:05 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:36:05 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:36:05 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:36:05 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:36:05 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:36:05 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:36:06 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:36:06 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:36:06 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:36:06 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:36:06 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:36:06 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:37:00 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:37:00 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:37:00 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:37:00 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:37:01 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:37:01 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:37:01 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:37:01 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:37:01 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:37:14 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:37:14 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:37:14 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:37:14 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:37:14 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:37:14 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:37:22 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:37:22 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:37:22 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:37:22 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:37:22 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:37:22 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:37:23 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:37:23 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:37:23 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:37:23 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:37:23 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:37:23 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:37:44 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 15:37:54 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 15:37:54 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 15:37:54 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 15:37:54 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 15:37:54 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 15:37:54 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 15:37:54 - app.main - INFO - All database indexes verified
+2025-05-22 15:37:54 - app.main - INFO - Server started successfully!
+2025-05-22 15:37:54 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 15:37:58 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:37:58 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:37:58 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:37:58 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:37:58 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:37:59 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:37:59 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:38:01 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:38:01 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:38:01 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:38:01 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:38:01 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:38:07 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:38:07 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:38:07 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:38:07 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:38:07 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:38:07 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:38:14 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:38:14 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:38:14 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:38:16 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:38:16 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:38:16 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:38:16 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 15:38:16 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 15:38:16 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 15:38:29 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 15:38:29 - app.routers.asset_items - INFO - Fetching asset items - category_id: 00d13910-f691-45e4-a3e2-4967d5eec5af, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 15:38:29 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 15:38:30 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:38:30 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:38:30 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:38:35 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:38:35 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:38:35 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:38:36 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:38:36 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:38:36 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:39:22 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:39:22 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:39:22 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 15:39:22 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 15:39:22 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 15:39:22 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 16:02:34 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 16:02:34 - app.routers.asset_categories - INFO - Creating asset category: Speakers
+2025-05-22 16:02:34 - app.services.asset_category_service - INFO - Creating category: Speakers
+2025-05-22 16:02:34 - app.services.asset_category_service - INFO - Created category with ID: f3c8660e-82b3-4f38-8f50-1dc9373424ef
+2025-05-22 16:04:54 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 16:04:54 - app.routers.asset_categories - INFO - Creating asset category: Speakers
+2025-05-22 16:04:54 - app.services.asset_category_service - INFO - Creating category: Speakers
+2025-05-22 16:04:54 - app.services.asset_category_service - INFO - Created category with ID: 9946979a-e3d1-449c-a9fa-6532b5da2f72
+2025-05-22 16:05:46 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 16:05:46 - app.main - WARNING - Request failed: POST /api/asset-categories/ - Status: 422
+2025-05-22 16:13:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 16:13:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 16:13:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 16:13:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 16:13:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 16:13:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 16:25:08 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 16:25:08 - app.main - WARNING - Request failed: POST /api/asset-categories/ - Status: 422
+2025-05-22 16:25:23 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 16:25:32 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 16:25:32 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 16:25:32 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 16:25:33 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 16:25:33 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 16:25:33 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 16:25:33 - app.main - INFO - All database indexes verified
+2025-05-22 16:25:33 - app.main - INFO - Server started successfully!
+2025-05-22 16:25:33 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 16:26:15 - app.main - INFO - Request: POST /api/asset-categories/
+2025-05-22 16:26:15 - app.main - WARNING - Request failed: POST /api/asset-categories/ - Status: 422
+2025-05-22 16:33:05 - app.main - INFO - Request: POST /api/asset-categories/bulk
+2025-05-22 16:33:05 - app.routers.asset_categories - INFO - Creating 7 asset categories in bulk
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Laptops
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: 1c6e3103-9dc5-4191-89eb-27506065ffdd
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Office Chairs
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: e737bbc8-1858-406c-80af-35be291e32b3
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Printer Ink
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: b56ef577-12c3-475f-a1cb-c937100a45be
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Projectors
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: 7be733c3-ed86-4820-a6ff-69178be5d5ec
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Software Licenses
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: 1bace0c9-ecaa-4e15-addc-4ab56f3282e0
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Desk Phones
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: 83c036c0-bdfd-4c64-b2d2-bd77018bb11b
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Creating category: Notebooks
+2025-05-22 16:33:05 - app.services.asset_category_service - INFO - Created category with ID: bfb3b812-3085-460a-87f7-67214c541adf
+2025-05-22 16:33:05 - app.routers.asset_categories - INFO - Successfully created 7 out of 7 categories
+2025-05-22 16:33:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 16:33:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 16:33:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 16:33:29 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 16:33:29 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 16:33:29 - app.services.asset_category_service - INFO - Fetching all asset categories

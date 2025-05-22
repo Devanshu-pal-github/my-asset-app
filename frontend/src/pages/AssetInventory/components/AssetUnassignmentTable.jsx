@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import logger from '../../../utils/logger';
 import { paginate, sortData } from './tableUtils';
 import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
 import { fetchEmployees } from '../../../store/slices/employeeSlice';
+import { unassignAsset } from '../../../store/slices/assignmentHistorySlice';
 
 const AssetUnassignmentTable = () => {
   const dispatch = useDispatch();
@@ -29,6 +30,7 @@ const AssetUnassignmentTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [entitySearchTerm, setEntitySearchTerm] = useState('');
   const itemsPerPage = 10;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Check for employeeId in navigation state
   const targetEmployeeId = location.state?.employeeId;
@@ -66,40 +68,64 @@ const AssetUnassignmentTable = () => {
 
   const currentCategory = categories.find((cat) => cat.id === categoryId);
 
-  // Filter assets: only assigned assets for the category that can be unassigned
-  const filteredAssets = assets.filter((asset) => {
-    if (!currentCategory) return false;
+  // Filter assets to show only assigned assets that can be unassigned
+  const filteredAssets = useMemo(() => {
+    logger.debug('Filtering assets for unassignment table', { 
+      totalAssets: assets.length,
+      categoryId
+    });
     
-    // Get category properties
-    const isConsumable = currentCategory.is_consumable;
-    const isReassignable = currentCategory.is_reassignable !== false; // Default to true if not specified
+    // First filter by category if provided
+    const categoryAssets = categoryId
+      ? assets.filter(asset => asset.category_id === categoryId)
+      : assets;
     
-    // Check asset status
-    const isAssigned = asset.status === 'assigned';
-    const hasActiveAssignment = asset.has_active_assignment;
-    const isNotUnderMaintenance = !['under_maintenance', 'maintenance_requested'].includes(asset.status);
+    logger.debug('Assets in selected category', { 
+      count: categoryAssets.length, 
+      categoryId 
+    });
     
-    // For consumable items, they can't be unassigned
-    if (isConsumable) {
-      return false;
-    }
+    // Filter to only show assets that are currently assigned
+    const assignedAssets = categoryAssets.filter(asset => {
+      const isAssigned = asset.status === 'assigned';
+      const hasActiveAssignment = asset.has_active_assignment === true;
+      const hasAssignee = !!asset.current_assignee_id || 
+                          (asset.current_assignment_id && asset.current_assignment_id !== '');
+      
+      // An asset is eligible for unassignment if it's assigned
+      const canBeUnassigned = isAssigned || (hasActiveAssignment && hasAssignee);
+      
+      // Log debug info for assets that might be confusing
+      if (hasAssignee && !canBeUnassigned) {
+        logger.debug('Asset has assignee but not eligible for unassignment', {
+          id: asset.id,
+          name: asset.name,
+          status: asset.status,
+          has_active_assignment: asset.has_active_assignment,
+          current_assignee_id: asset.current_assignee_id
+        });
+      }
+      
+      return canBeUnassigned;
+    });
     
-    // Check if asset matches target employee if specified
-    const matchesEmployee = !targetEmployeeId || asset.current_assignee_id === targetEmployeeId;
+    logger.debug('Assigned assets filtered', { count: assignedAssets.length });
     
-    // Asset must be assigned, have an active assignment, not under maintenance, be reassignable, and match employee if specified
-    return isAssigned && hasActiveAssignment && isNotUnderMaintenance && isReassignable && matchesEmployee;
-  });
+    // Filter by search term if provided
+    if (!searchTerm) return assignedAssets;
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return assignedAssets.filter(asset => 
+      (asset.name && asset.name.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.asset_id && asset.asset_id.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.serial_number && asset.serial_number.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.asset_tag && asset.asset_tag.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.status && asset.status.toLowerCase().includes(lowerSearchTerm))
+    );
+  }, [assets, categoryId, searchTerm]);
 
-  // Apply search filter
-  const searchFilteredAssets = searchTerm
-    ? filteredAssets.filter(asset =>
-        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.asset_tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (asset.current_assignee_id && employees.find(e => e.id === asset.current_assignee_id)?.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (asset.current_assignee_id && employees.find(e => e.id === asset.current_assignee_id)?.last_name.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-    : filteredAssets;
+  // Sort and search related functions
+  const searchFilteredAssets = filteredAssets;
 
   // Sort and paginate
   const sortedAssets = sortData(searchFilteredAssets, sortField, sortOrder);
@@ -171,7 +197,67 @@ const AssetUnassignmentTable = () => {
   
   const confirmUnassignment = async () => {
     try {
-      logger.info('Unassigning assets', { assets: selectedAssets, entities: selectedEntities, actionType });
+      setIsSubmitting(true);
+      
+      // Log detailed info about unassignment process
+      logger.info('Starting asset unassignment process', {
+        selectedAssets: selectedAssets.length,
+        actionType
+      });
+      
+      if (!selectedAssets.length) {
+        throw new Error('No assets selected for unassignment');
+      }
+      
+      // Create an array of promises for parallel processing
+      const unassignmentPromises = [];
+      
+      // Process each asset
+      for (const assetId of selectedAssets) {
+        const asset = assets.find(a => a._id === assetId || a.id === assetId);
+        
+        if (!asset) {
+          logger.error('Asset not found', { assetId });
+          continue;
+        }
+        
+        logger.debug('Processing asset for unassignment', {
+          assetId,
+          assetName: asset.name || asset.asset_name || 'Unknown',
+          currentAssignmentId: asset.current_assignment_id
+        });
+        
+        if (!asset.current_assignment_id) {
+          logger.warn('No active assignment found for asset', { assetId });
+          continue;
+        }
+        
+        // Create unassignment with unwrap() to handle errors
+        unassignmentPromises.push(
+          dispatch(unassignAsset({
+            assignmentId: asset.current_assignment_id,
+            returnNotes: actionType === 'unassign_and_reassign' 
+              ? 'Unassigned for reassignment' 
+              : 'Unassigned via asset management system',
+            returnDate: new Date().toISOString(),
+            returnCondition: asset.condition || 'Good'
+          })).unwrap()
+        );
+      }
+      
+      // Wait for all unassignment operations to complete
+      const results = await Promise.all(unassignmentPromises);
+      logger.info('Asset unassignment completed successfully', { 
+        count: results.length,
+        results: results.map(r => ({
+          assignmentId: r.assignment_id,
+          returnDate: r.return_date,
+          status: r.status
+        }))
+      });
+      
+      // Refresh asset list to show updated assignments
+      dispatch(fetchAssetItemsByCategory(categoryId));
       
       setNotification({
         type: 'success',
@@ -190,14 +276,22 @@ const AssetUnassignmentTable = () => {
         }
       }, 1500);
     } catch (error) {
-      logger.error('Failed to unassign asset', { error: error.message });
+      logger.error('Failed to unassign assets', { 
+        error: error.message || 'Unknown error',
+        stack: error.stack,
+        selectedAssets, 
+        actionType
+      });
+      
       setNotification({
         type: 'error',
-        message: 'Failed to unassign asset',
+        message: error.message || 'Failed to unassign assets',
       });
     } finally {
+      setIsSubmitting(false);
       setShowConfirmModal(false);
       setSelectedEntities([]);
+      setSelectedAssets([]);
     }
   };
 

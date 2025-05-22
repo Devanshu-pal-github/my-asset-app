@@ -113,6 +113,47 @@ async def request_asset_maintenance(maintenance: MaintenanceCreate, collection: 
         logger.error(f"Failed to request maintenance for asset {maintenance.asset_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to request maintenance: {str(e)}")
 
+@router.post("/request/bulk", response_model=List[AssetItem])
+async def request_bulk_maintenance(maintenances: List[MaintenanceCreate], collection: Database = Depends(get_maintenance_history_collection)):
+    """
+    Request maintenance for multiple assets in a single request.
+    
+    Args:
+        maintenances (List[MaintenanceCreate]): List of maintenance request details
+        collection (Database): MongoDB maintenance history collection, injected via dependency.
+    
+    Returns:
+        List[AssetItem]: List of updated assets with new maintenance records
+    
+    Raises:
+        HTTPException: 400 for validation errors, 500 for server errors
+    """
+    logger.info(f"Requesting maintenance for {len(maintenances)} assets in bulk")
+    
+    updated_assets = []
+    errors = []
+    
+    for idx, maintenance in enumerate(maintenances):
+        try:
+            logger.debug(f"Processing maintenance request {idx+1}/{len(maintenances)}: asset {maintenance.asset_id}")
+            updated_asset = request_maintenance(collection, maintenance)
+            updated_assets.append(updated_asset)
+            logger.debug(f"Successfully requested maintenance for asset: {maintenance.asset_id}")
+        except Exception as e:
+            logger.error(f"Failed to request maintenance {idx+1}: {str(e)}", exc_info=True)
+            errors.append(f"Maintenance {idx+1} (Asset {maintenance.asset_id}): {str(e)}")
+    
+    if errors and not updated_assets:
+        # If all maintenance requests failed, return 400 with error details
+        raise HTTPException(status_code=400, detail={"message": "All maintenance requests failed", "errors": errors})
+    
+    if errors:
+        # If some maintenance requests failed but others succeeded, log the errors
+        logger.warning(f"Some maintenance requests failed: {errors}")
+    
+    logger.info(f"Successfully requested maintenance for {len(updated_assets)} out of {len(maintenances)} assets")
+    return updated_assets
+
 @router.post("/update", response_model=AssetItem)
 async def update_maintenance(update: MaintenanceUpdate, collection: Database = Depends(get_maintenance_history_collection)):
     """

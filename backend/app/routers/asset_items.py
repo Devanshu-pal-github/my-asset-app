@@ -184,6 +184,47 @@ async def create_new_asset_item(item: AssetItemCreate, collection: Collection = 
         logger.error(f"Failed to create asset item: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to create asset item: {str(e)}")
 
+@router.post("/bulk", response_model=List[AssetItemResponse])
+async def create_bulk_asset_items(items: List[AssetItemCreate], collection: Collection = Depends(get_asset_items_collection)):
+    """
+    Create multiple asset items in a single request.
+    
+    Args:
+        items (List[AssetItemCreate]): List of asset items to create
+        collection (Collection): MongoDB collection instance, injected via dependency
+        
+    Returns:
+        List[AssetItemResponse]: List of created asset items
+        
+    Raises:
+        HTTPException: 400 for validation errors, 500 for server errors
+    """
+    logger.info(f"Creating {len(items)} asset items in bulk")
+    
+    created_items = []
+    errors = []
+    
+    for idx, item in enumerate(items):
+        try:
+            logger.debug(f"Creating item {idx+1}/{len(items)}: {item.name}")
+            created_item = create_asset_item(collection, item)
+            created_items.append(created_item)
+            logger.debug(f"Successfully created asset item: {created_item.id}")
+        except Exception as e:
+            logger.error(f"Failed to create asset item {idx+1}: {str(e)}", exc_info=True)
+            errors.append(f"Asset item {idx+1} ({item.name}): {str(e)}")
+    
+    if errors and not created_items:
+        # If all items failed, return 400 with error details
+        raise HTTPException(status_code=400, detail={"message": "All asset items failed to create", "errors": errors})
+    
+    if errors:
+        # If some items failed but others succeeded, log the errors
+        logger.warning(f"Some asset items failed to create: {errors}")
+    
+    logger.info(f"Successfully created {len(created_items)} out of {len(items)} asset items")
+    return created_items
+
 @router.put("/{asset_id}", response_model=AssetItemResponse)
 async def update_existing_asset_item(asset_id: str, item: AssetItemUpdate, collection: Collection = Depends(get_asset_items_collection)):
     """

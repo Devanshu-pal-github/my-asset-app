@@ -171,6 +171,47 @@ async def create_new_employee(employee: EmployeeCreate, collection: Database = D
         logger.error(f"Failed to create employee: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to create employee: {str(e)}")
 
+@router.post("/bulk", response_model=List[EmployeeResponse])
+async def create_bulk_employees(employees: List[EmployeeCreate], collection: Database = Depends(get_employees_collection)):
+    """
+    Create multiple employees in a single request.
+    
+    Args:
+        employees (List[EmployeeCreate]): List of employees to create
+        collection (Database): MongoDB collection instance, injected via dependency
+        
+    Returns:
+        List[EmployeeResponse]: List of created employees
+        
+    Raises:
+        HTTPException: 400 for validation errors, 500 for server errors
+    """
+    logger.info(f"Creating {len(employees)} employees in bulk")
+    
+    created_employees = []
+    errors = []
+    
+    for idx, employee in enumerate(employees):
+        try:
+            logger.debug(f"Creating employee {idx+1}/{len(employees)}: {employee.employee_id}")
+            created_employee = create_employee(collection, employee)
+            created_employees.append(created_employee)
+            logger.debug(f"Successfully created employee: {created_employee.id}")
+        except Exception as e:
+            logger.error(f"Failed to create employee {idx+1}: {str(e)}", exc_info=True)
+            errors.append(f"Employee {idx+1} ({employee.employee_id}): {str(e)}")
+    
+    if errors and not created_employees:
+        # If all employees failed, return 400 with error details
+        raise HTTPException(status_code=400, detail={"message": "All employees failed to create", "errors": errors})
+    
+    if errors:
+        # If some employees failed but others succeeded, log the errors
+        logger.warning(f"Some employees failed to create: {errors}")
+    
+    logger.info(f"Successfully created {len(created_employees)} out of {len(employees)} employees")
+    return created_employees
+
 @router.put("/{employee_id}", response_model=EmployeeResponse)
 async def update_existing_employee(employee_id: str, employee: EmployeeUpdate, collection: Database = Depends(get_employees_collection)):
     """

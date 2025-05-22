@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import logger from '../../../utils/logger';
 import { paginate, sortData } from './tableUtils';
 import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
 import { fetchEmployees } from '../../../store/slices/employeeSlice';
+import { createAssignment } from '../../../store/slices/assignmentHistorySlice';
 
 const AssetAssignmentTable = () => {
   const dispatch = useDispatch();
@@ -28,10 +29,12 @@ const AssetAssignmentTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
   const itemsPerPage = 10;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [debugMode, setDebugMode] = useState(false); // For debugging
 
   // Check for employeeId in navigation state
   const targetEmployeeId = location.state?.employeeId;
-  const targetEmployee = employees.find((emp) => emp.id === targetEmployeeId);
+  const targetEmployee = employees.find((emp) => emp.id === targetEmployeeId || emp._id === targetEmployeeId);
 
   useEffect(() => {
     logger.debug('AssetAssignmentTable useEffect triggered', { categoryId, targetEmployeeId });
@@ -42,6 +45,7 @@ const AssetAssignmentTable = () => {
         .unwrap()
         .then((result) => {
           logger.info('Assets fetched successfully', { count: result.length });
+          console.log('Assets fetched:', result);
         })
         .catch((error) => {
           logger.error('Failed to fetch assets', { error });
@@ -57,55 +61,140 @@ const AssetAssignmentTable = () => {
       .unwrap()
       .then((result) => {
         logger.info('Employees fetched successfully', { count: result.length });
+        console.log('Employees fetched:', result);
       })
       .catch((error) => {
         logger.error('Failed to fetch employees', { error });
       });
   }, [categoryId, dispatch, targetEmployeeId]);
 
+  // Add keyboard shortcut for debug mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+D to toggle debug mode
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        setDebugMode(prev => {
+          const newMode = !prev;
+          console.log(`Debug mode ${newMode ? 'enabled' : 'disabled'}`);
+          return newMode;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const currentCategory = categories.find((cat) => cat.id === categoryId);
+  
+  // Helper function to get the normalized ID (handle both id and _id cases)
+  const getNormalizedId = (item) => {
+    if (!item) return null;
+    return item.id || item._id;
+  };
 
-  // Filter assets: available, consumable, or allow multiple assignments, not under maintenance
-  const filteredAssets = assets.filter((asset) => {
-    if (!currentCategory) return false;
-    
-    // Get category properties
-    const allowMultipleAssignments = currentCategory.allow_multiple_assignments;
-    const isConsumable = currentCategory.is_consumable;
-    
-    // Check asset status
-    const isAvailable = asset.status === 'available';
-    const isNotUnderMaintenance = !['under_maintenance', 'maintenance_requested'].includes(asset.status);
-    
-    // For consumable items, they can always be assigned
-    if (isConsumable && isNotUnderMaintenance) {
-      return true;
-    }
-    
-    // For items allowing multiple assignments, they can be assigned unless under maintenance
-    if (allowMultipleAssignments && isNotUnderMaintenance) {
-      return true;
-    }
-    
-    // For regular items, they must be available and not under maintenance
-    return isAvailable && isNotUnderMaintenance;
-  });
+  // Get the selected assets with details for display
+  const selectedAssetsWithDetails = useMemo(() => {
+    return selectedAssets.map(assetId => {
+      const matchedAsset = assets.find(a => getNormalizedId(a) === assetId);
+      
+      if (!matchedAsset) {
+        logger.warn(`Asset not found for ID ${assetId}`, { 
+          availableAssetIds: assets.map(a => ({ id: a.id, _id: a._id })),
+          selectedAssetId: assetId
+        });
+        return { id: assetId, name: 'Unknown Asset', asset_tag: 'Unknown' };
+      }
+      
+      return matchedAsset;
+    });
+  }, [selectedAssets, assets]);
 
-  // Apply search filter
-  const searchFilteredAssets = searchTerm
-    ? filteredAssets.filter(asset =>
-        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.asset_tag.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : filteredAssets;
+  // Get the selected entities with details for display
+  const selectedEntitiesWithDetails = useMemo(() => {
+    const entityIdsToUse = selectedEntities.length > 0 ? selectedEntities : 
+                            targetEmployeeId ? [targetEmployeeId] : [];
+                                
+    return entityIdsToUse.map(entityId => {
+      const matchedEntity = employees.find(e => getNormalizedId(e) === entityId);
+      
+      if (!matchedEntity) {
+        logger.warn(`Employee not found for ID ${entityId}`, { 
+          availableEmployeeIds: employees.map(e => ({ id: e.id, _id: e._id })),
+          selectedEntityId: entityId
+        });
+        return { id: entityId, first_name: 'Unknown', last_name: 'Entity', department: 'Unknown' };
+      }
+      
+      return matchedEntity;
+    });
+  }, [selectedEntities, employees, targetEmployeeId]);
 
-  // Apply search filter to employees
-  const filteredEmployees = employeeSearchTerm 
-    ? employees.filter(employee => 
-        `${employee.first_name} ${employee.last_name}`.toLowerCase().includes(employeeSearchTerm.toLowerCase()) ||
-        employee.department.toLowerCase().includes(employeeSearchTerm.toLowerCase()) ||
-        employee.id.toLowerCase().includes(employeeSearchTerm.toLowerCase()))
-    : employees;
+  // Filter assets to show only unassigned assets
+  const filteredAssets = useMemo(() => {
+    logger.debug('Filtering assets for assignment table', { 
+      totalAssets: assets.length,
+      categoryId
+    });
+    
+    // First filter by category if provided
+    const categoryAssets = categoryId
+      ? assets.filter(asset => asset.category_id === categoryId)
+      : assets;
+    
+    logger.debug('Assets in selected category', { 
+      count: categoryAssets.length, 
+      categoryId,
+      firstAsset: categoryAssets[0]
+    });
+    
+    // Filter out assets that are not assignable
+    const assignableAssets = categoryAssets.filter(asset => {
+      const isAvailable = asset.status === 'available';
+      const isNotAssigned = !asset.has_active_assignment && !asset.current_assignee_id;
+      const isNotUnderMaintenance = asset.status !== 'under_maintenance' && asset.status !== 'maintenance_requested';
+      const isNotDecommissioned = asset.status !== 'retired' && asset.status !== 'lost';
+      
+      // An asset is assignable if it's available/not assigned and not under maintenance/decommissioned
+      const canBeAssigned = isAvailable && isNotAssigned && isNotUnderMaintenance && isNotDecommissioned;
+      
+      // Log debug info for assets that might be confusing
+      if (isAvailable && !canBeAssigned) {
+        logger.debug('Asset is available but not assignable', {
+          id: asset.id,
+          name: asset.name,
+          status: asset.status,
+          has_active_assignment: asset.has_active_assignment,
+          current_assignee_id: asset.current_assignee_id
+        });
+      }
+      
+      return canBeAssigned;
+    });
+    
+    logger.debug('Assignable assets filtered', { 
+      count: assignableAssets.length,
+      firstItem: assignableAssets[0]
+    });
+    
+    // Filter by search term if provided
+    if (!searchTerm) return assignableAssets;
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return assignableAssets.filter(asset => 
+      (asset.name && asset.name.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.asset_id && asset.asset_id.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.serial_number && asset.serial_number.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.asset_tag && asset.asset_tag.toLowerCase().includes(lowerSearchTerm)) ||
+      (asset.status && asset.status.toLowerCase().includes(lowerSearchTerm))
+    );
+  }, [assets, categoryId, searchTerm]);
+
+  // Sort and search related functions
+  const searchFilteredAssets = filteredAssets;
 
   const handleSort = (field) => {
     const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
@@ -157,33 +246,134 @@ const AssetAssignmentTable = () => {
 
   const confirmAssignment = async () => {
     try {
-      const entitiesToUse = selectedEntities.length > 0 
-        ? selectedEntities 
-        : targetEmployeeId ? [targetEmployeeId] : [];
+      setIsSubmitting(true);
       
-      logger.info('Assigning assets', { assets: selectedAssets, entities: entitiesToUse });
+      // Log detailed info about assignment process
+      logger.info('Starting asset assignment process', {
+        selectedAssets: selectedAssets.length,
+        selectedEntities: selectedEntities.length,
+        targetEmployeeId: targetEmployeeId
+      });
       
-      // Get entity names for notification
-      const entityNames = entitiesToUse.map(id => {
-        const entity = employees.find(e => e.id === id);
-        return entity ? `${entity.first_name} ${entity.last_name}` : 'Unknown';
-      }).join(', ');
+      // Determine which entities to use (either selected or target)
+      const entitiesToAssign = targetEmployeeId 
+        ? [targetEmployeeId] 
+        : selectedEntities;
+      
+      if (!entitiesToAssign.length) {
+        throw new Error('No employees selected for assignment');
+      }
+      
+      if (!selectedAssets.length) {
+        throw new Error('No assets selected for assignment');
+      }
+      
+      console.log('Assets to assign:', selectedAssetsWithDetails);
+      console.log('Entities to assign to:', selectedEntitiesWithDetails);
+      
+      // Log assignment details
+      logger.info('Assigning assets to entities', {
+        assets: selectedAssets,
+        entities: entitiesToAssign,
+        assignmentType: 'bulk-assignment'
+      });
+      
+      // Create an array of promises for parallel processing
+      const assignmentPromises = [];
+      
+      // For each selected asset, assign it to each selected entity
+      for (const assetId of selectedAssets) {
+        const asset = assets.find(item => getNormalizedId(item) === assetId);
+        
+        if (!asset) {
+          logger.error('Asset not found for assignment', { assetId });
+          console.error(`Asset not found for assignment: ${assetId}`);
+          continue;
+        }
+        
+        logger.debug('Processing asset for assignment', {
+          assetId,
+          assetName: asset.name || asset.asset_name || 'Unknown',
+          entities: entitiesToAssign
+        });
+        
+        // Find asset's category to get department
+        const category = categories.find(cat => cat.id === asset.category_id);
+        const department = category?.category_name || 'Unknown Department';
+        
+        for (const entityId of entitiesToAssign) {
+          const entity = employees.find(emp => getNormalizedId(emp) === entityId);
+          
+          if (!entity) {
+            logger.error('Entity not found for assignment', { entityId });
+            console.error(`Entity not found for assignment: ${entityId}`);
+            continue;
+          }
+          
+          const entityName = entity.name || `${entity.first_name} ${entity.last_name}` || 'Unknown';
+          
+          logger.debug('Creating assignment for asset-entity pair', {
+            assetId: getNormalizedId(asset),
+            entityId: getNormalizedId(entity),
+            entityName
+          });
+          
+          console.log(`Assigning asset "${asset.name}" to entity "${entityName}"`);
+          
+          // Create assignment with unwrap() to handle errors
+          assignmentPromises.push(
+            dispatch(createAssignment({
+              assetId: getNormalizedId(asset),
+              employeeId: getNormalizedId(entity),
+              assignmentNotes: `Assigned via Asset Management System to ${entityName}`,
+              department: entity.department || department,
+              condition: asset.condition || 'Good',
+              assignmentType: 'PERMANENT',
+              startDate: new Date().toISOString()
+            })).unwrap()
+          );
+        }
+      }
+      
+      // Wait for all assignment operations to complete
+      const results = await Promise.all(assignmentPromises);
+      logger.info('Asset assignment completed successfully', { 
+        count: results.length,
+        results: results.map(r => ({id: r.id, assetId: r.asset_id, employeeId: r.employee_id}))
+      });
+      
+      // Build notification message
+      const entityNames = selectedEntitiesWithDetails.map(entity => 
+        entity.name || `${entity.first_name} ${entity.last_name}`
+      );
+      
+      // Refresh asset list to show updated assignments
+      dispatch(fetchAssetItemsByCategory(categoryId));
       
       setNotification({
         type: 'success',
-        message: `Asset(s) assigned to ${entityNames}`,
+        message: `Asset(s) successfully assigned to ${entityNames.join(', ')}`,
       });
-
+      
       setTimeout(() => {
         navigate('/asset-inventory');
       }, 1500);
+      
     } catch (error) {
-      logger.error('Failed to assign asset', { error: error.message });
+      logger.error('Failed to assign assets', { 
+        error: error.message || 'Unknown error',
+        stack: error.stack,
+        selectedAssets, 
+        selectedEntities,
+        targetEmployeeId
+      });
+      
       setNotification({
         type: 'error',
-        message: 'Failed to assign asset',
+        message: error.message || 'Failed to assign assets',
       });
     } finally {
+      setIsSubmitting(false);
       setShowConfirmModal(false);
       setSelectedEntities([]);
       setSelectedAssets([]);
@@ -255,7 +445,7 @@ const AssetAssignmentTable = () => {
   return (
     <div className="mt-24 p-6">
       {/* Loading states */}
-      {(assetsLoading || employeesLoading) && (
+      {(assetsLoading || employeesLoading || isSubmitting) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -276,6 +466,25 @@ const AssetAssignmentTable = () => {
           </button>
         </div>
       )}
+      
+      {/* Debug information (toggle with Ctrl+D) */}
+      {debugMode && (
+        <div className="mb-6 p-4 bg-gray-800 text-white rounded-lg overflow-auto max-h-96">
+          <h3 className="text-lg font-semibold">Debug Information</h3>
+          <p><strong>Assets Count:</strong> {assets.length}</p>
+          <p><strong>Filtered Assets Count:</strong> {filteredAssets.length}</p>
+          <p><strong>Employees Count:</strong> {employees.length}</p>
+          <p><strong>Selected Assets:</strong> {selectedAssets.join(', ')}</p>
+          <p><strong>Selected Entities:</strong> {selectedEntities.join(', ')}</p>
+          <pre className="mt-2 text-xs">{JSON.stringify({
+            selectedAssetsWithDetails: selectedAssetsWithDetails.map(a => ({ id: a.id, name: a.name })),
+            selectedEntitiesWithDetails: selectedEntitiesWithDetails.map(e => ({ id: e.id, name: `${e.first_name} ${e.last_name}` })),
+            firstFewAssets: assets.slice(0, 3).map(a => ({ id: a.id, _id: a._id, name: a.name })),
+            firstFewEmployees: employees.slice(0, 3).map(e => ({ id: e.id, _id: e._id, name: `${e.first_name} ${e.last_name}` })),
+          }, null, 2)}</pre>
+        </div>
+      )}
+      
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -286,39 +495,36 @@ const AssetAssignmentTable = () => {
             
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Selected Assets</h4>
-              {selectedAssets.map((assetId) => {
-                const asset = assets.find((a) => a.id === assetId);
-                return (
-                  <div key={asset?._id} className="mt-2">
-                    <p className="text-gray-600">
-                      <strong>Name:</strong> {asset?.name || 'Unknown'}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Asset Tag:</strong> {asset?.asset_tag || 'Unknown'}
-                    </p>
-                  </div>
-                );
-              })}
+              {selectedAssetsWithDetails.map((asset) => (
+                <div key={asset.id || asset._id} className="mt-2 p-2 bg-gray-50 rounded-md">
+                  <p className="text-gray-600">
+                    <strong>Name:</strong> {asset.name || 'Unknown'}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>Asset Tag:</strong> {asset.asset_tag || 'Unknown'}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>ID:</strong> {getNormalizedId(asset)}
+                  </p>
+                </div>
+              ))}
             </div>
             
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Selected Entities</h4>
-              {(selectedEntities.length > 0 ? selectedEntities : targetEmployeeId ? [targetEmployeeId] : []).map((entityId) => {
-                const entity = employees.find((e) => e.id === entityId);
-                return (
-                  <div key={entity?._id} className="mt-2">
-                    <p className="text-gray-600">
-                      <strong>Name:</strong> {entity ? `${entity.first_name} ${entity.last_name}` : 'Unknown'}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>ID:</strong> {entity?._id || 'Unknown'}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Department:</strong> {entity?.department || 'N/A'}
-                    </p>
-                  </div>
-                );
-              })}
+              {selectedEntitiesWithDetails.map((entity) => (
+                <div key={entity.id || entity._id} className="mt-2 p-2 bg-gray-50 rounded-md">
+                  <p className="text-gray-600">
+                    <strong>Name:</strong> {entity ? `${entity.first_name} ${entity.last_name}` : 'Unknown'}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>ID:</strong> {getNormalizedId(entity)}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>Department:</strong> {entity?.department || 'N/A'}
+                  </p>
+                </div>
+              ))}
             </div>
             
             <div className="mt-6 flex justify-end gap-2">
@@ -332,10 +538,11 @@ const AssetAssignmentTable = () => {
                 Cancel
               </button>
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                disabled={isSubmitting}
+                className={`${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-2 px-4 rounded-lg transition-colors`}
                 onClick={confirmAssignment}
               >
-                Confirm
+                {isSubmitting ? 'Processing...' : 'Confirm'}
               </button>
             </div>
           </div>
@@ -393,7 +600,7 @@ const AssetAssignmentTable = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {filteredEmployees.map((employee) => (
+                    {employees.map((employee) => (
                       <tr key={employee._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <input
@@ -421,7 +628,7 @@ const AssetAssignmentTable = () => {
                   </tbody>
                 </table>
               </div>
-              {filteredEmployees.length === 0 && (
+              {employees.length === 0 && (
                 <div className="text-center py-4 text-gray-500">
                   No matching employees found
                 </div>
