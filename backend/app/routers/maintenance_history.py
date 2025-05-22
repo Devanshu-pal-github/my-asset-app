@@ -12,7 +12,8 @@ from app.models.maintenance_history import (
 from app.services.maintenance_history_service import (
     request_maintenance,
     update_maintenance_status,
-    get_maintenance_history_by_asset
+    get_maintenance_history_by_asset,
+    get_all_maintenance_history
 )
 import logging
 
@@ -135,3 +136,26 @@ async def update_maintenance(update: MaintenanceUpdate, collection: Database = D
     except Exception as e:
         logger.error(f"Failed to update maintenance: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to update maintenance: {str(e)}")
+
+@router.get("", response_model=List[MaintenanceResponse])
+async def read_all_maintenance_history(collection: Database = Depends(get_maintenance_history_collection)):
+    """
+    Retrieve all maintenance history entries.
+    
+    Args:
+        collection (Database): MongoDB maintenance history collection, injected via dependency.
+    
+    Returns:
+        List[MaintenanceResponse]: List of all maintenance history entries.
+    
+    Raises:
+        HTTPException: 500 for server errors.
+    """
+    logger.info("Fetching all maintenance history entries")
+    try:
+        history = get_all_maintenance_history(collection)
+        logger.debug(f"Fetched {len(history)} maintenance history entries")
+        return history
+    except Exception as e:
+        logger.error(f"Failed to fetch maintenance history: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch maintenance history: {str(e)}")

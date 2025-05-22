@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchMaintenanceHistory } from '../../store/slices/maintenanceHistorySlice';
 import logger from '../../utils/logger';
 
 // Mock maintenance data
@@ -93,10 +95,13 @@ const mockMaintenanceData = [
 
 // Maintenance status options from enum
 const MAINTENANCE_STATUS = {
-  REQUESTED: 'Requested',
-  IN_PROGRESS: 'In Progress',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
+  REQUESTED: 'requested',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  PENDING: 'pending',
+  SCHEDULED: 'scheduled',
+  OVERDUE: 'overdue'
 };
 
 // Constants for tag colors
@@ -105,23 +110,37 @@ const STATUS_COLORS = {
   [MAINTENANCE_STATUS.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
   [MAINTENANCE_STATUS.COMPLETED]: 'bg-green-100 text-green-800',
   [MAINTENANCE_STATUS.CANCELLED]: 'bg-gray-100 text-gray-800',
+  [MAINTENANCE_STATUS.PENDING]: 'bg-orange-100 text-orange-800',
+  [MAINTENANCE_STATUS.SCHEDULED]: 'bg-purple-100 text-purple-800',
+  [MAINTENANCE_STATUS.OVERDUE]: 'bg-red-100 text-red-800'
 };
 
-// Maintenance type options
+// Maintenance type options from backend
 const MAINTENANCE_TYPES = [
-  'Repair',
-  'Inspection',
-  'Cleaning',
-  'Replacement',
-  'Upgrade',
-  'Other',
+  'preventive',
+  'corrective',
+  'condition_based',
+  'breakdown',
+  'emergency',
+  'routine',
+  'scheduled',
+  'repair',
+  'inspection',
+  'cleaning',
+  'replacement',
+  'upgrade'
 ];
 
 const Maintenance = () => {
   const navigate = useNavigate();
-  const [maintenanceItems, setMaintenanceItems] = useState([]);
+  const dispatch = useDispatch();
+  
+  // Get maintenance data from Redux store
+  const { history: maintenanceItems, loading, error: reduxError } = useSelector(
+    (state) => state.maintenanceHistory
+  );
+  
   const [filteredItems, setFilteredItems] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -134,27 +153,28 @@ const Maintenance = () => {
   useEffect(() => {
     const fetchMaintenanceData = async () => {
       try {
-        logger.debug('Fetching maintenance data');
-        // Simulate API call with mock data
-        setTimeout(() => {
-          setMaintenanceItems(mockMaintenanceData);
-          setFilteredItems(mockMaintenanceData);
-          setLoading(false);
-          logger.info('Maintenance data loaded successfully');
-        }, 500);
+        logger.debug('Fetching all maintenance records');
+        // Fetch all maintenance records by passing no assetId
+        const result = await dispatch(fetchMaintenanceHistory()).unwrap();
+        logger.info('Maintenance data loaded successfully', { 
+          count: result?.length || 0,
+          firstRecord: result?.[0]?.id || null
+        });
       } catch (err) {
-        logger.error('Failed to fetch maintenance data', { error: err });
+        logger.error('Failed to fetch maintenance data', { 
+          error: err,
+          message: err?.message || 'Unknown error'
+        });
         setError('Failed to load maintenance data. Please try again later.');
-        setLoading(false);
       }
     };
 
     fetchMaintenanceData();
-  }, []);
+  }, [dispatch]);
 
-  // Filter and sort data when filters change
+  // Filter and sort data when filters change or when maintenanceItems updates
   useEffect(() => {
-    if (!maintenanceItems.length) return;
+    if (!maintenanceItems?.length) return;
 
     logger.debug('Applying filters and sort', { searchTerm, statusFilter, typeFilter, sortBy });
     
@@ -164,11 +184,12 @@ const Maintenance = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(item => 
-        item.asset_name.toLowerCase().includes(term) ||
-        item.asset_tag.toLowerCase().includes(term) ||
-        item.category_name.toLowerCase().includes(term) ||
-        item.technician.toLowerCase().includes(term) ||
-        (item.notes && item.notes.toLowerCase().includes(term))
+        (item.asset_name || '').toLowerCase().includes(term) ||
+        (item.asset_tag || '').toLowerCase().includes(term) ||
+        (item.category_name || '').toLowerCase().includes(term) ||
+        (item.technician || '').toLowerCase().includes(term) ||
+        (item.notes || '').toLowerCase().includes(term) ||
+        (item.description || '').toLowerCase().includes(term)
       );
     }
     
@@ -179,22 +200,25 @@ const Maintenance = () => {
     
     // Apply type filter
     if (typeFilter !== 'all') {
-      result = result.filter(item => item.maintenance_type === typeFilter);
+      result = result.filter(item => 
+        item.maintenance_type === typeFilter || 
+        item.service_type === typeFilter
+      );
     }
     
     // Apply sorting
     switch (sortBy) {
       case 'date_asc':
-        result.sort((a, b) => new Date(a.maintenance_date) - new Date(b.maintenance_date));
+        result.sort((a, b) => new Date(a.request_date || a.maintenance_date) - new Date(b.request_date || b.maintenance_date));
         break;
       case 'date_desc':
-        result.sort((a, b) => new Date(b.maintenance_date) - new Date(a.maintenance_date));
+        result.sort((a, b) => new Date(b.request_date || b.maintenance_date) - new Date(a.request_date || a.maintenance_date));
         break;
       case 'status':
-        result.sort((a, b) => a.status.localeCompare(b.status));
+        result.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
         break;
       case 'asset_name':
-        result.sort((a, b) => a.asset_name.localeCompare(b.asset_name));
+        result.sort((a, b) => (a.asset_name || '').localeCompare(b.asset_name || ''));
         break;
       default:
         break;
@@ -214,8 +238,42 @@ const Maintenance = () => {
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid Date';
+    }
+  };
+
+  // Format status for display
+  const formatStatus = (status) => {
+    if (!status) return 'Unknown';
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase().replace('_', ' ');
+  };
+
+  // Get appropriate icon for status
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case MAINTENANCE_STATUS.REQUESTED:
+        return 'pi pi-clock';
+      case MAINTENANCE_STATUS.IN_PROGRESS:
+        return 'pi pi-spin pi-spinner';
+      case MAINTENANCE_STATUS.COMPLETED:
+        return 'pi pi-check';
+      case MAINTENANCE_STATUS.CANCELLED:
+        return 'pi pi-times';
+      case MAINTENANCE_STATUS.PENDING:
+        return 'pi pi-exclamation-circle';
+      case MAINTENANCE_STATUS.SCHEDULED:
+        return 'pi pi-calendar';
+      case MAINTENANCE_STATUS.OVERDUE:
+        return 'pi pi-exclamation-triangle';
+      default:
+        return 'pi pi-question';
+    }
   };
 
   // Handle page change
@@ -250,13 +308,19 @@ const Maintenance = () => {
     );
   }
 
-  if (error) {
+  if (error || reduxError) {
     return (
       <div className="mt-24 p-6 flex justify-center">
-        <div className="text-red-600">{error}</div>
+        <div className="text-red-600">{error || reduxError}</div>
       </div>
     );
   }
+
+  // Keep existing JSX for the component UI, but update the stats calculation
+  const maintenanceStats = Object.values(MAINTENANCE_STATUS).reduce((acc, status) => {
+    acc[status] = maintenanceItems?.filter(item => item.status === status)?.length || 0;
+    return acc;
+  }, {});
 
   return (
     <div className="mt-24 p-6 bg-background-offwhite min-h-screen">
@@ -332,27 +396,21 @@ const Maintenance = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {Object.values(MAINTENANCE_STATUS).map(status => {
-          const count = maintenanceItems.filter(item => item.status === status).length;
-          return (
-            <div 
-              key={status} 
-              className={`bg-white p-4 rounded-lg shadow flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow ${statusFilter === status ? 'ring-2 ring-blue-500' : ''}`}
-              onClick={() => setStatusFilter(status === statusFilter ? 'all' : status)}
-            >
-              <div>
-                <h3 className="text-gray-500 text-sm font-medium">{status}</h3>
-                <p className="text-2xl font-bold">{count}</p>
-              </div>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${STATUS_COLORS[status]}`}>
-                {status === MAINTENANCE_STATUS.REQUESTED && <i className="pi pi-clock"></i>}
-                {status === MAINTENANCE_STATUS.IN_PROGRESS && <i className="pi pi-spin pi-spinner"></i>}
-                {status === MAINTENANCE_STATUS.COMPLETED && <i className="pi pi-check"></i>}
-                {status === MAINTENANCE_STATUS.CANCELLED && <i className="pi pi-times"></i>}
-              </div>
+        {Object.values(MAINTENANCE_STATUS).map(status => (
+          <div 
+            key={status} 
+            className={`bg-white p-4 rounded-lg shadow flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow ${statusFilter === status ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setStatusFilter(status === statusFilter ? 'all' : status)}
+          >
+            <div>
+              <h3 className="text-gray-500 text-sm font-medium">{formatStatus(status)}</h3>
+              <p className="text-2xl font-bold">{maintenanceStats[status]}</p>
             </div>
-          );
-        })}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${STATUS_COLORS[status] || STATUS_COLORS[MAINTENANCE_STATUS.PENDING]}`}>
+              <i className={getStatusIcon(status)}></i>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Maintenance Cards */}
@@ -375,23 +433,23 @@ const Maintenance = () => {
                   <h3 className="font-semibold text-gray-800">{item.asset_name}</h3>
                   <p className="text-sm text-gray-600">{item.asset_tag} • {item.category_name}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[item.status]}`}>
-                  {item.status}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[item.status] || STATUS_COLORS[MAINTENANCE_STATUS.PENDING]}`}>
+                  {formatStatus(item.status)}
                 </span>
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
                     <p className="text-xs text-gray-500">Maintenance Type</p>
-                    <p className="text-sm font-medium">{item.maintenance_type}</p>
+                    <p className="text-sm font-medium">{item.maintenance_type || item.service_type}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Technician</p>
-                    <p className="text-sm font-medium">{item.technician}</p>
+                    <p className="text-sm font-medium">{item.technician || item.performed_by || 'Not Assigned'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Request Date</p>
-                    <p className="text-sm">{formatDate(item.maintenance_date)}</p>
+                    <p className="text-sm">{formatDate(item.request_date || item.maintenance_date)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">
@@ -399,8 +457,8 @@ const Maintenance = () => {
                     </p>
                     <p className="text-sm">
                       {item.status === MAINTENANCE_STATUS.COMPLETED 
-                        ? formatDate(item.completed_date) 
-                        : item.condition_before}
+                        ? formatDate(item.completed_date || item.completion_date) 
+                        : (item.condition_before || 'Not Specified')}
                     </p>
                   </div>
                 </div>
@@ -408,7 +466,7 @@ const Maintenance = () => {
                 {item.notes && (
                   <div className="mb-4">
                     <p className="text-xs text-gray-500">Notes</p>
-                    <p className="text-sm text-gray-700 line-clamp-2">{item.notes}</p>
+                    <p className="text-sm text-gray-700 line-clamp-2">{item.notes || item.description}</p>
                   </div>
                 )}
                 
@@ -420,7 +478,8 @@ const Maintenance = () => {
                     <i className="pi pi-eye mr-1"></i> Details
                   </button>
                   
-                  {item.status !== MAINTENANCE_STATUS.COMPLETED && item.status !== MAINTENANCE_STATUS.CANCELLED && (
+                  {item.status !== MAINTENANCE_STATUS.COMPLETED && 
+                   item.status !== MAINTENANCE_STATUS.CANCELLED && (
                     <button
                       className="text-green-600 hover:text-green-800 text-sm font-medium flex items-center"
                       onClick={() => handleUpdateRequest(item.id)}

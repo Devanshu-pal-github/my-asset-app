@@ -458,3 +458,56 @@ def get_maintenance_statistics(db: Collection) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error calculating maintenance statistics: {str(e)}", exc_info=True)
         raise
+
+def get_all_maintenance_history(db: Collection) -> List[MaintenanceResponse]:
+    """
+    Retrieve all maintenance history entries.
+    
+    Args:
+        db (Collection): MongoDB collection
+        
+    Returns:
+        List[MaintenanceResponse]: List of maintenance history entries
+    """
+    logger.info("Fetching all maintenance history entries")
+    try:
+        # Find all maintenance history entries in the collection
+        history_entries = list(db.find().sort("request_date", -1))
+        
+        result = []
+        for entry in history_entries:
+            # Convert _id to id if needed
+            if "_id" in entry and "id" not in entry:
+                entry["id"] = str(entry["_id"])
+            
+            # Remove _id field as we have id
+            if "_id" in entry:
+                del entry["_id"]
+            
+            # Ensure required fields are present
+            if "request_date" not in entry:
+                entry["request_date"] = entry.get("created_at", get_current_datetime()).isoformat()
+            
+            if "description" not in entry:
+                entry["description"] = entry.get("maintenance_reason", "No description provided")
+            
+            # Convert datetime fields to ISO strings
+            entry = convert_datetime_fields(entry)
+            
+            try:
+                # Convert to MaintenanceResponse
+                maintenance_response = MaintenanceResponse(**entry)
+                result.append(maintenance_response)
+            except ValidationError as ve:
+                logger.error(f"Validation error for maintenance entry: {str(ve)}")
+                logger.debug(f"Problematic entry: {entry}")
+                continue
+        
+        logger.debug(f"Fetched {len(result)} maintenance entries")
+        return result
+    except OperationFailure as e:
+        logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching maintenance history: {str(e)}", exc_info=True)
+        raise

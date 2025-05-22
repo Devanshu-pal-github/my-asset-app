@@ -6,42 +6,103 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // Helper function to normalize maintenance history data
 const normalizeMaintenance = (maintenance) => {
-  return {
-    id: maintenance.id,
-    asset_id: maintenance.asset_id,
-    asset_name: maintenance.asset_name,
-    asset_tag: maintenance.asset_tag,
-    maintenance_type: maintenance.maintenance_type,
-    service_type: maintenance.service_type,
-    status: maintenance.status,
-    request_date: maintenance.request_date,
-    scheduled_date: maintenance.scheduled_date,
-    completion_date: maintenance.completion_date || maintenance.completed_date,
-    description: maintenance.description,
-    assigned_to_name: maintenance.assigned_to_name,
-    technician: maintenance.technician,
-    condition_before: maintenance.condition_before,
-    condition_after: maintenance.condition_after,
-    maintenance_date: maintenance.maintenance_date,
-    priority: maintenance.priority,
-    severity: maintenance.severity,
-    estimated_cost: maintenance.estimated_cost,
-    actual_cost: maintenance.actual_cost,
-    cost: maintenance.cost,
-    completed: maintenance.completed,
-    notes: maintenance.notes,
-    is_warranty_covered: maintenance.is_warranty_covered,
-    performed_by: maintenance.performed_by,
-    next_scheduled: maintenance.next_scheduled
+  // Log raw maintenance data for debugging
+  console.log('Raw maintenance data from backend:', maintenance);
+  logger.debug('Normalizing maintenance data with fields:', Object.keys(maintenance));
+  
+  // Ensure all required fields are present with proper types
+  const normalized = {
+    // Core fields
+    id: maintenance.id || '',
+    asset_id: maintenance.asset_id || '',
+    asset_name: maintenance.asset_name || maintenance.asset?.name || 'Unknown Asset',
+    asset_tag: maintenance.asset_tag || maintenance.asset?.asset_tag || 'N/A',
+    
+    // Type and status
+    maintenance_type: maintenance.maintenance_type || maintenance.type || 'Not Specified',
+    service_type: maintenance.service_type || maintenance.maintenance_type || 'Not Specified',
+    status: maintenance.status?.toLowerCase() || 'pending',
+    
+    // Dates - ensure proper format
+    request_date: maintenance.request_date || maintenance.created_at || new Date().toISOString(),
+    scheduled_date: maintenance.scheduled_date || null,
+    completion_date: maintenance.completion_date || maintenance.completed_date || null,
+    completed_date: maintenance.completed_date || maintenance.completion_date || null,
+    maintenance_date: maintenance.maintenance_date || maintenance.request_date || new Date().toISOString(),
+    next_scheduled: maintenance.next_scheduled || maintenance.next_maintenance_date || null,
+    
+    // Description and notes
+    description: maintenance.description || maintenance.maintenance_reason || 'No description provided',
+    notes: maintenance.notes || maintenance.comments || '',
+    
+    // Personnel
+    assigned_to_name: maintenance.assigned_to_name || maintenance.technician || 'Unassigned',
+    technician: maintenance.technician || maintenance.assigned_to_name || 'Unassigned',
+    performed_by: maintenance.performed_by || maintenance.technician || 'Not Specified',
+    
+    // Condition tracking
+    condition_before: maintenance.condition_before || 'Not Specified',
+    condition_after: maintenance.condition_after || null,
+    
+    // Priority and severity
+    priority: maintenance.priority || 'Medium',
+    severity: maintenance.severity || 'Normal',
+    
+    // Cost information
+    estimated_cost: typeof maintenance.estimated_cost === 'number' ? maintenance.estimated_cost : 0,
+    actual_cost: typeof maintenance.actual_cost === 'number' ? maintenance.actual_cost : 0,
+    cost: typeof maintenance.cost === 'number' ? maintenance.cost : (maintenance.actual_cost || maintenance.estimated_cost || 0),
+    
+    // Status flags
+    completed: maintenance.completed || maintenance.status?.toLowerCase() === 'completed' || false,
+    is_warranty_covered: maintenance.is_warranty_covered || false,
+    
+    // Additional metadata
+    category_name: maintenance.category_name || maintenance.asset?.category_name || 'Unknown Category',
+    department: maintenance.department || maintenance.location?.department || 'Not Specified',
+    location: maintenance.location || maintenance.site || 'Not Specified',
+    
+    // Timestamps
+    created_at: maintenance.created_at || maintenance.request_date || new Date().toISOString(),
+    updated_at: maintenance.updated_at || null,
+    
+    // Additional fields from backend
+    maintenance_reason: maintenance.maintenance_reason || maintenance.description || '',
+    maintenance_details: maintenance.maintenance_details || {},
+    parts_used: Array.isArray(maintenance.parts_used) ? maintenance.parts_used : [],
+    labor_hours: maintenance.labor_hours || 0,
+    recommendations: maintenance.recommendations || '',
+    attachments: Array.isArray(maintenance.attachments) ? maintenance.attachments : []
   };
+
+  // Log normalized data for verification
+  logger.debug('Normalized maintenance data:', {
+    id: normalized.id,
+    asset_name: normalized.asset_name,
+    status: normalized.status,
+    dates: {
+      request: normalized.request_date,
+      scheduled: normalized.scheduled_date,
+      completion: normalized.completion_date
+    }
+  });
+
+  return normalized;
 };
 
 export const fetchMaintenanceHistory = createAsyncThunk(
   'maintenanceHistory/fetchMaintenanceHistory',
-  async (assetId, { rejectWithValue }) => {
+  async (assetId = null, { rejectWithValue }) => {
     try {
       logger.debug('Fetching maintenance history from API', { assetId });
-      const response = await axios.get(`${API_URL}/maintenance-history/asset/${assetId}`);
+      
+      // If no assetId is provided, fetch all maintenance history
+      const url = assetId 
+        ? `${API_URL}/maintenance-history/asset/${assetId}`
+        : `${API_URL}/maintenance-history`;
+        
+      logger.debug('Making request to:', { url });
+      const response = await axios.get(url);
       
       // Enhanced logging for debugging
       logger.debug('Raw maintenance history response:', {
@@ -59,15 +120,17 @@ export const fetchMaintenanceHistory = createAsyncThunk(
       });
       
       // Normalize the maintenance history data
-      const normalizedHistory = response.data.map(entry => {
-        const normalized = normalizeMaintenance(entry);
-        console.log('Normalized entry:', normalized);
-        return normalized;
-      });
+      const normalizedHistory = Array.isArray(response.data) 
+        ? response.data.map(entry => {
+            const normalized = normalizeMaintenance(entry);
+            console.log('Normalized entry:', normalized);
+            return normalized;
+          })
+        : [];
       
       logger.info('Successfully fetched maintenance history', { 
         count: normalizedHistory.length,
-        assetId,
+        assetId: assetId || 'all',
         firstNormalized: normalizedHistory[0]
       });
       
@@ -75,7 +138,7 @@ export const fetchMaintenanceHistory = createAsyncThunk(
     } catch (error) {
       logger.error('Failed to fetch maintenance history', { 
         error: error.message,
-        assetId,
+        assetId: assetId || 'all',
         response: error.response?.data 
       });
       console.error('Maintenance history error:', {

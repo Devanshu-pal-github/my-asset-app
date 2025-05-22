@@ -16021,3 +16021,533 @@ maintenance_date
 2025-05-22 12:58:12 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
 2025-05-22 12:58:12 - app.services.asset_category_service - INFO - Fetching all asset categories
 2025-05-22 12:58:15 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 12:58:25 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 12:58:25 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 12:58:25 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 12:58:26 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 12:58:26 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 12:58:26 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 12:58:26 - app.main - INFO - All database indexes verified
+2025-05-22 12:58:26 - app.main - INFO - Server started successfully!
+2025-05-22 12:58:26 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 12:58:36 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 12:58:36 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 12:58:36 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 12:58:37 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 12:58:37 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 12:58:37 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 12:58:38 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 12:58:38 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 12:58:38 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 12:58:40 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:40 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 12:58:40 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:40 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:40 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:58:40 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:58:40 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 12:58:40 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 12:58:40 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 12:58:41 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:41 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:41 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:41 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:58:41 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:58:41 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 12:58:42 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:42 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:42 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:43 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:43 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:43 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:58:43 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:58:43 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:58:43 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 12:59:08 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:08 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 12:59:08 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 12:59:08 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 12:59:08 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 12:59:08 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:08 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:09 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:59:09 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:59:09 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 12:59:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 12:59:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 12:59:10 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:10 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:10 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:10 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:59:10 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:59:10 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 12:59:12 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:12 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:12 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:12 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:59:12 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 12:59:12 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 12:59:14 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:14 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 12:59:14 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:16 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:04:16 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:04:16 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:04:50 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:04:50 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:04:50 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:04:52 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:04:52 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:04:52 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:04:53 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:53 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:53 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:53 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:04:53 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:04:53 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:04:53 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 13:04:53 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 13:04:53 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 13:04:54 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:54 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:54 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:54 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:04:54 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:04:54 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:04:55 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:55 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:55 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:57 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:57 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:57 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:04:57 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:04:57 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:04:57 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:05:05 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 13:05:15 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 13:05:15 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 13:05:15 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 13:05:15 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 13:05:15 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 13:05:15 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 13:05:16 - app.main - INFO - All database indexes verified
+2025-05-22 13:05:16 - app.main - INFO - Server started successfully!
+2025-05-22 13:05:16 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 13:05:18 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:05:18 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:05:18 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:05:19 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:05:19 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:05:19 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:05:21 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:21 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 13:05:21 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 13:05:21 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 13:05:21 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:21 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:21 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:05:21 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:05:21 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:05:22 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:22 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:22 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:22 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:05:22 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:05:22 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:05:22 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:22 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:22 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:24 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:24 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:24 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:05:24 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:05:24 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:05:24 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:06:11 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:06:11 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:06:11 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:06:34 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:06:34 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:06:34 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:09:24 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:09:24 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:09:24 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:10:03 - app.main - INFO - Request: GET /api/maintenance-history/asset/undefined
+2025-05-22 13:10:03 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset undefined
+2025-05-22 13:10:03 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: undefined
+2025-05-22 13:10:03 - app.services.maintenance_history_service - WARNING - Asset not found: undefined
+2025-05-22 13:10:03 - app.routers.maintenance_history - WARNING - Invalid request: Asset with ID undefined not found
+2025-05-22 13:10:03 - app.main - WARNING - Request failed: GET /api/maintenance-history/asset/undefined - Status: 400
+2025-05-22 13:10:34 - app.main - INFO - Request: GET /api/maintenance-history/asset/undefined
+2025-05-22 13:10:34 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset undefined
+2025-05-22 13:10:34 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: undefined
+2025-05-22 13:10:34 - app.services.maintenance_history_service - WARNING - Asset not found: undefined
+2025-05-22 13:10:34 - app.routers.maintenance_history - WARNING - Invalid request: Asset with ID undefined not found
+2025-05-22 13:10:34 - app.main - WARNING - Request failed: GET /api/maintenance-history/asset/undefined - Status: 400
+2025-05-22 13:10:34 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:10:34 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:10:34 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:11:04 - app.main - INFO - Request: GET /api/maintenance-history/asset/undefined
+2025-05-22 13:11:04 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset undefined
+2025-05-22 13:11:04 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: undefined
+2025-05-22 13:11:04 - app.services.maintenance_history_service - WARNING - Asset not found: undefined
+2025-05-22 13:11:04 - app.routers.maintenance_history - WARNING - Invalid request: Asset with ID undefined not found
+2025-05-22 13:11:04 - app.main - WARNING - Request failed: GET /api/maintenance-history/asset/undefined - Status: 400
+2025-05-22 13:11:22 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 13:11:48 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 13:11:48 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 13:11:48 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 13:11:48 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 13:11:48 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 13:11:48 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 13:11:48 - app.main - INFO - All database indexes verified
+2025-05-22 13:11:48 - app.main - INFO - Server started successfully!
+2025-05-22 13:11:48 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 13:11:51 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:11:52 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:11:52 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:11:53 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:11:53 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:11:53 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:11:54 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:11:54 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:11:54 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:11:56 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:56 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 13:11:56 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:56 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:56 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:11:56 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:11:56 - app.routers.documents - INFO - GET /documents/ - asset_id: 70ee52cb-1753-4987-8b74-3c0567718a2d, employee_id: None, document_type: None
+2025-05-22 13:11:56 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '70ee52cb-1753-4987-8b74-3c0567718a2d'}
+2025-05-22 13:11:56 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:11:57 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:57 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:57 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:57 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:11:57 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:11:57 - app.main - INFO - Request: GET /api/maintenance-history/asset/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:57 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:11:57 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:57 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:59 - app.main - INFO - Request: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:59 - app.routers.asset_items - INFO - Fetching asset item with ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:59 - app.services.asset_item_service - INFO - Fetching asset item ID: 70ee52cb-1753-4987-8b74-3c0567718a2d
+2025-05-22 13:11:59 - app.services.asset_item_service - ERROR - Error fetching asset 70ee52cb-1753-4987-8b74-3c0567718a2d: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\devanshu\Downloads\github asset management\my-asset-app\backend\app\services\asset_item_service.py", line 143, in get_asset_item_by_id
+    asset_response = AssetItemResponse(**asset)
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:11:59 - app.routers.asset_items - WARNING - Invalid asset ID: 1 validation error for AssetItemResponse
+current_assignment_date
+  Input should be a valid string [type=string_type, input_value=datetime.datetime(2025, 5, 18, 8, 1, 13, 715000), input_type=datetime]
+    For further information visit https://errors.pydantic.dev/2.10/v/string_type
+2025-05-22 13:11:59 - app.main - WARNING - Request failed: GET /api/asset-items/70ee52cb-1753-4987-8b74-3c0567718a2d - Status: 400
+2025-05-22 13:11:59 - app.main - INFO - Request: GET /api/maintenance-history/asset/undefined
+2025-05-22 13:11:59 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset undefined
+2025-05-22 13:11:59 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: undefined
+2025-05-22 13:11:59 - app.services.maintenance_history_service - WARNING - Asset not found: undefined
+2025-05-22 13:11:59 - app.routers.maintenance_history - WARNING - Invalid request: Asset with ID undefined not found
+2025-05-22 13:11:59 - app.main - WARNING - Request failed: GET /api/maintenance-history/asset/undefined - Status: 400
+2025-05-22 13:12:09 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 13:12:19 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 13:12:19 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 13:12:19 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 13:12:19 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 13:12:19 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 13:12:19 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 13:12:20 - app.main - INFO - All database indexes verified
+2025-05-22 13:12:20 - app.main - INFO - Server started successfully!
+2025-05-22 13:12:20 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 13:12:20 - app.main - INFO - Request: GET /api/maintenance-history/asset/undefined
+2025-05-22 13:12:20 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset undefined
+2025-05-22 13:12:20 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: undefined
+2025-05-22 13:12:20 - app.services.maintenance_history_service - WARNING - Asset not found: undefined
+2025-05-22 13:12:20 - app.routers.maintenance_history - WARNING - Invalid request: Asset with ID undefined not found
+2025-05-22 13:12:20 - app.main - WARNING - Request failed: GET /api/maintenance-history/asset/undefined - Status: 400
+2025-05-22 13:12:20 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:12:20 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:12:20 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:12:26 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:12:26 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:12:26 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:12:34 - app.main - INFO - Request: GET /api/maintenance-history/asset/undefined
+2025-05-22 13:12:34 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset undefined
+2025-05-22 13:12:34 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: undefined
+2025-05-22 13:12:34 - app.services.maintenance_history_service - WARNING - Asset not found: undefined
+2025-05-22 13:12:34 - app.routers.maintenance_history - WARNING - Invalid request: Asset with ID undefined not found
+2025-05-22 13:12:34 - app.main - WARNING - Request failed: GET /api/maintenance-history/asset/undefined - Status: 400
+2025-05-22 13:13:28 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 13:13:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:13:28 - app.main - WARNING - Request failed: GET /api/maintenance-history - Status: 405
+2025-05-22 13:13:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:13:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:13:45 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 13:13:45 - app.main - WARNING - Request failed: GET /api/maintenance-history - Status: 405
+2025-05-22 13:13:54 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:13:54 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:13:54 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:13:55 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 13:13:55 - app.main - WARNING - Request failed: GET /api/maintenance-history - Status: 405
+2025-05-22 13:14:36 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 13:14:46 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 13:14:46 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 13:14:46 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 13:14:46 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 13:14:46 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 13:14:47 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 13:14:47 - app.main - INFO - All database indexes verified
+2025-05-22 13:14:47 - app.main - INFO - Server started successfully!
+2025-05-22 13:14:47 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 13:14:57 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:14:57 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:14:57 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:14:58 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 13:14:58 - app.main - WARNING - Request failed: GET /api/maintenance-history - Status: 405
+2025-05-22 13:17:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:17:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:17:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:17:11 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 13:17:11 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 13:17:11 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 13:17:11 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 13:17:13 - app.routers.asset_items - INFO - Fetching asset items - category_id: 958d338a-8828-495f-88c7-04d52049cb8a, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 13:17:13 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 13:17:13 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:17:13 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:17:13 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:19:04 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:19:04 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:19:04 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:19:06 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:19:06 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:19:06 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:19:28 - app.main - INFO - Request: DELETE /api/asset-categories/207290be-433c-4db8-84ec-0e060193269b
+2025-05-22 13:19:28 - app.routers.asset_categories - INFO - Deleting asset category with ID: 207290be-433c-4db8-84ec-0e060193269b
+2025-05-22 13:19:28 - app.services.asset_category_service - INFO - Deleting category ID: 207290be-433c-4db8-84ec-0e060193269b
+2025-05-22 13:19:56 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 13:19:56 - app.main - WARNING - Request failed: GET /api/maintenance-history - Status: 405
+2025-05-22 13:20:07 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 13:20:07 - app.main - WARNING - Request failed: GET /api/maintenance-history - Status: 405
+2025-05-22 13:20:07 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 13:20:07 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 13:20:07 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 13:20:13 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
