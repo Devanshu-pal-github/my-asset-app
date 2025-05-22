@@ -7,21 +7,20 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 // Helper function to normalize maintenance history data
 const normalizeMaintenance = (maintenance) => {
   // Log raw maintenance data for debugging
-  console.log('Raw maintenance data from backend:', maintenance);
   logger.debug('Normalizing maintenance data with fields:', Object.keys(maintenance));
   
-  // Ensure all required fields are present with proper types
-  const normalized = {
+  return {
     // Core fields
     id: maintenance.id || '',
     asset_id: maintenance.asset_id || '',
-    asset_name: maintenance.asset_name || maintenance.asset?.name || 'Unknown Asset',
-    asset_tag: maintenance.asset_tag || maintenance.asset?.asset_tag || 'N/A',
+    asset_name: maintenance.asset_name || 'Unknown Asset',
+    asset_tag: maintenance.asset_tag || '',
+    category_name: maintenance.category_name || '',
     
     // Type and status
-    maintenance_type: maintenance.maintenance_type || maintenance.type || 'Not Specified',
+    maintenance_type: maintenance.maintenance_type || maintenance.service_type || 'Not Specified',
     service_type: maintenance.service_type || maintenance.maintenance_type || 'Not Specified',
-    status: maintenance.status?.toLowerCase() || 'pending',
+    status: (maintenance.status || 'pending').toLowerCase(),
     
     // Dates - ensure proper format
     request_date: maintenance.request_date || maintenance.created_at || new Date().toISOString(),
@@ -71,23 +70,8 @@ const normalizeMaintenance = (maintenance) => {
     maintenance_details: maintenance.maintenance_details || {},
     parts_used: Array.isArray(maintenance.parts_used) ? maintenance.parts_used : [],
     labor_hours: maintenance.labor_hours || 0,
-    recommendations: maintenance.recommendations || '',
-    attachments: Array.isArray(maintenance.attachments) ? maintenance.attachments : []
+    recommendations: maintenance.recommendations || ''
   };
-
-  // Log normalized data for verification
-  logger.debug('Normalized maintenance data:', {
-    id: normalized.id,
-    asset_name: normalized.asset_name,
-    status: normalized.status,
-    dates: {
-      request: normalized.request_date,
-      scheduled: normalized.scheduled_date,
-      completion: normalized.completion_date
-    }
-  });
-
-  return normalized;
 };
 
 export const fetchMaintenanceHistory = createAsyncThunk(
@@ -106,32 +90,28 @@ export const fetchMaintenanceHistory = createAsyncThunk(
       
       // Enhanced logging for debugging
       logger.debug('Raw maintenance history response:', {
-        data: response.data,
-        firstEntry: response.data[0],
-        dataType: typeof response.data,
+        dataLength: response.data?.length || 0,
+        firstEntry: response.data?.[0],
         isArray: Array.isArray(response.data)
       });
       
-      console.log('Raw maintenance history response:', {
-        data: response.data,
-        firstEntry: response.data[0],
-        dataType: typeof response.data,
-        isArray: Array.isArray(response.data)
-      });
+      // Ensure response.data is an array
+      const maintenanceData = Array.isArray(response.data) ? response.data : [];
       
       // Normalize the maintenance history data
-      const normalizedHistory = Array.isArray(response.data) 
-        ? response.data.map(entry => {
-            const normalized = normalizeMaintenance(entry);
-            console.log('Normalized entry:', normalized);
-            return normalized;
-          })
-        : [];
+      const normalizedHistory = maintenanceData.map(entry => {
+        const normalized = normalizeMaintenance(entry);
+        logger.debug('Normalized maintenance entry:', {
+          id: normalized.id,
+          asset_name: normalized.asset_name,
+          status: normalized.status
+        });
+        return normalized;
+      });
       
       logger.info('Successfully fetched maintenance history', { 
         count: normalizedHistory.length,
-        assetId: assetId || 'all',
-        firstNormalized: normalizedHistory[0]
+        assetId: assetId || 'all'
       });
       
       return normalizedHistory;
@@ -140,10 +120,6 @@ export const fetchMaintenanceHistory = createAsyncThunk(
         error: error.message,
         assetId: assetId || 'all',
         response: error.response?.data 
-      });
-      console.error('Maintenance history error:', {
-        message: error.message,
-        response: error.response?.data
       });
       return rejectWithValue(error.response?.data?.detail || error.message);
     }
