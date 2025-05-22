@@ -15,6 +15,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def convert_datetime_fields(entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert datetime fields to ISO format strings."""
+    datetime_fields = [
+        'request_date',
+        'scheduled_date',
+        'completion_date',
+        'completed_date',
+        'maintenance_date',
+        'created_at',
+        'updated_at',
+        'in_progress_date',
+        'next_maintenance_date',
+        'next_scheduled'
+    ]
+    
+    for field in datetime_fields:
+        if field in entry and isinstance(entry[field], datetime):
+            entry[field] = entry[field].isoformat()
+    return entry
+
 def get_maintenance_history_by_asset(
     db: Collection, 
     asset_id: str, 
@@ -57,9 +77,24 @@ def get_maintenance_history_by_asset(
             if "_id" in entry:
                 del entry["_id"]
             
-            # Convert to MaintenanceResponse
-            maintenance_response = MaintenanceResponse(**entry)
-            result.append(maintenance_response)
+            # Ensure required fields are present
+            if "request_date" not in entry:
+                entry["request_date"] = entry.get("created_at", get_current_datetime()).isoformat()
+            
+            if "description" not in entry:
+                entry["description"] = entry.get("maintenance_reason", "No description provided")
+            
+            # Convert datetime fields to ISO strings
+            entry = convert_datetime_fields(entry)
+            
+            try:
+                # Convert to MaintenanceResponse
+                maintenance_response = MaintenanceResponse(**entry)
+                result.append(maintenance_response)
+            except ValidationError as ve:
+                logger.error(f"Validation error for maintenance entry: {str(ve)}")
+                logger.debug(f"Problematic entry: {entry}")
+                continue
         
         logger.debug(f"Fetched {len(result)} maintenance entries for asset ID: {asset_id}")
         return result

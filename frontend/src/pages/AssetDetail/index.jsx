@@ -336,89 +336,108 @@ const MaintenanceHistoryTab = ({
   error,
   onLogMaintenance,
 }) => {
-  if (loading)
-    return <p className="text-gray-600">Loading maintenance history...</p>;
-  if (error)
+  const formatDate = (date) => date ? new Date(date).toLocaleDateString() : "N/A";
+  const formatCurrency = (amount) => amount ? `$${amount.toFixed(2)}` : "N/A";
+
+  const getStatusBadgeClass = (status) => {
+    const statusClasses = {
+      requested: "bg-yellow-100 text-yellow-800",
+      in_progress: "bg-blue-100 text-blue-800",
+      completed: "bg-green-100 text-green-800",
+      cancelled: "bg-red-100 text-red-800",
+      scheduled: "bg-purple-100 text-purple-800",
+      overdue: "bg-orange-100 text-orange-800",
+      pending: "bg-gray-100 text-gray-800"
+    };
+    return statusClasses[status] || "bg-gray-100 text-gray-800";
+  };
+
+  if (loading) {
     return (
-      <p className="text-red-500">
-        {error.includes("404")
-          ? "No maintenance history found. Using mock data."
-          : "Failed to fetch maintenance history"}
-      </p>
+      <div className="flex justify-center items-center h-48">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
     );
-  if (!history || history.length === 0)
-    return <p className="text-gray-500">No maintenance history available</p>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        Error loading maintenance history: {error}
+      </div>
+    );
+  }
+
+  if (!history || history.length === 0) {
+    return (
+      <div className="p-4 text-gray-500 text-center">
+        No maintenance history available.
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto">
       <div className="flex justify-end mb-4">
         <button
           onClick={onLogMaintenance}
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
           Log Maintenance
         </button>
       </div>
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="min-w-full bg-white border border-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Service Type
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Technician
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Condition Before
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Condition After
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Maintenance Date
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Completed Date
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Cost
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Completed
-            </th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-              Notes
-            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Type</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Request Date</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Completion Date</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Technician</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Cost</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Condition</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Notes</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {history.map((rowData) => (
-            <tr key={rowData.id}>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {rowData.maintenance_type || "N/A"}
+        <tbody className="divide-y divide-gray-200">
+          {history.map((record) => (
+            <tr key={record.id} className="hover:bg-gray-50">
+              <td className="px-4 py-2">
+                <div className="flex flex-col">
+                  <span className="font-medium">{record.maintenance_type}</span>
+                  {record.service_type && (
+                    <span className="text-sm text-gray-500">{record.service_type}</span>
+                  )}
+                </div>
               </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {rowData.technician || "N/A"}
+              <td className="px-4 py-2">
+                <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(record.status)}`}>
+                  {record.status}
+                </span>
               </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {rowData.condition_before || "N/A"}
+              <td className="px-4 py-2">{formatDate(record.request_date)}</td>
+              <td className="px-4 py-2">{formatDate(record.completion_date)}</td>
+              <td className="px-4 py-2">
+                <div className="flex flex-col">
+                  <span>{record.technician}</span>
+                  {record.performed_by && (
+                    <span className="text-sm text-gray-500">{record.performed_by}</span>
+                  )}
+                </div>
               </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {rowData.condition_after || "N/A"}
+              <td className="px-4 py-2">
+                {formatCurrency(record.cost || record.actual_cost || record.estimated_cost)}
               </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {formatDate(rowData.maintenance_date)}
+              <td className="px-4 py-2">
+                <div className="flex flex-col">
+                  <span>Before: {record.condition_before || 'N/A'}</span>
+                  <span>After: {record.condition_after || 'N/A'}</span>
+                </div>
               </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {formatDate(rowData.completed_date)}
-              </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {formatCurrency(rowData.cost)}
-              </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {rowData.status === "completed" ? "Yes" : "No"}
-              </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {rowData.notes || "N/A"}
+              <td className="px-4 py-2">
+                <div className="max-w-xs truncate" title={record.notes}>
+                  {record.notes || 'No notes'}
+                </div>
               </td>
             </tr>
           ))}

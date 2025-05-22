@@ -16,6 +16,26 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+def convert_datetime_fields(asset: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert datetime fields to ISO strings."""
+    datetime_fields = [
+        'current_assignment_date',
+        'assigned_at',
+        'purchase_date',
+        'warranty_until',
+        'maintenance_due_date',
+        'disposal_date',
+        'created_at',
+        'updated_at',
+        'last_maintenance_date',
+        'next_maintenance_date'
+    ]
+    
+    for field in datetime_fields:
+        if field in asset and isinstance(asset[field], datetime):
+            asset[field] = asset[field].isoformat()
+    return asset
+
 def get_asset_items(
     db: Collection, 
     filters: Dict[str, Any] = None
@@ -80,6 +100,9 @@ def get_asset_items(
             # Remove _id field as we have id
             if "_id" in asset:
                 del asset["_id"]
+                
+            # Convert datetime fields to ISO strings
+            asset = convert_datetime_fields(asset)
                 
             # Convert to AssetItemResponse
             asset_response = AssetItemResponse(**asset)
