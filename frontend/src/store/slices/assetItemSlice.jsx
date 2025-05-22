@@ -339,7 +339,7 @@ export const createAssetItem = createAsyncThunk(
       // Refresh the category items list
       if (itemData.category_id) {
         try {
-          await dispatch(fetchAssetItemsByCategory(itemData.category_id)).unwrap();
+      await dispatch(fetchAssetItemsByCategory(itemData.category_id)).unwrap();
           logger.debug('Successfully refreshed category items after creation');
         } catch (refreshError) {
           logger.warn('Failed to refresh category items after creation', { error: refreshError.message });

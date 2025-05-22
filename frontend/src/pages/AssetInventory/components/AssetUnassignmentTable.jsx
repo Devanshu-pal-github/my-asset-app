@@ -1,31 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import logger from '../../../utils/logger';
 import { paginate, sortData } from './tableUtils';
-
-// Mock data
-const mockCategories = [
-  { _id: 'cat1', name: 'Laptops', can_be_assigned_to: 'single_employee' },
-];
-
-const mockAssets = [
-  { _id: 'asset1', name: 'MacBook Pro', asset_tag: 'LT001', status: 'assigned', category_id: 'cat1' },
-  { _id: 'asset2', name: 'HP Pavilion', asset_tag: 'LT002', status: 'assigned', category_id: 'cat1' },
-  { _id: 'asset3', name: 'Dell XPS', asset_tag: 'LT003', status: 'assigned', category_id: 'cat1' },
-];
-
-// Mock employees data
-const mockEmployees = [
-  { _id: 'emp1', first_name: 'John', last_name: 'Doe', department: 'Engineering', assigned_assets: [{ asset_id: 'asset1' }] },
-  { _id: 'emp2', first_name: 'Jane', last_name: 'Smith', department: 'Marketing', assigned_assets: [{ asset_id: 'asset2' }] },
-  { _id: 'emp3', first_name: 'Bob', last_name: 'Johnson', department: 'Sales', assigned_assets: [{ asset_id: 'asset3' }] },
-];
+import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
+import { fetchEmployees } from '../../../store/slices/employeeSlice';
 
 const AssetUnassignmentTable = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { categoryId } = useParams();
+  
+  // Redux state
+  const { categories } = useSelector((state) => state.assetCategories);
+  const { items: assets, loading: assetsLoading } = useSelector((state) => state.assetItems);
+  const { employees, loading: employeesLoading } = useSelector((state) => state.employees);
+  
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState('name');
+  const [sortField, setSortField] = useState('asset_tag');
   const [sortOrder, setSortOrder] = useState('asc');
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
@@ -37,25 +30,89 @@ const AssetUnassignmentTable = () => {
   const [entitySearchTerm, setEntitySearchTerm] = useState('');
   const itemsPerPage = 10;
 
+  // Check for employeeId in navigation state
+  const targetEmployeeId = location.state?.employeeId;
+  const targetEmployee = employees.find((emp) => emp.id === targetEmployeeId);
+
   useEffect(() => {
-    logger.debug('AssetUnassignmentTable useEffect triggered', { categoryId });
-    logger.info('Simulating fetch with mock data', { categoryId });
-  }, [categoryId]);
+    logger.debug('AssetUnassignmentTable useEffect triggered', { categoryId, targetEmployeeId });
+    
+    // Fetch assets for the category
+    if (categoryId) {
+      dispatch(fetchAssetItemsByCategory(categoryId))
+        .unwrap()
+        .then((result) => {
+          logger.info('Assets fetched successfully', { count: result.length });
+        })
+        .catch((error) => {
+          logger.error('Failed to fetch assets', { error });
+          setNotification({
+            type: 'error',
+            message: 'Failed to fetch assets. Please try again.'
+          });
+        });
+    }
+    
+    // Fetch employees if needed
+    dispatch(fetchEmployees())
+      .unwrap()
+      .then((result) => {
+        logger.info('Employees fetched successfully', { count: result.length });
+      })
+      .catch((error) => {
+        logger.error('Failed to fetch employees', { error });
+      });
+  }, [categoryId, dispatch, targetEmployeeId]);
 
-  const filteredAssets = mockAssets.filter((asset) => asset.status === 'assigned' && asset.category_id === categoryId);
-  const currentCategory = mockCategories.find((cat) => cat._id === categoryId);
+  const currentCategory = categories.find((cat) => cat.id === categoryId);
 
-  // Apply search filter to assets
-  const searchFilteredAssets = searchTerm 
-    ? filteredAssets.filter(asset => 
-        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        asset.asset_tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Filter assets: only assigned assets for the category that can be unassigned
+  const filteredAssets = assets.filter((asset) => {
+    if (!currentCategory) return false;
+    
+    // Get category properties
+    const isConsumable = currentCategory.is_consumable;
+    const isReassignable = currentCategory.is_reassignable !== false; // Default to true if not specified
+    
+    // Check asset status
+    const isAssigned = asset.status === 'assigned';
+    const hasActiveAssignment = asset.has_active_assignment;
+    const isNotUnderMaintenance = !['under_maintenance', 'maintenance_requested'].includes(asset.status);
+    
+    // For consumable items, they can't be unassigned
+    if (isConsumable) {
+      return false;
+    }
+    
+    // Check if asset matches target employee if specified
+    const matchesEmployee = !targetEmployeeId || asset.current_assignee_id === targetEmployeeId;
+    
+    // Asset must be assigned, have an active assignment, not under maintenance, be reassignable, and match employee if specified
+    return isAssigned && hasActiveAssignment && isNotUnderMaintenance && isReassignable && matchesEmployee;
+  });
+
+  // Apply search filter
+  const searchFilteredAssets = searchTerm
+    ? filteredAssets.filter(asset =>
+        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.asset_tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (asset.current_assignee_id && employees.find(e => e.id === asset.current_assignee_id)?.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (asset.current_assignee_id && employees.find(e => e.id === asset.current_assignee_id)?.last_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
     : filteredAssets;
 
+  // Sort and paginate
+  const sortedAssets = sortData(searchFilteredAssets, sortField, sortOrder);
+  const paginatedAssets = paginate(sortedAssets, currentPage, itemsPerPage);
+  const totalPages = Math.ceil(sortedAssets.length / itemsPerPage);
+
   const handleSort = (field) => {
-    const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
-    setSortField(field);
-    setSortOrder(newSortOrder);
+    if (field === sortField) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
   };
 
   const handleAssetSelect = (assetId) => {
@@ -158,7 +215,7 @@ const AssetUnassignmentTable = () => {
     if (!selectedAssets.length) return [];
     
     // Filter employees who have any of the selected assets assigned to them
-    return mockEmployees.filter(emp => 
+    return employees.filter(emp => 
       emp.assigned_assets.some(asset => selectedAssets.includes(asset.asset_id))
     );
   };
@@ -170,10 +227,6 @@ const AssetUnassignmentTable = () => {
         entity.department.toLowerCase().includes(entitySearchTerm.toLowerCase()) ||
         entity._id.toLowerCase().includes(entitySearchTerm.toLowerCase()))
     : getRelevantEntities();
-
-  const sortedAssets = sortData(searchFilteredAssets, sortField, sortOrder);
-  const paginatedAssets = paginate(sortedAssets, currentPage, itemsPerPage);
-  const totalPages = Math.ceil(searchFilteredAssets.length / itemsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -224,6 +277,16 @@ const AssetUnassignmentTable = () => {
         </div>
       )}
       
+      {/* Loading states */}
+      {(assetsLoading || employeesLoading) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Employee Unassignment Modal */}
       {showEmployeeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -239,7 +302,7 @@ const AssetUnassignmentTable = () => {
               <h4 className="font-medium text-gray-800 mb-2">Selected Assets</h4>
               <div className="mb-4 flex flex-wrap gap-2">
                 {selectedAssets.map((assetId) => {
-                  const asset = mockAssets.find((a) => a._id === assetId);
+                  const asset = assets.find((a) => a._id === assetId);
                   return (
                     <div key={assetId} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                       {asset?.name} ({asset?.asset_tag})
@@ -364,7 +427,7 @@ const AssetUnassignmentTable = () => {
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Selected Assets</h4>
               {selectedAssets.map((assetId) => {
-                const asset = mockAssets.find((a) => a._id === assetId);
+                const asset = assets.find((a) => a._id === assetId);
                 return (
                   <div key={asset?._id} className="mt-2">
                     <p className="text-gray-600">
@@ -381,7 +444,7 @@ const AssetUnassignmentTable = () => {
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Selected Entities</h4>
               {selectedEntities.map((entityId) => {
-                const entity = mockEmployees.find((e) => e._id === entityId);
+                const entity = employees.find((e) => e._id === entityId);
                 return (
                   <div key={entity?._id} className="mt-2">
                     <p className="text-gray-600">

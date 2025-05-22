@@ -1,32 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import logger from '../../../utils/logger';
 import { paginate, sortData } from './tableUtils';
-
-// Mock data
-const mockCategories = [
-  { _id: 'cat1', name: 'Laptops', allow_multiple_assignments: false, is_consumable: false, can_be_assigned_to: 'single_employee' },
-  { _id: 'cat2', name: 'Stationery', allow_multiple_assignments: true, is_consumable: true, can_be_assigned_to: 'department' },
-];
-
-const mockAssets = [
-  { _id: 'asset1', name: 'MacBook Pro', asset_tag: 'LT001', status: 'available', category_id: 'cat1' },
-  { _id: 'asset2', name: 'HP Pavilion', asset_tag: 'LT002', status: 'available', category_id: 'cat1' },
-  { _id: 'asset3', name: 'Pen', asset_tag: 'ST001', status: 'available', category_id: 'cat2' },
-];
-
-const mockEmployees = [
-  { _id: 'emp1', first_name: 'John', last_name: 'Doe', department: 'Engineering', assigned_assets: [] },
-  { _id: 'emp2', first_name: 'Jane', last_name: 'Smith', department: 'Marketing', assigned_assets: [] },
-  { _id: 'emp3', first_name: 'Bob', last_name: 'Johnson', department: 'Sales', assigned_assets: [] },
-  { _id: 'emp4', first_name: 'Alice', last_name: 'Williams', department: 'Engineering', assigned_assets: [] },
-  { _id: 'emp5', first_name: 'Charlie', last_name: 'Brown', department: 'Finance', assigned_assets: [] },
-];
+import { fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
+import { fetchEmployees } from '../../../store/slices/employeeSlice';
 
 const AssetAssignmentTable = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { categoryId } = useParams();
+  
+  // Redux state
+  const { categories } = useSelector((state) => state.assetCategories);
+  const { items: assets, loading: assetsLoading } = useSelector((state) => state.assetItems);
+  const { employees, loading: employeesLoading } = useSelector((state) => state.employees);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState('asset_tag');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -41,39 +31,81 @@ const AssetAssignmentTable = () => {
 
   // Check for employeeId in navigation state
   const targetEmployeeId = location.state?.employeeId;
-  const targetEmployee = mockEmployees.find((emp) => emp._id === targetEmployeeId);
+  const targetEmployee = employees.find((emp) => emp.id === targetEmployeeId);
 
   useEffect(() => {
     logger.debug('AssetAssignmentTable useEffect triggered', { categoryId, targetEmployeeId });
-    logger.info('Simulating fetch with mock data', { categoryId });
-  }, [categoryId, targetEmployeeId]);
+    
+    // Fetch assets for the category
+    if (categoryId) {
+      dispatch(fetchAssetItemsByCategory(categoryId))
+        .unwrap()
+        .then((result) => {
+          logger.info('Assets fetched successfully', { count: result.length });
+        })
+        .catch((error) => {
+          logger.error('Failed to fetch assets', { error });
+          setNotification({
+            type: 'error',
+            message: 'Failed to fetch assets. Please try again.'
+          });
+        });
+    }
+    
+    // Fetch employees if needed
+    dispatch(fetchEmployees())
+      .unwrap()
+      .then((result) => {
+        logger.info('Employees fetched successfully', { count: result.length });
+      })
+      .catch((error) => {
+        logger.error('Failed to fetch employees', { error });
+      });
+  }, [categoryId, dispatch, targetEmployeeId]);
 
-  const currentCategory = mockCategories.find((cat) => cat._id === categoryId);
+  const currentCategory = categories.find((cat) => cat.id === categoryId);
 
   // Filter assets: available, consumable, or allow multiple assignments, not under maintenance
-  const filteredAssets = mockAssets.filter((asset) => {
+  const filteredAssets = assets.filter((asset) => {
     if (!currentCategory) return false;
+    
+    // Get category properties
     const allowMultipleAssignments = currentCategory.allow_multiple_assignments;
-    const isNotAssigned = asset.status === 'available';
     const isConsumable = currentCategory.is_consumable;
-    const isNotUnderMaintenance = asset.status !== 'under_maintenance' && asset.status !== 'maintenance_requested';
-    return asset.category_id === categoryId && (isNotAssigned || allowMultipleAssignments || isConsumable) && isNotUnderMaintenance;
+    
+    // Check asset status
+    const isAvailable = asset.status === 'available';
+    const isNotUnderMaintenance = !['under_maintenance', 'maintenance_requested'].includes(asset.status);
+    
+    // For consumable items, they can always be assigned
+    if (isConsumable && isNotUnderMaintenance) {
+      return true;
+    }
+    
+    // For items allowing multiple assignments, they can be assigned unless under maintenance
+    if (allowMultipleAssignments && isNotUnderMaintenance) {
+      return true;
+    }
+    
+    // For regular items, they must be available and not under maintenance
+    return isAvailable && isNotUnderMaintenance;
   });
 
-  // Apply search filter to assets
-  const searchFilteredAssets = searchTerm 
-    ? filteredAssets.filter(asset => 
-        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        asset.asset_tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Apply search filter
+  const searchFilteredAssets = searchTerm
+    ? filteredAssets.filter(asset =>
+        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.asset_tag.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : filteredAssets;
 
   // Apply search filter to employees
   const filteredEmployees = employeeSearchTerm 
-    ? mockEmployees.filter(employee => 
+    ? employees.filter(employee => 
         `${employee.first_name} ${employee.last_name}`.toLowerCase().includes(employeeSearchTerm.toLowerCase()) ||
         employee.department.toLowerCase().includes(employeeSearchTerm.toLowerCase()) ||
-        employee._id.toLowerCase().includes(employeeSearchTerm.toLowerCase()))
-    : mockEmployees;
+        employee.id.toLowerCase().includes(employeeSearchTerm.toLowerCase()))
+    : employees;
 
   const handleSort = (field) => {
     const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
@@ -133,7 +165,7 @@ const AssetAssignmentTable = () => {
       
       // Get entity names for notification
       const entityNames = entitiesToUse.map(id => {
-        const entity = mockEmployees.find(e => e._id === id);
+        const entity = employees.find(e => e.id === id);
         return entity ? `${entity.first_name} ${entity.last_name}` : 'Unknown';
       }).join(', ');
       
@@ -222,6 +254,16 @@ const AssetAssignmentTable = () => {
 
   return (
     <div className="mt-24 p-6">
+      {/* Loading states */}
+      {(assetsLoading || employeesLoading) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      )}
+
       {notification && (
         <div
           className={`fixed top-4 right-4 p-4 rounded-lg text-white ${
@@ -245,7 +287,7 @@ const AssetAssignmentTable = () => {
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Selected Assets</h4>
               {selectedAssets.map((assetId) => {
-                const asset = mockAssets.find((a) => a._id === assetId);
+                const asset = assets.find((a) => a.id === assetId);
                 return (
                   <div key={asset?._id} className="mt-2">
                     <p className="text-gray-600">
@@ -262,7 +304,7 @@ const AssetAssignmentTable = () => {
             <div className="mt-4">
               <h4 className="text-md font-semibold text-gray-800">Selected Entities</h4>
               {(selectedEntities.length > 0 ? selectedEntities : targetEmployeeId ? [targetEmployeeId] : []).map((entityId) => {
-                const entity = mockEmployees.find((e) => e._id === entityId);
+                const entity = employees.find((e) => e.id === entityId);
                 return (
                   <div key={entity?._id} className="mt-2">
                     <p className="text-gray-600">
@@ -314,7 +356,7 @@ const AssetAssignmentTable = () => {
               <h4 className="font-medium text-gray-800 mb-2">Selected Assets</h4>
               <div className="mb-4 flex flex-wrap gap-2">
                 {selectedAssets.map((assetId) => {
-                  const asset = mockAssets.find((a) => a._id === assetId);
+                  const asset = assets.find((a) => a.id === assetId);
                   return (
                     <div key={assetId} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                       {asset?.name} ({asset?.asset_tag})
