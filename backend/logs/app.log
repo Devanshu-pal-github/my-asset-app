@@ -17587,3 +17587,243 @@ current_assignment_date
 2025-05-22 16:33:29 - app.main - INFO - Request: GET /api/asset-categories/
 2025-05-22 16:33:29 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
 2025-05-22 16:33:29 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 16:47:46 - app.main - INFO - Request: POST /api/assets/bulk
+2025-05-22 16:47:46 - app.main - WARNING - Request failed: POST /api/assets/bulk - Status: 404
+2025-05-22 16:54:23 - app.main - INFO - Request: POST /api/assets/bulk
+2025-05-22 16:54:23 - app.main - WARNING - Request failed: POST /api/assets/bulk - Status: 404
+2025-05-22 17:02:44 - app.main - INFO - Request: POST /api/employees/bulk
+2025-05-22 17:02:44 - app.routers.employees - INFO - Creating 10 employees in bulk
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Creating employee: Fiyaz Sood
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Created employee with ID: d1232c5d-74af-41a1-a770-6620389857a0
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Creating employee: Nihal Sabharwal
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Created employee with ID: e6aeef64-693c-4508-9ba4-0603bee7c64b
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Creating employee: Ridhi Nagy
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Created employee with ID: bcbe9f9c-2cf7-48b9-a09a-2211f7d865cc
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Creating employee: Nandini Srivastava
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Created employee with ID: c1e545df-b66a-44e9-bfe3-e0bb474e2bab
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Creating employee: Yashica Mistry
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Created employee with ID: 566efe29-aaa8-49d1-a5ca-1b6e1dae6399
+2025-05-22 17:02:44 - app.services.employee_service - INFO - Creating employee: Varsha Balan
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Created employee with ID: beae9e24-b3d2-431a-859a-a5bb86ce31b3
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Creating employee: Max Dada
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Created employee with ID: 293bba73-5614-4959-b760-ae56ea98d966
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Creating employee: Kritika Karnik
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Created employee with ID: f0162e42-18ef-49e5-8565-ff27769445b2
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Creating employee: William Cherian
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Created employee with ID: e8666cfb-a0c2-4d7d-9d74-27711de3f382
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Creating employee: Hemani Devi
+2025-05-22 17:02:45 - app.services.employee_service - INFO - Created employee with ID: 4fc347e2-6ccf-480a-859e-c446fb61e3c0
+2025-05-22 17:02:45 - app.routers.employees - INFO - Successfully created 10 out of 10 employees
+2025-05-22 17:05:27 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:05:27 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:05:27 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:05:28 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:05:28 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:05:28 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:05:29 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:05:29 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:05:29 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:09:42 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:09:42 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:09:42 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:09:48 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:09:48 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:09:48 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:09:52 - app.main - INFO - Request: GET /api/maintenance-history
+2025-05-22 17:09:52 - app.routers.maintenance_history - INFO - Fetching all maintenance history entries
+2025-05-22 17:09:52 - app.services.maintenance_history_service - INFO - Fetching all maintenance history entries
+2025-05-22 17:10:08 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:10:08 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:10:08 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:10:09 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:10:09 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:10:09 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:10:13 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:10:13 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:10:13 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:10:15 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:10:15 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:10:15 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:10:34 - app.main - INFO - Request: PUT /api/asset-categories/bfb3b812-3085-460a-87f7-67214c541adf
+2025-05-22 17:10:34 - app.routers.asset_categories - INFO - Updating asset category with ID: bfb3b812-3085-460a-87f7-67214c541adf
+2025-05-22 17:10:34 - app.services.asset_category_service - INFO - Updating category ID: bfb3b812-3085-460a-87f7-67214c541adf
+2025-05-22 17:10:34 - app.main - ERROR - Request failed: PUT /api/asset-categories/bfb3b812-3085-460a-87f7-67214c541adf - Error: 1 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='9af749bb-7204-48f6-88ce-f08a67537033', type='edit', edit_date='2025-05-22', change_type='Category Update', details='Updated category fields: category_name, category_type, description, policies, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-22 17:10:42 - app.main - INFO - Request: PUT /api/asset-categories/1c6e3103-9dc5-4191-89eb-27506065ffdd
+2025-05-22 17:10:42 - app.routers.asset_categories - INFO - Updating asset category with ID: 1c6e3103-9dc5-4191-89eb-27506065ffdd
+2025-05-22 17:10:42 - app.services.asset_category_service - INFO - Updating category ID: 1c6e3103-9dc5-4191-89eb-27506065ffdd
+2025-05-22 17:10:42 - app.main - ERROR - Request failed: PUT /api/asset-categories/1c6e3103-9dc5-4191-89eb-27506065ffdd - Error: 1 validation errors:
+  {'type': 'dict_type', 'loc': ('response', 'edit_history', 0), 'msg': 'Input should be a valid dictionary', 'input': EditHistoryEntry(id='6bc7907a-ebc8-487b-8825-8a3f78fe0042', type='edit', edit_date='2025-05-22', change_type='Category Update', details='Updated category fields: category_name, category_type, description, policies, is_consumable, is_allotted, is_active, is_reassignable, requires_maintenance, assignment_policies, updated_at', notes='Updated via API')}
+
+2025-05-22 17:10:46 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:10:46 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:10:46 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:10:47 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:10:47 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:10:47 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:16:48 - app.main - INFO - Request: POST /api/assets/bulk
+2025-05-22 17:16:48 - app.main - WARNING - Request failed: POST /api/assets/bulk - Status: 404
+2025-05-22 17:17:35 - app.main - INFO - Request: POST /api/assets/bulk
+2025-05-22 17:17:35 - app.main - WARNING - Request failed: POST /api/assets/bulk - Status: 404
+2025-05-22 17:17:46 - app.main - INFO - ========== APPLICATION SHUTTING DOWN ==========
+2025-05-22 17:17:55 - app.main - INFO - Logging configured successfully (level: INFO)
+2025-05-22 17:17:55 - app.main - INFO - CORS middleware configured with frontend origins
+2025-05-22 17:17:55 - app.main - INFO - Registering routers with prefix /api
+2025-05-22 17:17:55 - app.main - INFO - Starting Asset Management API application on port 8000...
+2025-05-22 17:17:55 - app.main - INFO - MongoDB connection verified successfully
+2025-05-22 17:17:55 - app.main - INFO - Using existing text index: asset_tag_text_category_id_1
+2025-05-22 17:17:55 - app.main - INFO - All database indexes verified
+2025-05-22 17:17:55 - app.main - INFO - Server started successfully!
+2025-05-22 17:17:55 - app.main - INFO - API documentation available at: http://localhost:8000/docs
+2025-05-22 17:17:58 - app.main - INFO - Request: POST /api/assets/bulk
+2025-05-22 17:17:58 - app.main - WARNING - Request failed: POST /api/assets/bulk - Status: 404
+2025-05-22 17:20:06 - app.main - INFO - Request: POST /api/asset-items/bulk
+2025-05-22 17:20:06 - app.main - WARNING - Request failed: POST /api/asset-items/bulk - Status: 422
+2025-05-22 17:22:43 - app.main - INFO - Request: POST /api/asset-items/bulk
+2025-05-22 17:22:43 - app.routers.asset_items - INFO - Creating 10 asset items in bulk
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: Bose Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: Logitech Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: 4e0e3c5f-1c5a-411a-ac72-092b6c4101eb
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: Sony Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: 87f9314f-bada-4a32-b588-53f0e929112b
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: JBL Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: cdbf8aa5-f6bd-40b8-8fd2-a1b8f6f999d6
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: Bose Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: 5ee30b1e-a048-4ae1-835a-572cf2f81d94
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: Logitech Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: 3b9a463a-0f8a-4aeb-b802-c7a2da8694a3
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: JBL Speaker
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Created asset with ID: f6397267-755a-4b28-8a95-28fb71e98f7e
+2025-05-22 17:22:43 - app.services.asset_item_service - INFO - Creating asset: Zebronics Speaker
+2025-05-22 17:22:44 - app.services.asset_item_service - INFO - Created asset with ID: d3c3093b-4350-4c7d-b634-1f71c30a7947
+2025-05-22 17:22:44 - app.services.asset_item_service - INFO - Creating asset: JBL Speaker
+2025-05-22 17:22:44 - app.services.asset_item_service - INFO - Created asset with ID: d5481a00-2457-4d7f-a9b3-467e3621da8d
+2025-05-22 17:22:44 - app.services.asset_item_service - INFO - Creating asset: JBL Speaker
+2025-05-22 17:22:44 - app.services.asset_item_service - INFO - Created asset with ID: 20ea2f16-2ad9-4b0f-964c-8dbab1e437e2
+2025-05-22 17:22:44 - app.routers.asset_items - INFO - Successfully created 10 out of 10 asset items
+2025-05-22 17:22:51 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:22:51 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:22:51 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:22:52 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:22:52 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:22:52 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:23:54 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:23:54 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:23:54 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:24:01 - app.main - INFO - Request: GET /api/asset-items/437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:24:01 - app.routers.asset_items - INFO - Fetching asset item with ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:24:01 - app.services.asset_item_service - INFO - Fetching asset item ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:24:01 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 17:24:01 - app.routers.documents - INFO - GET /documents/ - asset_id: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3, employee_id: None, document_type: None
+2025-05-22 17:24:01 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '437d2033-0cd1-4b4a-9201-e3e3ebc440d3'}
+2025-05-22 17:24:03 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:24:03 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:24:03 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:24:06 - app.main - INFO - Request: GET /api/asset-items/437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:24:06 - app.routers.asset_items - INFO - Fetching asset item with ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:24:06 - app.services.asset_item_service - INFO - Fetching asset item ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:24:06 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 17:24:06 - app.routers.documents - INFO - GET /documents/ - asset_id: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3, employee_id: None, document_type: None
+2025-05-22 17:24:06 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '437d2033-0cd1-4b4a-9201-e3e3ebc440d3'}
+2025-05-22 17:24:16 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:24:16 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:24:16 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:24:18 - app.main - INFO - Request: GET /api/asset-items/87f9314f-bada-4a32-b588-53f0e929112b
+2025-05-22 17:24:18 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 17:24:18 - app.routers.asset_items - INFO - Fetching asset item with ID: 87f9314f-bada-4a32-b588-53f0e929112b
+2025-05-22 17:24:18 - app.services.asset_item_service - INFO - Fetching asset item ID: 87f9314f-bada-4a32-b588-53f0e929112b
+2025-05-22 17:24:18 - app.routers.documents - INFO - GET /documents/ - asset_id: 87f9314f-bada-4a32-b588-53f0e929112b, employee_id: None, document_type: None
+2025-05-22 17:24:18 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '87f9314f-bada-4a32-b588-53f0e929112b'}
+2025-05-22 17:24:25 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:24:25 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:24:25 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:24:27 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:24:27 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:24:27 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:24:34 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:24:34 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:24:34 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:28:02 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:02 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:02 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:04 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:28:04 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:28:04 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:28:04 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:28:04 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:28:04 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:28:17 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:17 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:17 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:19 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:28:19 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:28:19 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:28:19 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:28:19 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:28:19 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:28:21 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:21 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:21 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:27 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:28:27 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:28:27 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:28:27 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:28:27 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:28:27 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:28:32 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:28:32 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:28:32 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:28:33 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:33 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:33 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:37 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:37 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:37 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:38 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:38 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:38 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:44 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:44 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:44 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:28:44 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:28:44 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:28:44 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:30:01 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:30:01 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:30:01 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:30:01 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:30:01 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:30:01 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:30:07 - app.main - INFO - Request: GET /api/employees/
+2025-05-22 17:30:07 - app.routers.employees - INFO - Fetching employees - department: None, role: None, is_active: None
+2025-05-22 17:30:07 - app.services.employee_service - INFO - Fetching employees with filters
+2025-05-22 17:30:08 - app.main - INFO - Request: GET /api/asset-categories/
+2025-05-22 17:30:08 - app.routers.asset_categories - INFO - Fetching asset categories - category_type: None, is_active: None
+2025-05-22 17:30:08 - app.services.asset_category_service - INFO - Fetching all asset categories
+2025-05-22 17:30:10 - app.main - INFO - Request: GET /api/asset-items/
+2025-05-22 17:30:10 - app.routers.asset_items - INFO - Fetching asset items - category_id: 9946979a-e3d1-449c-a9fa-6532b5da2f72, status: None, has_active_assignment: None, serial_number: None, asset_tag: None, department: None, location: None, maintenance_due_before: None
+2025-05-22 17:30:10 - app.services.asset_item_service - INFO - Fetching asset items with filters
+2025-05-22 17:30:12 - app.main - INFO - Request: GET /api/asset-items/437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:12 - app.routers.asset_items - INFO - Fetching asset item with ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:12 - app.services.asset_item_service - INFO - Fetching asset item ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:12 - app.main - INFO - Request: GET /api/documents/
+2025-05-22 17:30:12 - app.routers.documents - INFO - GET /documents/ - asset_id: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3, employee_id: None, document_type: None
+2025-05-22 17:30:12 - app.services.document_service - INFO - Fetching documents with filters: {'asset_id': '437d2033-0cd1-4b4a-9201-e3e3ebc440d3'}
+2025-05-22 17:30:14 - app.main - INFO - Request: GET /api/assignment-history/asset/437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:14 - app.routers.assignment_history - INFO - Fetching assignment history for asset 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:14 - app.services.assignment_history_service - INFO - Fetching assignment history for asset ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:16 - app.main - INFO - Request: GET /api/maintenance-history/asset/437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:16 - app.routers.maintenance_history - INFO - Fetching maintenance history for asset 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:30:16 - app.services.maintenance_history_service - INFO - Fetching maintenance history for asset ID: 437d2033-0cd1-4b4a-9201-e3e3ebc440d3
+2025-05-22 17:31:30 - asyncio - ERROR - Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\devanshu\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host

@@ -1,83 +1,8 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-
-// Hardcoded employee data
-const mockEmployeeData = {
-  EMP001: {
-    employee: {
-      id: 'EMP001',
-      first_name: 'John',
-      last_name: 'Doe',
-      employee_id: 'EMP001',
-      email: 'john.doe@example.com',
-      department: 'Engineering',
-      job_title: 'Software Engineer',
-      phone: '123-456-7890',
-      is_active: true,
-      created_at: '2023-01-15',
-    },
-    current_assets: [
-      {
-        id: 'ASSET001',
-        name: 'Laptop',
-        asset_tag: 'LP001',
-        category_name: 'Electronics',
-        status: 'Assigned',
-        condition: 'Good',
-        current_assignment_date: '2024-06-01',
-      },
-      {
-        id: 'ASSET002',
-        name: 'Monitor',
-        asset_tag: 'MN001',
-        category_name: 'Electronics',
-        status: 'Assigned',
-        condition: 'Excellent',
-        current_assignment_date: '2024-07-15',
-      },
-    ],
-    assignment_history: [
-      {
-        id: 'ASSIGN001',
-        asset_name: 'Laptop',
-        assignment_date: '2024-06-01',
-        return_date: null,
-        assignment_type: 'Permanent',
-        is_active: true,
-        notes: 'Assigned for remote work',
-      },
-      {
-        id: 'ASSIGN002',
-        asset_name: 'Old Monitor',
-        assignment_date: '2023-03-10',
-        return_date: '2024-07-14',
-        assignment_type: 'Temporary',
-        is_active: false,
-        notes: 'Returned due to upgrade',
-      },
-    ],
-    maintenance_history: [
-      {
-        id: 'MAINT001',
-        asset_name: 'Laptop',
-        maintenance_date: '2024-08-01',
-        maintenance_type: 'Repair',
-        cost: 150.00,
-        performed_by: 'Tech Service Inc.',
-        next_scheduled_maintenance: '2025-02-01',
-      },
-      {
-        id: 'MAINT002',
-        asset_name: 'Monitor',
-        maintenance_date: '2024-09-10',
-        maintenance_type: 'Inspection',
-        cost: 50.00,
-        performed_by: 'IT Crew',
-        next_scheduled_maintenance: '2025-03-10',
-      },
-    ],
-  },
-};
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchEmployeeDetails, clearEmployeeDetails } from '../../store/slices/employeeSlice';
+import logger from '../../utils/logger';
 
 // Constants for tab names
 const TABS = {
@@ -164,7 +89,7 @@ const AssignmentHistoryTab = ({ history }) => (
             <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.return_date)}</td>
             <td className="px-6 py-4 whitespace-nowrap">{record.assignment_type || 'N/A'}</td>
             <td className="px-6 py-4 whitespace-nowrap">{record.is_active ? 'Active' : 'Inactive'}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{record.notes || 'N/A'}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{record.notes || record.assignment_notes || 'N/A'}</td>
           </tr>
         )) : (
           <tr>
@@ -195,10 +120,10 @@ const MaintenanceHistoryTab = ({ history }) => (
           <tr key={record.id}>
             <td className="px-6 py-4 whitespace-nowrap">{record.asset_name || 'Unknown'}</td>
             <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.maintenance_date)}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{record.maintenance_type || 'N/A'}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{record.maintenance_type || record.service_type || 'N/A'}</td>
             <td className="px-6 py-4 whitespace-nowrap">{record.cost ? `$${record.cost.toFixed(2)}` : 'N/A'}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{record.performed_by || 'N/A'}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.next_scheduled_maintenance)}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{record.performed_by || record.technician || 'N/A'}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{formatDate(record.next_scheduled_maintenance || record.next_scheduled)}</td>
           </tr>
         )) : (
           <tr>
@@ -212,21 +137,94 @@ const MaintenanceHistoryTab = ({ history }) => (
 
 const EmployeeDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState(TABS.CURRENT_ASSETS);
+  
+  // Get employee details from Redux store
+  const { employeeDetails, loading, error } = useSelector((state) => state.employees);
 
-  // Fetch mock data based on employee ID
-  const employeeDetails = mockEmployeeData[id] || null;
-
-  if (!employeeDetails) {
-    return <div className="p-6 text-gray-500">Employee not found</div>;
-  }
-
-  const { employee, current_assets, assignment_history, maintenance_history } = employeeDetails;
+  // Fetch employee details when component mounts
+  useEffect(() => {
+    logger.debug('EmployeeDetails component mounted', { employeeId: id });
+    dispatch(fetchEmployeeDetails(id))
+      .unwrap()
+      .then((result) => {
+        console.log('Employee details fetched successfully:', result);
+        logger.info('Employee details loaded successfully', { employeeId: id });
+      })
+      .catch((error) => {
+        console.error('Error fetching employee details:', error);
+        logger.error('Failed to load employee details', { error, employeeId: id });
+      });
+      
+    // Cleanup when component unmounts
+    return () => {
+      dispatch(clearEmployeeDetails());
+      logger.debug('EmployeeDetails component unmounted, cleared details');
+    };
+  }, [dispatch, id]);
 
   // Handle tab changes
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    logger.debug('Changed active tab', { tab });
   };
+
+  // If loading, show loading indicator
+  if (loading) {
+    return (
+      <div className="p-6 mt-20 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // If error, show error message
+  if (error) {
+    return (
+      <div className="p-6 mt-20 text-red-500">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Error Loading Employee Profile</h1>
+          <Link to="/employee-assets" className="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+            <i className="pi pi-arrow-left mr-2"></i> Back to Employees
+          </Link>
+        </div>
+        <p>Error: {error}</p>
+        <button 
+          onClick={() => dispatch(fetchEmployeeDetails(id))}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // If no employee details are found
+  if (!employeeDetails) {
+    return (
+      <div className="p-6 mt-20 text-gray-500">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Employee Not Found</h1>
+          <Link to="/employee-assets" className="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+            <i className="pi pi-arrow-left mr-2"></i> Back to Employees
+          </Link>
+        </div>
+        <p>The employee with ID {id} could not be found.</p>
+      </div>
+    );
+  }
+
+  const { employee, current_assets, assignment_history, maintenance_history } = employeeDetails;
+  
+  // Log the data for debugging
+  logger.debug('Rendering employee details', { 
+    employee: { id: employee.id, name: employee.full_name },
+    assetsCount: current_assets?.length || 0,
+    assignmentHistoryCount: assignment_history?.length || 0,
+    maintenanceHistoryCount: maintenance_history?.length || 0
+  });
 
   return (
     <div className="p-6 bg-background-offwhite min-h-screen mt-20 text-gray-900">
@@ -245,7 +243,7 @@ const EmployeeDetails = () => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Name:</span>
-              <span className="font-medium">{employee.first_name} {employee.last_name}</span>
+              <span className="font-medium">{employee.full_name || `${employee.first_name} ${employee.last_name}`}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Employee ID:</span>
@@ -253,21 +251,21 @@ const EmployeeDetails = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Email:</span>
-              <span className="font-medium">{employee.email}</span>
+              <span className="font-medium">{employee.contact?.email || employee.email || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Department:</span>
-              <span className="font-medium">{employee.department}</span>
+              <span className="font-medium">{employee.department || 'N/A'}</span>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Job Title:</span>
-              <span className="font-medium">{employee.job_title || 'N/A'}</span>
+              <span className="font-medium">{employee.job_title || employee.metadata?.job_title || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Phone:</span>
-              <span className="font-medium">{employee.phone || 'N/A'}</span>
+              <span className="font-medium">{employee.contact?.phone || employee.phone || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Status:</span>
@@ -275,7 +273,7 @@ const EmployeeDetails = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Joined:</span>
-              <span className="font-medium">{formatDate(employee.created_at)}</span>
+              <span className="font-medium">{formatDate(employee.metadata?.joining_date || employee.created_at)}</span>
             </div>
           </div>
         </div>
@@ -288,21 +286,21 @@ const EmployeeDetails = () => {
           {activeTab === TABS.CURRENT_ASSETS && (
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Current Assigned Assets</h2>
-              <CurrentAssetsTab assets={current_assets} />
+              <CurrentAssetsTab assets={current_assets || []} />
             </div>
           )}
           
           {activeTab === TABS.ASSIGNMENT_HISTORY && (
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Assignment History</h2>
-              <AssignmentHistoryTab history={assignment_history} />
+              <AssignmentHistoryTab history={assignment_history || []} />
             </div>
           )}
           
           {activeTab === TABS.MAINTENANCE_HISTORY && (
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Maintenance History</h2>
-              <MaintenanceHistoryTab history={maintenance_history} />
+              <MaintenanceHistoryTab history={maintenance_history || []} />
             </div>
           )}
         </div>
