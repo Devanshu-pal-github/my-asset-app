@@ -91,19 +91,30 @@ const AssetTable = ({
       case "warranty_until":
         return formatDate(item.warranty_until);
       case "actions":
+        const id = item.asset_id || item.id || item._id;
+        const isValidId = isValidObjectId(id);
         return (
           <div className="flex gap-2">
-            <Link
-              to={`/asset/${getSafeId(item)}`}
-              className="text-blue-600 hover:text-blue-800"
-              onClick={() =>
-                logger.info("Navigating to asset detail", {
-                  assetId: getSafeId(item),
-                })
-              }
-            >
-              View Details
-            </Link>
+            {isValidId ? (
+              <Link
+                to={`/asset/${id}`}
+                className="text-blue-600 hover:text-blue-800"
+                onClick={() =>
+                  logger.info("Navigating to asset detail", {
+                    assetId: id,
+                  })
+                }
+              >
+                View Details
+              </Link>
+            ) : (
+              <span 
+                className="text-gray-400 cursor-not-allowed" 
+                title="Asset ID not available"
+              >
+                View Details
+              </span>
+            )}
           </div>
         );
       default:
@@ -149,18 +160,22 @@ const AssetTable = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((item) => (
-            <tr key={getSafeId(item)} className="hover:bg-gray-50">
-              {columns.map((col) => (
-                <td
-                  key={col}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                >
-                  {renderCellContent(item, col)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.map((item) => {
+            const id = item.asset_id || item.id || item._id;
+            const rowKey = isValidObjectId(id) ? id : `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            return (
+              <tr key={rowKey} className="hover:bg-gray-50">
+                {columns.map((col) => (
+                  <td
+                    key={col}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                  >
+                    {renderCellContent(item, col)}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {data.length === 0 && (
