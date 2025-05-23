@@ -260,6 +260,23 @@ export const fetchAssetItemById = createAsyncThunk(
         responseDataKeys: Object.keys(response.data)
       });
       
+      // Log detailed assignment-related fields to verify database state
+      logger.info('Asset assignment state from database:', { 
+        assetId,
+        status: response.data.status,
+        has_active_assignment: response.data.has_active_assignment,
+        current_assignee_id: response.data.current_assignee_id,
+        current_assignee_name: response.data.current_assignee_name,
+        current_assignment_id: response.data.current_assignment_id,
+        current_assignment_date: response.data.current_assignment_date
+      });
+      console.log('Assignment details from DB:', {
+        status: response.data.status,
+        hasActiveAssignment: response.data.has_active_assignment,
+        currentAssigneeId: response.data.current_assignee_id,
+        currentAssigneeName: response.data.current_assignee_name
+      });
+      
       // Log more detailed asset information
       logger.debug('Asset item details:', { 
         item: { ...response.data },

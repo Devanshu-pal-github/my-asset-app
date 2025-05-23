@@ -90,20 +90,14 @@ const AssetAssignmentTable = () => {
 
   const currentCategory = categories.find((cat) => cat.id === categoryId);
   
-  // Helper function to get the normalized ID (handle both id and _id cases)
-  const getNormalizedId = (item) => {
-    if (!item) return null;
-    return item.id || item._id;
-  };
-
   // Get the selected assets with details for display
   const selectedAssetsWithDetails = useMemo(() => {
     return selectedAssets.map(assetId => {
-      const matchedAsset = assets.find(a => getNormalizedId(a) === assetId);
+      const matchedAsset = assets.find(a => a.id === assetId);
       
       if (!matchedAsset) {
         logger.warn(`Asset not found for ID ${assetId}`, { 
-          availableAssetIds: assets.map(a => ({ id: a.id, _id: a._id })),
+          availableAssetIds: assets.slice(0, 5).map(a => a.id),
           selectedAssetId: assetId
         });
         return { id: assetId, name: 'Unknown Asset', asset_tag: 'Unknown' };
@@ -119,11 +113,11 @@ const AssetAssignmentTable = () => {
                             targetEmployeeId ? [targetEmployeeId] : [];
                                 
     return entityIdsToUse.map(entityId => {
-      const matchedEntity = employees.find(e => getNormalizedId(e) === entityId);
+      const matchedEntity = employees.find(e => e.id === entityId);
       
       if (!matchedEntity) {
         logger.warn(`Employee not found for ID ${entityId}`, { 
-          availableEmployeeIds: employees.map(e => ({ id: e.id, _id: e._id })),
+          availableEmployeeIds: employees.slice(0, 5).map(e => e.id),
           selectedEntityId: entityId
         });
         return { id: entityId, first_name: 'Unknown', last_name: 'Entity', department: 'Unknown' };
@@ -151,6 +145,11 @@ const AssetAssignmentTable = () => {
       firstAsset: categoryAssets[0]
     });
     
+    // Get category details for assignment policies
+    const category = categories.find(cat => cat.id === categoryId);
+    const allowMultipleAssignments = category?.assignment_policies?.allow_multiple_assignments || 
+                                   category?.allow_multiple_assignments || false;
+    
     // Filter out assets that are not assignable
     const assignableAssets = categoryAssets.filter(asset => {
       const isAvailable = asset.status === 'available';
@@ -158,8 +157,11 @@ const AssetAssignmentTable = () => {
       const isNotUnderMaintenance = asset.status !== 'under_maintenance' && asset.status !== 'maintenance_requested';
       const isNotDecommissioned = asset.status !== 'retired' && asset.status !== 'lost';
       
-      // An asset is assignable if it's available/not assigned and not under maintenance/decommissioned
-      const canBeAssigned = isAvailable && isNotAssigned && isNotUnderMaintenance && isNotDecommissioned;
+      // An asset is assignable if:
+      // 1. It's available and not assigned, OR
+      // 2. It's assigned but allows multiple assignments
+      const canBeAssigned = (isAvailable && isNotAssigned && isNotUnderMaintenance && isNotDecommissioned) ||
+                           (allowMultipleAssignments && !isNotUnderMaintenance && !isNotDecommissioned);
       
       // Log debug info for assets that might be confusing
       if (isAvailable && !canBeAssigned) {
@@ -168,7 +170,8 @@ const AssetAssignmentTable = () => {
           name: asset.name,
           status: asset.status,
           has_active_assignment: asset.has_active_assignment,
-          current_assignee_id: asset.current_assignee_id
+          current_assignee_id: asset.current_assignee_id,
+          allowMultipleAssignments
         });
       }
       
@@ -177,7 +180,8 @@ const AssetAssignmentTable = () => {
     
     logger.debug('Assignable assets filtered', { 
       count: assignableAssets.length,
-      firstItem: assignableAssets[0]
+      firstItem: assignableAssets[0],
+      allowMultipleAssignments
     });
     
     // Filter by search term if provided
@@ -191,7 +195,7 @@ const AssetAssignmentTable = () => {
       (asset.asset_tag && asset.asset_tag.toLowerCase().includes(lowerSearchTerm)) ||
       (asset.status && asset.status.toLowerCase().includes(lowerSearchTerm))
     );
-  }, [assets, categoryId, searchTerm]);
+  }, [assets, categoryId, searchTerm, categories]);
 
   // Sort and search related functions
   const searchFilteredAssets = filteredAssets;
@@ -203,12 +207,20 @@ const AssetAssignmentTable = () => {
   };
 
   const handleAssetSelect = (assetId) => {
+    if (!assetId) {
+      logger.warn('Attempted to select asset with invalid ID');
+      return;
+    }
     setSelectedAssets((prev) =>
       prev.includes(assetId) ? prev.filter((id) => id !== assetId) : [...prev, assetId]
     );
   };
 
   const handleAssetDirectAssign = (assetId) => {
+    if (!assetId) {
+      logger.warn('Attempted to directly assign asset with invalid ID');
+      return;
+    }
     setSelectedAssets([assetId]);
     setShowEmployeeModal(true);
   };
@@ -223,12 +235,24 @@ const AssetAssignmentTable = () => {
   };
 
   const handleEntitySelect = (entityId) => {
+    if (!entityId) {
+      logger.warn('Attempted to select entity with invalid ID');
+      return;
+    }
     setSelectedEntities((prev) =>
       prev.includes(entityId) ? prev.filter((id) => id !== entityId) : [...prev, entityId]
     );
   };
 
   const handleEntityAssign = (entityId) => {
+    if (!entityId) {
+      logger.warn('Attempted to assign to entity with invalid ID');
+      return;
+    }
+    
+    logger.info('Initiating direct assignment to entity', { entityId });
+    
+    // Set the selected entity and show confirmation modal
     setSelectedEntities([entityId]);
     setShowEmployeeModal(false);
     setShowConfirmModal(true);
@@ -236,9 +260,17 @@ const AssetAssignmentTable = () => {
 
   const handleAssignSelected = () => {
     if (selectedEntities.length === 0) {
-      setNotification({ type: 'error', message: 'Please select at least one entity.' });
+      setNotification({
+        type: 'error',
+        message: 'Please select at least one entity.',
+      });
       return;
     }
+    
+    logger.info('Proceeding with bulk assignment', { 
+      selectedEntities,
+      selectedAssets
+    });
     
     setShowEmployeeModal(false);
     setShowConfirmModal(true);
@@ -248,88 +280,76 @@ const AssetAssignmentTable = () => {
     try {
       setIsSubmitting(true);
       
-      // Log detailed info about assignment process
-      logger.info('Starting asset assignment process', {
-        selectedAssets: selectedAssets.length,
-        selectedEntities: selectedEntities.length,
-        targetEmployeeId: targetEmployeeId
-      });
+      // Validate selected assets and entities
+      const validSelectedAssets = selectedAssets.filter(id => id && assets.some(asset => asset._id === id || asset.id === id));
+      const validSelectedEntities = selectedEntities.filter(id => id && employees.some(emp => emp._id === id || emp.id === id));
+      
+      if (validSelectedAssets.length === 0) {
+        throw new Error('No valid assets selected for assignment');
+      }
       
       // Determine which entities to use (either selected or target)
       const entitiesToAssign = targetEmployeeId 
         ? [targetEmployeeId] 
-        : selectedEntities;
+        : validSelectedEntities;
       
-      if (!entitiesToAssign.length) {
-        throw new Error('No employees selected for assignment');
+      if (entitiesToAssign.length === 0) {
+        throw new Error('No valid employees selected for assignment');
       }
       
-      if (!selectedAssets.length) {
-        throw new Error('No assets selected for assignment');
-      }
-      
-      console.log('Assets to assign:', selectedAssetsWithDetails);
-      console.log('Entities to assign to:', selectedEntitiesWithDetails);
-      
-      // Log assignment details
-      logger.info('Assigning assets to entities', {
-        assets: selectedAssets,
-        entities: entitiesToAssign,
-        assignmentType: 'bulk-assignment'
+      // Log assignment details with validated data
+      logger.info('Starting asset assignment process', {
+        selectedAssets: validSelectedAssets.length,
+        selectedEntities: entitiesToAssign.length,
+        targetEmployeeId
       });
       
       // Create an array of promises for parallel processing
       const assignmentPromises = [];
       
       // For each selected asset, assign it to each selected entity
-      for (const assetId of selectedAssets) {
-        const asset = assets.find(item => getNormalizedId(item) === assetId);
+      for (const assetId of validSelectedAssets) {
+        const asset = assets.find(item => item._id === assetId || item.id === assetId);
         
         if (!asset) {
           logger.error('Asset not found for assignment', { assetId });
-          console.error(`Asset not found for assignment: ${assetId}`);
           continue;
         }
         
-        logger.debug('Processing asset for assignment', {
-          assetId,
-          assetName: asset.name || asset.asset_name || 'Unknown',
-          entities: entitiesToAssign
-        });
-        
         // Find asset's category to get department
         const category = categories.find(cat => cat.id === asset.category_id);
-        const department = category?.category_name || 'Unknown Department';
         
         for (const entityId of entitiesToAssign) {
-          const entity = employees.find(emp => getNormalizedId(emp) === entityId);
+          const entity = employees.find(emp => emp._id === entityId || emp.id === entityId);
           
           if (!entity) {
             logger.error('Entity not found for assignment', { entityId });
-            console.error(`Entity not found for assignment: ${entityId}`);
             continue;
           }
           
-          const entityName = entity.name || `${entity.first_name} ${entity.last_name}` || 'Unknown';
+          const currentTime = new Date().toISOString();
           
-          logger.debug('Creating assignment for asset-entity pair', {
-            assetId: getNormalizedId(asset),
-            entityId: getNormalizedId(entity),
-            entityName
-          });
-          
-          console.log(`Assigning asset "${asset.name}" to entity "${entityName}"`);
-          
-          // Create assignment with unwrap() to handle errors
+          // Create assignment with explicit field mapping for backend
           assignmentPromises.push(
             dispatch(createAssignment({
-              assetId: getNormalizedId(asset),
-              employeeId: getNormalizedId(entity),
-              assignmentNotes: `Assigned via Asset Management System to ${entityName}`,
-              department: entity.department || department,
-              condition: asset.condition || 'Good',
-              assignmentType: 'PERMANENT',
-              startDate: new Date().toISOString()
+              asset_id: asset.id || asset._id,
+              asset_name: asset.name || 'Unknown Asset',
+              asset_tag: asset.asset_tag || '',
+              category_id: category?.id || '',
+              category_name: category?.name || '',
+              assigned_to: entity.id || entity._id,
+              assigned_to_name: `${entity.first_name} ${entity.last_name}`,
+              employee_id: entity.id || entity._id,
+              employee_name: `${entity.first_name} ${entity.last_name}`,
+              assignment_type: 'PERMANENT',
+              status: 'active',
+              assigned_date: currentTime,
+              assignment_notes: `Assigned via Asset Management System to ${entity.first_name} ${entity.last_name}`,
+              department: entity.department || category?.name || '',
+              location: entity.location || asset.location || '',
+              condition_at_assignment: asset.condition || 'Good',
+              terms_accepted: true,
+              bypass_policy: false
             })).unwrap()
           );
         }
@@ -337,23 +357,34 @@ const AssetAssignmentTable = () => {
       
       // Wait for all assignment operations to complete
       const results = await Promise.all(assignmentPromises);
+      
+      if (results.length === 0) {
+        throw new Error('No assignments were created');
+      }
+      
       logger.info('Asset assignment completed successfully', { 
         count: results.length,
         results: results.map(r => ({id: r.id, assetId: r.asset_id, employeeId: r.employee_id}))
       });
       
       // Build notification message
-      const entityNames = selectedEntitiesWithDetails.map(entity => 
-        entity.name || `${entity.first_name} ${entity.last_name}`
-      );
+      const entityNames = entitiesToAssign.map(entityId => {
+        const entity = employees.find(emp => emp._id === entityId || emp.id === entityId);
+        return entity ? `${entity.first_name} ${entity.last_name}` : 'Unknown Employee';
+      });
       
       // Refresh asset list to show updated assignments
-      dispatch(fetchAssetItemsByCategory(categoryId));
+      await dispatch(fetchAssetItemsByCategory(categoryId));
       
       setNotification({
         type: 'success',
-        message: `Asset(s) successfully assigned to ${entityNames.join(', ')}`,
+        message: `Successfully assigned ${validSelectedAssets.length} asset(s) to ${entityNames.join(', ')}`,
       });
+      
+      // Reset selection states
+      setSelectedAssets([]);
+      setSelectedEntities([]);
+      setShowConfirmModal(false);
       
       setTimeout(() => {
         navigate('/asset-inventory');
@@ -405,6 +436,208 @@ const AssetAssignmentTable = () => {
 
   const handleNavigateToInventory = () => {
     navigate('/asset-inventory');
+  };
+
+  // Update the modal content to display asset and entity details properly
+  const renderConfirmModal = () => {
+    // Get category details for assignment policies
+    const category = categories.find(cat => cat.id === categoryId);
+    const allowMultipleAssignments = category?.assignment_policies?.allow_multiple_assignments || 
+                                   category?.allow_multiple_assignments || false;
+    
+    // Get detailed information about the selected assets
+    const selectedAssetsList = selectedAssets.map((assetId) => {
+      const asset = assets.find((a) => a._id === assetId || a.id === assetId);
+      return asset || { name: 'Unknown Asset', asset_tag: 'N/A', status: 'unknown' };
+    });
+
+    // Get detailed information about the selected entities
+    const selectedEntitiesList = selectedEntities.map((entityId) => {
+      const entity = employees.find((e) => e._id === entityId || e.id === entityId);
+      return entity || { first_name: 'Unknown', last_name: 'Employee', department: 'N/A' };
+    });
+
+    return (
+      <div className="fixed z-10 inset-0 overflow-y-auto">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+          <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full p-6 relative z-10">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Confirm Assignment
+              </h3>
+              
+              {/* Display category assignment policy */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <h4 className="text-sm font-semibold text-blue-800">Category Assignment Policy</h4>
+                <p className="text-sm text-blue-600">
+                  {allowMultipleAssignments 
+                    ? 'This category allows multiple assignments per asset.'
+                    : 'This category allows only one assignment per asset.'}
+                </p>
+              </div>
+              
+              {/* Display selected assets */}
+              <div className="mt-4">
+                <h4 className="text-md font-semibold text-gray-800">Selected Assets:</h4>
+                <div className="mt-1 max-h-40 overflow-y-auto">
+                  {selectedAssetsList.map((asset) => (
+                    <div key={asset._id || asset.id} className="mt-1 p-2 border border-gray-200 rounded">
+                      <p className="text-gray-800"><strong>Name:</strong> {asset.name}</p>
+                      <p className="text-gray-600"><strong>Tag:</strong> {asset.asset_tag}</p>
+                      <p className="text-gray-600"><strong>Status:</strong> {asset.status}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Display selected employees */}
+              <div className="mt-4">
+                <h4 className="text-md font-semibold text-gray-800">Assigning to:</h4>
+                <div className="mt-1 max-h-40 overflow-y-auto">
+                  {selectedEntitiesList.map((entity) => (
+                    <div key={entity._id || entity.id} className="mt-1 p-2 border border-gray-200 rounded">
+                      <p className="text-gray-800">
+                        <strong>Name:</strong> {`${entity.first_name} ${entity.last_name}`}
+                      </p>
+                      <p className="text-gray-600"><strong>Department:</strong> {entity.department || 'N/A'}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setShowEmployeeModal(true);
+                }}
+                className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={confirmAssignment}
+                disabled={isSubmitting}
+                className={`${
+                  isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                } text-white font-medium py-2 px-4 rounded transition-colors flex items-center`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Assigning...
+                  </>
+                ) : (
+                  'Confirm Assignment'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Update the employee modal content
+  const renderEmployeeModal = () => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Assign Asset{selectedAssets.length > 1 ? 's' : ''} - {currentCategory?.name}
+          </h3>
+          
+          <div className="border rounded-lg p-4 bg-gray-50 mb-4">
+            <h4 className="font-medium text-gray-800 mb-2">Selected Assets</h4>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {selectedAssets.map((assetId) => {
+                const asset = assets.find((a) => a._id === assetId || a.id === assetId);
+                return (
+                  <div key={assetId} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    {asset?.name} ({asset?.asset_tag})
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search employees..."
+              value={employeeSearchTerm}
+              onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Select</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {employees
+                  .filter(emp => 
+                    !employeeSearchTerm || 
+                    `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(employeeSearchTerm.toLowerCase()) ||
+                    emp.department?.toLowerCase().includes(employeeSearchTerm.toLowerCase())
+                  )
+                  .map((employee) => (
+                    <tr key={employee._id || employee.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedEntities.includes(employee._id || employee.id)}
+                          onChange={() => handleEntitySelect(employee._id || employee.id)}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                      <td className="px-6 py-4">{employee.first_name} {employee.last_name}</td>
+                      <td className="px-6 py-4">{employee.department || 'N/A'}</td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleEntityAssign(employee._id || employee.id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                        >
+                          Assign
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 flex justify-between">
+            <button
+              onClick={handleAssignSelected}
+              disabled={selectedEntities.length === 0}
+              className={`${
+                selectedEntities.length > 0
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-gray-400 cursor-not-allowed'
+              } text-white px-4 py-2 rounded-lg`}
+            >
+              Assign to Selected ({selectedEntities.length})
+            </button>
+            <button
+              onClick={() => setShowEmployeeModal(false)}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (!currentCategory) {
@@ -485,177 +718,9 @@ const AssetAssignmentTable = () => {
         </div>
       )}
       
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-800">Confirm Assignment</h3>
-            <p className="text-gray-600 mt-2">
-              Are you sure you want to assign the selected asset(s) to the selected entity/entities?
-            </p>
-            
-            <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800">Selected Assets</h4>
-              {selectedAssetsWithDetails.map((asset) => (
-                <div key={asset.id || asset._id} className="mt-2 p-2 bg-gray-50 rounded-md">
-                  <p className="text-gray-600">
-                    <strong>Name:</strong> {asset.name || 'Unknown'}
-                  </p>
-                  <p className="text-gray-600">
-                    <strong>Asset Tag:</strong> {asset.asset_tag || 'Unknown'}
-                  </p>
-                  <p className="text-gray-600">
-                    <strong>ID:</strong> {getNormalizedId(asset)}
-                  </p>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800">Selected Entities</h4>
-              {selectedEntitiesWithDetails.map((entity) => (
-                <div key={entity.id || entity._id} className="mt-2 p-2 bg-gray-50 rounded-md">
-                  <p className="text-gray-600">
-                    <strong>Name:</strong> {entity ? `${entity.first_name} ${entity.last_name}` : 'Unknown'}
-                  </p>
-                  <p className="text-gray-600">
-                    <strong>ID:</strong> {getNormalizedId(entity)}
-                  </p>
-                  <p className="text-gray-600">
-                    <strong>Department:</strong> {entity?.department || 'N/A'}
-                  </p>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setShowEmployeeModal(true);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                disabled={isSubmitting}
-                className={`${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-2 px-4 rounded-lg transition-colors`}
-                onClick={confirmAssignment}
-              >
-                {isSubmitting ? 'Processing...' : 'Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showConfirmModal && renderConfirmModal()}
       
-      {showEmployeeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Assign Asset{selectedAssets.length > 1 ? 's' : ''} - {currentCategory.name}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Select an entity to assign the asset{selectedAssets.length > 1 ? 's' : ''} to.
-            </p>
-            
-            <div className="border rounded-lg p-4 bg-gray-50 mb-4">
-              <h4 className="font-medium text-gray-800 mb-2">Selected Assets</h4>
-              <div className="mb-4 flex flex-wrap gap-2">
-                {selectedAssets.map((assetId) => {
-                  const asset = assets.find((a) => a.id === assetId);
-                  return (
-                    <div key={assetId} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      {asset?.name} ({asset?.asset_tag})
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <h4 className="font-medium text-gray-800 mb-2">Available Entities</h4>
-              <div className="mb-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search by name, department or ID..."
-                    className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-                    value={employeeSearchTerm}
-                    onChange={handleEmployeeSearchChange}
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <i className="pi pi-search"></i>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Select</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {employees.map((employee) => (
-                      <tr key={employee._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <input
-                            type="checkbox"
-                            checked={selectedEntities.includes(employee._id)}
-                            onChange={() => handleEntitySelect(employee._id)}
-                            className="h-4 w-4"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {employee.first_name} {employee.last_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee._id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department || 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-                            onClick={() => handleEntityAssign(employee._id)}
-                          >
-                            Assign
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {employees.length === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  No matching employees found
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-between">
-              <div>
-                {selectedEntities.length > 0 && (
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                    onClick={handleAssignSelected}
-                  >
-                    Assign to Selected ({selectedEntities.length})
-                  </button>
-                )}
-              </div>
-              <button
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
-                onClick={handleCloseEmployeeModal}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showEmployeeModal && renderEmployeeModal()}
       
       <div className="flex justify-between items-center mb-5">
         <div>
@@ -747,12 +812,12 @@ const AssetAssignmentTable = () => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {paginatedAssets.map((asset) => (
-              <tr key={asset._id} className="hover:bg-gray-50">
+              <tr key={asset._id || asset.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <input
                     type="checkbox"
-                    checked={selectedAssets.includes(asset._id)}
-                    onChange={() => handleAssetSelect(asset._id)}
+                    checked={selectedAssets.includes(asset._id || asset.id)}
+                    onChange={() => handleAssetSelect(asset._id || asset.id)}
                     className="h-4 w-4"
                   />
                 </td>
@@ -762,7 +827,7 @@ const AssetAssignmentTable = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-                    onClick={() => handleAssetDirectAssign(asset._id)}
+                    onClick={() => handleAssetDirectAssign(asset._id || asset.id)}
                   >
                     Assign
                   </button>

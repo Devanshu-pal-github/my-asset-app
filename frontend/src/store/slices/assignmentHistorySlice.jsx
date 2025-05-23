@@ -103,77 +103,105 @@ export const fetchAssignmentHistory = createAsyncThunk(
 
 export const createAssignment = createAsyncThunk(
   'assignmentHistory/createAssignment',
-  async (payload, { rejectWithValue }) => {
+  async (payload, { rejectWithValue, getState }) => {
     try {
       // Log full payload for debugging
       logger.debug('Creating new assignment with payload:', payload);
-      console.log('Assignment payload from component:', payload);
       
       // Validate required fields
-      if (!payload.assetId) {
-        const error = 'Asset ID is required for assignment';
-        logger.error(error, { payload });
-        throw new Error(error);
+      if (!payload.asset_id && !payload.assetId) {
+        throw new Error('Asset ID is required for assignment');
       }
       
-      if (!payload.employeeId) {
-        const error = 'Employee ID is required for assignment';
-        logger.error(error, { payload });
-        throw new Error(error);
+      if (!payload.assigned_to && !payload.employeeId) {
+        throw new Error('Employee ID is required for assignment');
       }
+      
+      // Get the current state to check category policies
+      const state = getState();
+      const assetId = payload.asset_id || payload.assetId;
+      const employeeId = payload.assigned_to || payload.employeeId;
+      
+      const asset = state.assetItems.items.find(item => item.id === assetId || item._id === assetId);
+      const category = state.assetCategories.categories.find(cat => cat.id === asset?.category_id);
+      const employee = state.employees.employees.find(emp => emp.id === employeeId || emp._id === employeeId);
+      
+      if (!asset) {
+        throw new Error('Asset not found');
+      }
+      
+      if (!employee) {
+        throw new Error('Employee not found');
+      }
+      
+      // Check if multiple assignments are allowed
+      const allowMultipleAssignments = category?.assignment_policies?.allow_multiple_assignments || 
+                                     category?.allow_multiple_assignments || false;
+      
+      // Check if asset is already assigned and multiple assignments are not allowed
+      if (asset?.has_active_assignment && !allowMultipleAssignments) {
+        throw new Error('This asset is already assigned and does not allow multiple assignments');
+      }
+      
+      // Check if employee's department matches category restrictions
+      if (category?.assignment_policies?.assignable_to_departments?.length > 0) {
+        if (!category.assignment_policies.assignable_to_departments.includes(employee?.department)) {
+          throw new Error(`Employee's department is not allowed for this asset category`);
+        }
+      }
+
+      const currentTime = new Date().toISOString();
       
       // Prepare payload based on required backend fields
-      // IMPORTANT: Use snake_case for backend API
       const apiPayload = {
-        asset_id: payload.assetId,
-        assigned_to: payload.employeeId,
-        assignment_notes: payload.assignmentNotes || 'Assigned via asset management system',
+        asset_id: asset.id || asset._id,
+        asset_name: asset.name || 'Unknown Asset',
+        asset_tag: asset.asset_tag || '',
+        category_id: category?.id || category?._id || '',
+        category_name: category?.name || '',
+        assigned_to: employee.id || employee._id,
+        assigned_to_name: `${employee.first_name} ${employee.last_name}`,
+        employee_id: employee.id || employee._id,  // Alias for assigned_to
+        employee_name: `${employee.first_name} ${employee.last_name}`,
         assignment_type: payload.assignmentType || 'PERMANENT',
-        assignment_date: payload.startDate || new Date().toISOString(),
+        status: 'active',
+        assigned_date: currentTime,
+        assignment_notes: payload.assignmentNotes || `Assigned ${asset.name || 'Asset'} to ${employee.first_name} ${employee.last_name}`,
+        department: employee.department || category?.name || '',
+        location: employee.location || asset.location || '',
+        condition_at_assignment: asset.condition || 'Good',
+        terms_accepted: true,
+        bypass_policy: false,
         expected_return_date: payload.endDate || null,
-        department: payload.department || null,
-        condition: payload.condition || 'Good'
+        assigned_by: 'system',
+        assigned_by_name: 'System'
       };
       
       // Log API request details
       logger.info('Sending assignment request to API', { 
-        url: `${API_URL}/assignment-history/`,
-        payload: apiPayload 
+        url: `${API_URL}/assignment-history`,
+        payload: apiPayload
       });
-      console.log('API request payload:', apiPayload);
-      console.log('API payload fields:', Object.keys(apiPayload));
-      console.log('Sending to URL:', `${API_URL}/assignment-history/`);
       
       // Make the API request with retry logic
       const response = await withRetry(() => 
-        axiosInstance.post(`${API_URL}/assignment-history/`, apiPayload)
+        axiosInstance.post(`${API_URL}/assignment-history`, apiPayload)
       );
       
       // Log the complete API response
       logger.info('Assignment API response received', { 
         status: response.status,
-        responseData: response.data,
-        responseFields: Object.keys(response.data)
+        responseData: response.data
       });
-      console.log('Assignment API response:', response.data);
-      
-      // If response doesn't have an ID, it might be an error
-      if (!response.data.id && !response.data._id) {
-        logger.warn('API response missing ID field', { 
-          response: response.data,
-          fields: Object.keys(response.data)
-        });
-      }
       
       const normalizedAssignment = normalizeAssignmentHistory(response.data);
-      logger.debug('Normalized assignment data:', normalizedAssignment);
       
-      // Log success with key details
+      // Log success
       logger.info('Assignment created successfully', {
         assignmentId: normalizedAssignment.id,
-        assetId: normalizedAssignment.asset_id,
-        employeeId: normalizedAssignment.employee_id,
-        status: normalizedAssignment.status
+        assetId: asset.id,
+        employeeId: employee.id,
+        status: 'active'
       });
       
       return normalizedAssignment;
@@ -185,21 +213,10 @@ export const createAssignment = createAsyncThunk(
       
       logger.error('Failed to create assignment', {
         error: errorDetail,
-        payload,
-        assetId: payload.assetId,
-        employeeId: payload.employeeId,
         status: errorStatus,
         responseData: errorData,
         stack: error.stack
       });
-      
-      // Log detailed error for debugging
-      console.error(`Assignment creation failed (${errorStatus}):`, errorDetail);
-      console.error('Original payload:', payload);
-      
-      if (errorData) {
-        console.error('Error response data:', errorData);
-      }
       
       return rejectWithValue(errorDetail);
     }

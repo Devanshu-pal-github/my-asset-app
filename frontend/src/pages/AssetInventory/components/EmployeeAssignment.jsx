@@ -1,28 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import logger from '../../../utils/logger';
 import { paginate, sortData, filterData } from './tableUtils';
-
-// Mock data
-const mockEmployees = [
-  { _id: 'emp1', first_name: 'John', last_name: 'Doe', department: 'Engineering', assigned_assets: [] },
-  { _id: 'emp2', first_name: 'Jane', last_name: 'Smith', department: 'HR', assigned_assets: [] },
-];
-
-const mockCategories = [
-  { _id: 'cat1', name: 'Laptops', can_be_assigned_to: 'single_employee' },
-  { _id: 'cat2', name: 'Stationery', can_be_assigned_to: 'department' },
-];
-
-const mockAssets = [
-  { _id: 'asset1', name: 'MacBook Pro', asset_tag: 'LT001', status: 'available', category_id: 'cat1' },
-];
+import { fetchAssetItemById, fetchAssetItemsByCategory } from '../../../store/slices/assetItemSlice';
+import { fetchEmployees } from '../../../store/slices/employeeSlice';
+import { fetchAssetCategories } from '../../../store/slices/assetCategorySlice';
+import { createAssignment } from '../../../store/slices/assignmentHistorySlice';
 
 const EmployeeAssignment = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { categoryId, assetId } = useParams();
   const location = useLocation();
   const { selectedAssets = [] } = location.state || {};
+  
+  // State
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedEntities, setSelectedEntities] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -30,81 +23,291 @@ const EmployeeAssignment = () => {
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [notification, setNotification] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const itemsPerPage = 10;
 
+  // Get data from Redux store
+  const { categories } = useSelector(state => state.assetCategories);
+  const { items: assets, currentItem: assetItem } = useSelector(state => state.assetItems);
+  const { employees } = useSelector(state => state.employees);
+  
+  // Fetch data on component mount
   useEffect(() => {
     logger.debug('EmployeeAssignment useEffect triggered', { categoryId, assetId, selectedAssets });
-    logger.info('Simulating fetch with mock data', { categoryId, assetId });
-  }, [categoryId, assetId]);
-
-  const currentCategory = mockCategories.find((cat) => cat._id === categoryId) || {};
-  const currentAsset = assetId ? mockAssets.find((asset) => asset._id === assetId) : null;
-
-  const entities = () => {
-    switch (currentCategory.can_be_assigned_to) {
-      case 'single_employee':
-        return mockEmployees;
-      case 'team':
-        return [{ _id: 'team1', name: 'Dev Team', department: 'Engineering' }];
-      case 'department':
-        return [{ _id: 'dept1', name: 'Engineering', location: 'Building A' }];
-      default:
-        return [];
+    
+    // Fetch asset categories if not already loaded
+    if (categories.length === 0) {
+      dispatch(fetchAssetCategories())
+        .unwrap()
+        .then(() => logger.info('Categories fetched successfully'))
+        .catch(err => logger.error('Error fetching categories', { error: err }));
     }
+    
+    // Fetch employees
+    dispatch(fetchEmployees())
+      .unwrap()
+      .then(result => logger.info('Employees fetched successfully', { count: result.length }))
+      .catch(err => logger.error('Error fetching employees', { error: err }));
+    
+    // If specific asset ID provided, fetch that asset
+    if (assetId) {
+      dispatch(fetchAssetItemById(assetId))
+        .unwrap()
+        .then(result => logger.info('Asset fetched successfully', { id: result.id, name: result.name }))
+        .catch(err => logger.error('Error fetching asset', { error: err }));
+    }
+    
+    // If category ID provided, fetch assets for that category
+    if (categoryId) {
+      dispatch(fetchAssetItemsByCategory(categoryId))
+        .unwrap()
+        .then(result => logger.info('Category assets fetched successfully', { count: result.length }))
+        .catch(err => logger.error('Error fetching category assets', { error: err }));
+    }
+  }, [dispatch, categoryId, assetId, selectedAssets, categories.length]);
+
+  const currentCategory = categories.find((cat) => cat.id === categoryId) || {};
+  const currentAsset = assetId ? (assetItem || assets.find((asset) => asset.id === assetId)) : null;
+
+  // Get appropriate entities based on category assignment settings
+  const entities = () => {
+    logger.debug('Getting entities based on category settings', { 
+      categoryId, 
+      categoryName: currentCategory.name || 'Unknown',
+      assignableTo: currentCategory.assignment_policies?.assignable_to || currentCategory.can_be_assigned_to
+    });
+    
+    const assignableTo = currentCategory.assignment_policies?.assignable_to || 
+                        currentCategory.can_be_assigned_to || 'single_employee';
+    
+    // Filter employees based on assignment policy
+    let filteredEmployees = employees;
+    
+    switch (assignableTo) {
+      case 'department':
+        // Only show employees from specific departments if defined
+        if (currentCategory.assignment_policies?.assignable_to_departments?.length > 0) {
+          filteredEmployees = employees.filter(emp => 
+            currentCategory.assignment_policies.assignable_to_departments.includes(emp.department)
+          );
+        }
+        break;
+      case 'team':
+        // Only show employees from specific teams if defined
+        if (currentCategory.assignment_policies?.assignable_to_teams?.length > 0) {
+          filteredEmployees = employees.filter(emp => 
+            currentCategory.assignment_policies.assignable_to_teams.includes(emp.team)
+          );
+        }
+        break;
+      case 'single_employee':
+      case 'employee':
+      default:
+        // Return all employees by default
+        break;
+    }
+    
+    return filteredEmployees;
   };
 
   const entityList = entities();
+  
+  // Check if multiple employee selection is allowed
+  const allowMultipleEmployees = useMemo(() => {
+    const assignmentType = currentCategory.assignment_policies?.assignable_to || 
+                          currentCategory.can_be_assigned_to;
+    return assignmentType === 'team' || assignmentType === 'department';
+  }, [currentCategory]);
 
+  // Handle entity selection
   const handleEntitySelect = (entityId) => {
-    setSelectedEntities((prev) =>
-      prev.includes(entityId) ? prev.filter((id) => id !== entityId) : [...prev, entityId]
-    );
+    if (!allowMultipleEmployees) {
+      // If multiple selection is not allowed, replace the selection
+      setSelectedEntities([entityId]);
+    } else {
+      // If multiple selection is allowed, toggle the selection
+      setSelectedEntities((prev) =>
+        prev.includes(entityId) ? prev.filter((id) => id !== entityId) : [...prev, entityId]
+      );
+    }
+    logger.debug('Entity selection changed', { 
+      entityId, 
+      selectedEntities, 
+      allowMultipleEmployees 
+    });
   };
 
+  // Show confirmation modal when Assign button clicked
   const handleAssignClick = () => {
     if (selectedEntities.length === 0) {
-      setNotification({ type: 'error', message: 'Please select at least one entity to assign.' });
+      setNotification({ 
+        type: 'error', 
+        message: 'Please select at least one employee to assign.' 
+      });
       return;
     }
+    logger.debug('Opening confirm modal for assignment', { 
+      selectedEntities, 
+      selectedAssets,
+      allowMultipleEmployees
+    });
     setShowConfirmModal(true);
   };
 
+  // Process the assignment when confirmed
   const confirmAssignment = async () => {
     if (selectedEntities.length === 0) {
+      setNotification({
+        type: 'error',
+        message: 'Please select at least one employee to assign.'
+      });
       setShowConfirmModal(false);
       return;
     }
 
     try {
-      const assetsToAssign = selectedAssets.length > 0 ? selectedAssets : [assetId];
-      logger.info('Assigning assets', { assetsToAssign, selectedEntities });
+      setIsSubmitting(true);
+      
+      // Determine which assets to assign
+      const assetsToAssign = selectedAssets.length > 0 
+        ? selectedAssets 
+        : [assetId];
+      
+      if (assetsToAssign.length === 0) {
+        throw new Error('No assets selected for assignment');
+      }
+      
+      logger.info('Starting asset assignment process', { 
+        assetCount: assetsToAssign.length,
+        entityCount: selectedEntities.length,
+        categoryId
+      });
+      
+      // Create an array of promises for parallel processing
+      const assignmentPromises = [];
+      
+      // For each selected asset, assign it to each selected entity
+      for (const assetId of assetsToAssign) {
+        const asset = assets.find(item => item.id === assetId);
+        
+        if (!asset) {
+          logger.error('Asset not found for assignment', { assetId });
+          continue;
+        }
+        
+        // Find asset's category
+        const category = categories.find(cat => cat.id === asset.category_id);
+        
+        for (const entityId of selectedEntities) {
+          const entity = employees.find(emp => emp.id === entityId);
+          
+          if (!entity) {
+            logger.error('Entity not found for assignment', { entityId });
+            continue;
+          }
+          
+          const entityName = `${entity.first_name} ${entity.last_name}`;
+          
+          logger.debug('Creating assignment for asset-entity pair', {
+            assetId: asset.id,
+            assetName: asset.name,
+            entityId: entity.id,
+            entityName
+          });
+          
+          // Create the assignment through Redux
+          assignmentPromises.push(
+            dispatch(createAssignment({
+              assetId: asset.id,
+              employeeId: entity.id,
+              assignmentNotes: `Assigned ${asset.name || 'Asset'} to ${entityName}`,
+              assignmentType: 'PERMANENT',
+              department: entity.department,
+              location: entity.location || asset.location,
+              condition: asset.condition || 'Good',
+              assignedBy: 'system',
+              assignedByName: 'System'
+            })).unwrap()
+          );
+        }
+      }
+      
+      // Wait for all assignment operations to complete
+      const results = await Promise.all(assignmentPromises.map(p => p.catch(e => e)));
+      
+      // Check for errors
+      const errors = results.filter(r => r instanceof Error);
+      if (errors.length > 0) {
+        logger.error('Some assignments failed', { 
+          errorCount: errors.length,
+          errors: errors.map(e => e.message)
+        });
+        throw new Error(`Failed to assign some assets: ${errors[0].message}`);
+      }
+      
+      const successfulAssignments = results.filter(r => !(r instanceof Error));
+      
+      logger.info('Asset assignments completed successfully', { 
+        count: successfulAssignments.length,
+        results: successfulAssignments.map(r => ({
+          id: r.id,
+          assetId: r.asset_id,
+          employeeId: r.employee_id
+        }))
+      });
+      
+      // Build success notification
+      const entityNames = selectedEntities.map(entityId => {
+        const entity = employees.find(emp => emp.id === entityId);
+        return entity 
+          ? `${entity.first_name} ${entity.last_name}`
+          : 'Unknown';
+      });
+      
+      // Set success notification
       setNotification({
         type: 'success',
-        message: `Asset(s) assigned to ${selectedEntities.length} ${currentCategory.can_be_assigned_to}(s)`,
+        message: `Asset(s) successfully assigned to ${entityNames.join(', ')}`,
       });
-
+      
+      // Refresh asset list and categories
+      if (categoryId) {
+        dispatch(fetchAssetItemsByCategory(categoryId));
+        dispatch(fetchAssetCategories());
+      }
+      
+      // Navigate back after a short delay
       setTimeout(() => {
         navigate(`/asset-inventory/${categoryId}/assign`);
       }, 1500);
+      
     } catch (error) {
-      logger.error('Failed to assign asset', { error: error.message });
+      logger.error('Failed to assign assets', { 
+        error: error.message || 'Unknown error',
+        stack: error.stack,
+        selectedAssets, 
+        selectedEntities
+      });
+      
       setNotification({
         type: 'error',
-        message: 'Failed to assign asset',
+        message: error.message || 'Failed to assign assets',
       });
     } finally {
+      setIsSubmitting(false);
       setShowConfirmModal(false);
-      setSelectedEntities([]);
     }
   };
 
+  // Handle sorting
   const handleSort = (field) => {
     const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortOrder(newSortOrder);
   };
 
-  const filteredEntities = filterData(entityList, globalFilter, ['name', 'first_name', 'last_name', 'department']);
+  // Filter, sort and paginate entities
+  const filteredEntities = filterData(entityList || [], globalFilter, ['name', 'first_name', 'last_name', 'department', 'employee_id']);
   const sortedEntities = sortData(filteredEntities, sortField, sortOrder);
   const paginatedEntities = paginate(sortedEntities, currentPage, itemsPerPage);
   const totalPages = Math.ceil(filteredEntities.length / itemsPerPage);
@@ -113,7 +316,8 @@ const EmployeeAssignment = () => {
     setCurrentPage(page);
   };
 
-  if (!currentCategory.name) {
+  // Loading or error states
+  if (!currentCategory || !currentCategory.name) {
     logger.warn('Category not found', { categoryId });
     return (
       <div className="p-6 text-gray-600">
@@ -137,11 +341,11 @@ const EmployeeAssignment = () => {
     );
   }
 
-  if (!entityList.length) {
+  if (!entityList || entityList.length === 0) {
     logger.info('No entities found');
     return (
       <div className="p-6 text-gray-600">
-        No {currentCategory.can_be_assigned_to}s available for assignment.{' '}
+        No employees available for assignment.{' '}
         <Link to={`/asset-inventory/${categoryId}/assign`} className="text-blue-600 underline hover:text-blue-800">
           Back to Asset Assignment
         </Link>
@@ -167,48 +371,60 @@ const EmployeeAssignment = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-gray-800">Confirm Assignment</h3>
-            <p className="text-gray-600 mt-2">
-              Are you sure you want to assign the following asset(s) to the selected {currentCategory.can_be_assigned_to}(s)?
-            </p>
-            <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800">{currentCategory.can_be_assigned_to} Details</h4>
-              {selectedEntities.map((entityId) => {
-                const entity = entityList.find((e) => e._id === entityId);
-                return (
-                  <div key={entity._id} className="mt-2">
-                    <p className="text-gray-600">
-                      <strong>Name:</strong> {entity.name || `${entity.first_name} ${entity.last_name}`}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>ID:</strong> {entity._id}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Department:</strong> {entity.department || 'N/A'}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800">Asset Details</h4>
-              {selectedAssets.length > 0 ? (
-                <p className="text-gray-600">
-                  <strong>Assets:</strong> {selectedAssets.length} selected
+            
+            {/* Assignment Policy Info */}
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <h4 className="text-sm font-semibold text-blue-800">Assignment Policy</h4>
+              <p className="text-sm text-blue-600">
+                {allowMultipleEmployees 
+                  ? 'Multiple employees can be selected for assignment.'
+                  : 'Only one employee can be selected for assignment.'}
+              </p>
+              {currentCategory.assignment_policies?.assignable_to_departments?.length > 0 && (
+                <p className="text-sm text-blue-600 mt-1">
+                  Restricted to departments: {currentCategory.assignment_policies.assignable_to_departments.join(', ')}
                 </p>
-              ) : (
-                <>
-                  <p className="text-gray-600">
-                    <strong>Name:</strong> {currentAsset?.name || 'N/A'}
-                  </p>
-                  <p className="text-gray-600">
-                    <strong>Category:</strong> {currentCategory.name || 'N/A'}
-                  </p>
-                  <p className="text-gray-600">
-                    <strong>Status:</strong> {currentAsset?.status || 'N/A'}
-                  </p>
-                </>
               )}
             </div>
+            
+            <div className="mt-4">
+              <h4 className="text-md font-semibold text-gray-800">Selected Assets</h4>
+              {selectedAssets.length > 0 ? (
+                <div className="mt-2 space-y-2">
+                  {selectedAssets.map((assetId) => {
+                    const asset = assets.find((a) => a.id === assetId);
+                    return asset ? (
+                      <div key={asset.id} className="p-2 bg-gray-50 rounded-lg">
+                        <p className="font-medium">{asset.name}</p>
+                        <p className="text-sm text-gray-600">Tag: {asset.asset_tag}</p>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-600 mt-2">No assets selected</p>
+              )}
+            </div>
+            
+            <div className="mt-4">
+              <h4 className="text-md font-semibold text-gray-800">Selected Employees</h4>
+              <div className="mt-2 space-y-2">
+                {selectedEntities.map((entityId) => {
+                  const entity = entityList.find((e) => e.id === entityId);
+                  return entity ? (
+                    <div key={entity.id} className="p-2 bg-gray-50 rounded-lg">
+                      <p className="font-medium">
+                        {entity.full_name || `${entity.first_name} ${entity.last_name}`}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Department: {entity.department || 'N/A'}
+                      </p>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+            
             <div className="mt-6 flex justify-end gap-2">
               <button
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
@@ -223,7 +439,7 @@ const EmployeeAssignment = () => {
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                 onClick={confirmAssignment}
               >
-                Confirm
+                Confirm Assignment
               </button>
             </div>
           </div>
@@ -235,7 +451,9 @@ const EmployeeAssignment = () => {
             Assign Asset - {currentCategory.name}
           </h2>
           <span className="text-gray-600 text-sm">
-            Assign asset(s) to a {currentCategory.can_be_assigned_to}
+            {allowMultipleEmployees 
+              ? 'Select one or more employees to assign assets to'
+              : 'Select an employee to assign assets to'}
           </span>
         </div>
         <div className="flex gap-3">
@@ -249,7 +467,7 @@ const EmployeeAssignment = () => {
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
               onClick={handleAssignClick}
             >
-              Assign Selected ({selectedEntities.length})
+              Assign to {selectedEntities.length} Selected
             </button>
           )}
         </div>
@@ -257,7 +475,7 @@ const EmployeeAssignment = () => {
       <div className="mb-4">
         <input
           type="text"
-          placeholder={`Search ${currentCategory.can_be_assigned_to}s...`}
+          placeholder="Search employees..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="p-2 border border-gray-300 rounded-lg w-full max-w-md text-gray-700"
@@ -281,24 +499,24 @@ const EmployeeAssignment = () => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {paginatedEntities.map((entity) => (
-              <tr key={entity._id} className="hover:bg-gray-50">
+              <tr key={entity.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <input
                     type="checkbox"
-                    checked={selectedEntities.includes(entity._id)}
-                    onChange={() => handleEntitySelect(entity._id)}
+                    checked={selectedEntities.includes(entity.id)}
+                    onChange={() => handleEntitySelect(entity.id)}
                     className="h-4 w-4"
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {entity.name || `${entity.first_name} ${entity.last_name}`}
+                  {entity.full_name || `${entity.first_name} ${entity.last_name}`}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entity._id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entity.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entity.department || 'N/A'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors"
-                    onClick={() => handleEntitySelect(entity._id)}
+                    onClick={() => handleEntitySelect(entity.id)}
                   >
                     Select
                   </button>
@@ -311,7 +529,7 @@ const EmployeeAssignment = () => {
       <div className="mt-4 flex justify-between items-center">
         <div className="text-sm text-gray-600">
           Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-          {Math.min(currentPage * itemsPerPage, filteredEntities.length)} of {filteredEntities.length} {currentCategory.can_be_assigned_to}s
+          {Math.min(currentPage * itemsPerPage, filteredEntities.length)} of {filteredEntities.length} employees
         </div>
         <div className="flex gap-2">
           <button
