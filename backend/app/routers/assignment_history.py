@@ -57,6 +57,10 @@ async def create_assignment(
     This endpoint matches the base URL expected by the frontend.
     Assigns an asset to an employee with validation.
     """
+    print("\n" + "="*50)
+    print("DEBUG: Executing create_assignment in router")
+    print("="*50 + "\n")
+    
     logger.info(f"Creating new assignment - asset {assignment.get('asset_id')} to {assignment.get('assigned_to')}")
     
     try:
@@ -140,24 +144,60 @@ async def create_assignment(
         )
         
         # Update employee status
-        full_db.employees.update_one(
+        logger.info(f"Starting employee updates for ID: {assigned_to}")
+        
+        # Create current asset entry
+        current_asset = {
+            "id": asset_id,
+            "name": asset.get("name"),
+            "asset_tag": asset.get("asset_tag"),
+            "category_id": asset.get("category_id"),
+            "category_name": asset.get("category_name"),
+            "assignment_id": assignment_id,
+            "assignment_date": current_time,
+            "status": "active",
+            "department": employee.get("department"),
+            "location": assignment.get("location") or employee.get("location", "")
+        }
+        
+        logger.info(f"Current asset entry to be added: {current_asset}")
+        
+        # First remove any existing entries
+        remove_result = full_db.employees.update_one(
             {"id": assigned_to},
             {
-                "$set": {
-                    "has_assigned_assets": True
-                },
-                "$push": {
-                    "assignment_history": {
-                        "id": assignment_id,
-                        "asset_id": asset_id,
-                        "asset_name": asset.get("name", "Unknown Asset"),
-                        "asset_tag": asset.get("asset_tag", ""),
-                        "assignment_date": current_time.isoformat(),
-                        "status": "active"
-                    }
+                "$pull": {
+                    "current_assets": {"id": asset_id}
                 }
             }
         )
+        logger.info(f"Remove result - matched: {remove_result.matched_count}, modified: {remove_result.modified_count}")
+        
+        # Then add the new current asset entry
+        update_result = full_db.employees.update_one(
+            {"id": assigned_to},
+            {
+                "$set": {
+                    "has_assigned_assets": True,
+                    "last_asset_assigned_date": current_time,
+                    "last_assigned_asset_id": asset_id
+                },
+                "$addToSet": {
+                    "current_assets": current_asset,
+                    "assigned_asset_ids": asset_id
+                },
+                "$inc": {
+                    "current_assignments_count": 1
+                }
+            }
+        )
+        logger.info(f"Update result - matched: {update_result.matched_count}, modified: {update_result.modified_count}")
+        
+        # Verify the update
+        after_employee = full_db.employees.find_one({"id": assigned_to})
+        logger.info(f"Employee after update - has_assigned_assets: {after_employee.get('has_assigned_assets')}")
+        logger.info(f"Employee current_assets count: {len(after_employee.get('current_assets', []))}")
+        logger.info(f"Employee current_assets: {after_employee.get('current_assets', [])}")
         
         logger.info(f"Successfully created assignment: {assignment_id} for asset {asset_id} to employee {assigned_to}")
         
@@ -285,24 +325,60 @@ async def create_bulk_assignments(
             )
             
             # Update employee status
-            full_db.employees.update_one(
+            logger.info(f"Starting employee updates for ID: {assigned_to}")
+            
+            # Create current asset entry
+            current_asset = {
+                "id": asset_id,
+                "name": asset.get("name"),
+                "asset_tag": asset.get("asset_tag"),
+                "category_id": asset.get("category_id"),
+                "category_name": asset.get("category_name"),
+                "assignment_id": assignment_id,
+                "assignment_date": current_time,
+                "status": "active",
+                "department": employee.get("department"),
+                "location": assignment.get("location") or employee.get("location", "")
+            }
+            
+            logger.info(f"Current asset entry to be added: {current_asset}")
+            
+            # First remove any existing entries
+            remove_result = full_db.employees.update_one(
                 {"id": assigned_to},
                 {
-                    "$set": {
-                        "has_assigned_assets": True
-                    },
-                    "$push": {
-                        "assignment_history": {
-                            "id": assignment_id,
-                            "asset_id": asset_id,
-                            "asset_name": asset.get("name", "Unknown Asset"),
-                            "asset_tag": asset.get("asset_tag", ""),
-                            "assignment_date": current_time.isoformat(),
-                            "status": "active"
-                        }
+                    "$pull": {
+                        "current_assets": {"id": asset_id}
                     }
                 }
             )
+            logger.info(f"Remove result - matched: {remove_result.matched_count}, modified: {remove_result.modified_count}")
+            
+            # Then add the new current asset entry
+            update_result = full_db.employees.update_one(
+                {"id": assigned_to},
+                {
+                    "$set": {
+                        "has_assigned_assets": True,
+                        "last_asset_assigned_date": current_time,
+                        "last_assigned_asset_id": asset_id
+                    },
+                    "$addToSet": {
+                        "current_assets": current_asset,
+                        "assigned_asset_ids": asset_id
+                    },
+                    "$inc": {
+                        "current_assignments_count": 1
+                    }
+                }
+            )
+            logger.info(f"Update result - matched: {update_result.matched_count}, modified: {update_result.modified_count}")
+            
+            # Verify the update
+            after_employee = full_db.employees.find_one({"id": assigned_to})
+            logger.info(f"Employee after update - has_assigned_assets: {after_employee.get('has_assigned_assets')}")
+            logger.info(f"Employee current_assets count: {len(after_employee.get('current_assets', []))}")
+            logger.info(f"Employee current_assets: {after_employee.get('current_assets', [])}")
             
             logger.info(f"Successfully created assignment {idx+1}: {assignment_id} for asset {asset_id} to employee {assigned_to}")
             created_assignments.append(assignment_record)

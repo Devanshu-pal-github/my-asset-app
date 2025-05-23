@@ -525,140 +525,220 @@ const AssetDetail = () => {
     loading: maintenanceLoading,
     error: maintenanceError,
   } = useSelector((state) => state.maintenanceHistory);
+  const { documents } = useSelector((state) => state.documents);
   const [activeTab, setActiveTab] = useState(TABS.SPECIFICATIONS);
   const [showBasicEditForm, setShowBasicEditForm] = useState(false);
-  const [showSpecsFinanceEditForm, setShowSpecsFinanceEditForm] =
-    useState(false);
+  const [showSpecsFinanceEditForm, setShowSpecsFinanceEditForm] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showUnassignModal, setShowUnassignModal] = useState(false);
-  const [currentAssigneeName, setCurrentAssigneeName] = useState("Unassigned");
+  const [currentAssigneeName, setCurrentAssigneeName] = useState("");
 
-  // Use mock data as fallback
-  const effectiveAsset =
-    asset || mockAssets.find((a) => a._id === assetId) || mockAssets[0];
-  const effectiveCategories =
-    categories.length > 0 ? categories : mockCategories;
-  const effectiveAssignmentHistory =
-    assignmentHistory.length > 0
-      ? assignmentHistory
-      : mockAssignmentHistory.filter((h) => h.asset_id === assetId);
-  const effectiveMaintenanceHistory =
-    maintenanceHistory.length > 0
-      ? maintenanceHistory
-      : mockMaintenanceHistory.filter((h) => h.asset_id === assetId);
-
-  const memoizedAsset = useMemo(() => effectiveAsset, [effectiveAsset]);
-
-  logger.debug("AssetDetail rendering", {
-    assetId,
-    asset: memoizedAsset,
-    assetError,
-    assetLoading,
-  });
-
-  if (!assetId) {
-    logger.error("Missing assetId in AssetDetail", {
-      url: window.location.href,
-    });
-    return <Navigate to="/asset-inventory" replace />;
-  }
-
-  if (!isValidObjectId(assetId)) {
-    logger.warn("Not a valid ObjectId, attempting to use mock data", {
-      assetId,
-    });
-  }
-
+  // Fetch asset data when component mounts
   useEffect(() => {
-    logger.debug("AssetDetail useEffect triggered", {
-      assetId,
-      asset: memoizedAsset,
-    });
-    dispatch(fetchAssetItemById(assetId))
-      .unwrap()
-      .then((result) =>
-        logger.info("Successfully fetched asset item", { assetId, result })
-      )
-      .catch((err) =>
-        logger.error("Failed to fetch asset item, using mock data", {
-          error: err.message,
-          assetId,
-        })
-      );
-    dispatch(fetchDocuments(assetId))
-      .unwrap()
-      .then(() => logger.info("Successfully fetched documents", { assetId }))
-      .catch((err) =>
-        logger.error("Failed to fetch documents, using mock data", {
-          error: err.message,
-        })
-      );
+    if (assetId) {
+      dispatch(fetchAssetItemById(assetId));
+      dispatch(fetchAssignmentHistory(assetId));
+      dispatch(fetchMaintenanceHistory(assetId));
+      dispatch(fetchDocuments(assetId));
+    }
     return () => {
       dispatch(clearCurrentItem());
       dispatch(clearAssignmentHistory());
       dispatch(clearMaintenanceHistory());
       dispatch(clearDocuments());
-      logger.debug("Cleared all state on unmount");
     };
   }, [dispatch, assetId]);
 
-  useEffect(() => {
-    logger.debug("AssetLoading state", {
-      assetLoading,
-      assetId,
-      asset: memoizedAsset,
-    });
-    if (assetLoading && !asset)
-      logger.info("AssetDetail is loading", { assetId });
-  }, [assetLoading, assetId, asset]);
+  // If no asset data is available, show error
+  if (!asset && !assetLoading) {
+    return (
+      <div className="p-6 text-red-600">
+        Error: Asset not found for ID {assetId}. Please check the URL or contact support.
+        <div className="flex justify-end mt-4">
+          <Link to="/asset-inventory" className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50">
+            <i className="pi pi-arrow-left mr-2"></i>Return to Asset Inventory
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const fetchEmployeeName = async (employeeId) => {
-      logger.debug("Fetching employee name", { employeeId });
-      // Mock employee fetch for testing
-      const mockEmployee = mockEmployees.find((emp) => emp._id === employeeId);
-      if (mockEmployee) {
-        const fullName = `${mockEmployee.first_name} ${mockEmployee.last_name}`;
-        setCurrentAssigneeName(fullName);
-        logger.info("Using mock employee name", { employeeId, fullName });
-        return;
-      }
-      try {
-        const response = await axiosInstance.get(
-          `${API_URL}/employees/${employeeId}`
-        );
-        if (!response.data) throw new Error("No employee data returned");
-        const { first_name, last_name } = response.data;
-        const fullName = `${first_name} ${last_name}`;
-        setCurrentAssigneeName(fullName);
-        logger.info("Successfully fetched employee name", {
-          employeeId,
-          fullName,
-        });
-      } catch (error) {
-        logger.error("Failed to fetch employee name", { error: error.message });
-        setCurrentAssigneeName("Unknown");
-      }
+  // Loading state
+  if (assetLoading) {
+    return <div className="p-6">Loading asset details...</div>;
+  }
+
+  // Update the asset data mapping to be dynamic based on API payload
+  const assetData = useMemo(() => {
+    if (!asset) return null;
+
+    return {
+      // Core Information (from normalized data)
+      id: asset._id,
+      assetId: asset.asset_id,
+      name: asset.name,
+      categoryId: asset.category_id,
+      categoryName: categories.find(cat => cat._id === asset.category_id)?.name || 'Unknown',
+      
+      // Status Information
+      status: asset.status || 'available',
+      condition: asset.condition,
+      isOperational: asset.is_operational,
+      
+      // Technical Details
+      serialNumber: asset.serial_number,
+      model: asset.model,
+      manufacturer: asset.manufacturer,
+      specifications: asset.specifications || [],
+      
+      // Location and Assignment
+      location: asset.location,
+      department: asset.department,
+      assignedTo: asset.assigned_to,
+      currentAssignmentDate: asset.current_assignment_date,
+      hasActiveAssignment: asset.has_active_assignment,
+      
+      // Financial Information
+      purchaseCost: asset.purchase_cost,
+      currentValue: asset.current_value,
+      purchaseDate: asset.purchase_date,
+      vendor: asset.vendor,
+      warrantyUntil: asset.warranty_until,
+      
+      // Maintenance
+      maintenanceDueDate: asset.maintenance_due_date,
+      lastMaintenanceDate: asset.last_maintenance_date,
+      
+      // Metadata
+      createdAt: asset.created_at,
+      updatedAt: asset.updated_at,
+      notes: asset.notes
     };
-    const assigneeId = memoizedAsset?.assigned_to;
-    if (assigneeId) fetchEmployeeName(assigneeId);
-    else {
-      setCurrentAssigneeName("Unassigned");
-      logger.debug("No assigned_to, setting currentAssigneeName to Unassigned");
-    }
-  }, [memoizedAsset?.assigned_to]);
+  }, [asset, categories]);
 
-  const assignmentCategoryId = memoizedAsset?.category_id;
-  if (assignmentCategoryId && !isValidObjectId(assignmentCategoryId))
-    logger.error("Invalid categoryId for EmployeeAssignment", {
-      assignmentCategoryId,
-      assetId,
+  // Render info cards based on available data
+  const renderInfoCards = () => {
+    if (!assetData) return null;
+
+    const cards = [];
+
+    // Status Card (Always show)
+    cards.push({
+      title: "Asset Status",
+      data: [
+        { label: "Status", value: <StatusIndicator status={assetData.status} /> },
+        ...(assetData.condition ? [{ label: "Condition", value: assetData.condition }] : []),
+        { label: "Operational", value: assetData.isOperational ? "Yes" : "No" },
+        { label: "Last Updated", value: formatDate(assetData.updatedAt) }
+      ].filter(item => item.value)
     });
-  else if (assignmentCategoryId)
-    logger.debug("Valid categoryId for EmployeeAssignment", {
-      assignmentCategoryId,
-      assetId,
+
+    // Asset Information Card (Always show)
+    cards.push({
+      title: "Asset Information",
+      data: [
+        { label: "Asset Name", value: assetData.name },
+        { label: "Asset ID", value: assetData.assetId },
+        ...(assetData.serialNumber ? [{ label: "Serial Number", value: assetData.serialNumber }] : []),
+        ...(assetData.model ? [{ label: "Model", value: assetData.model }] : []),
+        ...(assetData.manufacturer ? [{ label: "Manufacturer", value: assetData.manufacturer }] : []),
+        { label: "Category", value: assetData.categoryName }
+      ].filter(item => item.value)
     });
+
+    // Assignment Details Card (Only if has assignment data)
+    if (assetData.assignedTo || assetData.department || assetData.location) {
+      cards.push({
+        title: "Assignment Details",
+        data: [
+          ...(assetData.assignedTo ? [{ label: "Assigned To", value: currentAssigneeName || "Loading..." }] : []),
+          ...(assetData.department ? [{ label: "Department", value: assetData.department }] : []),
+          ...(assetData.location ? [{ label: "Location", value: assetData.location }] : []),
+          ...(assetData.currentAssignmentDate ? [{ 
+            label: "Assignment Date", 
+            value: formatDate(assetData.currentAssignmentDate) 
+          }] : [])
+        ].filter(item => item.value)
+      });
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {cards.map((card, index) => (
+          <AssetInfoCard
+            key={index}
+            title={card.title}
+            data={card.data}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Render specifications tab content
+  const renderSpecificationsTab = () => {
+    if (!assetData) return null;
+
+    const technicalDetails = [
+      ...(assetData.model ? [{ label: "Model", value: assetData.model }] : []),
+      ...(assetData.manufacturer ? [{ label: "Manufacturer", value: assetData.manufacturer }] : []),
+      ...(assetData.serialNumber ? [{ label: "Serial Number", value: assetData.serialNumber }] : []),
+      ...(Array.isArray(assetData.specifications) ? 
+        assetData.specifications.map(spec => ({
+          label: spec.name,
+          value: spec.value
+        })) : 
+        []
+      )
+    ].filter(item => item.value);
+
+    const purchaseDetails = [
+      ...(assetData.purchaseCost ? [{ label: "Purchase Cost", value: formatCurrency(assetData.purchaseCost) }] : []),
+      ...(assetData.purchaseDate ? [{ label: "Purchase Date", value: formatDate(assetData.purchaseDate) }] : []),
+      ...(assetData.vendor ? [{ label: "Vendor", value: assetData.vendor }] : []),
+      ...(assetData.warrantyUntil ? [{ label: "Warranty Until", value: formatDate(assetData.warrantyUntil) }] : []),
+      ...(assetData.currentValue ? [{ label: "Current Value", value: formatCurrency(assetData.currentValue) }] : [])
+    ].filter(item => item.value);
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {technicalDetails.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Technical Details</h3>
+            <div className="space-y-4">
+              {technicalDetails.map(({ label, value }) => (
+                <div key={label} className="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span className="text-gray-600">{label}</span>
+                  <span className="font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {purchaseDetails.length > 0 && (
+          <div>
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={toggleSpecsFinanceEditForm}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Edit
+              </button>
+            </div>
+            <h3 className="text-lg font-semibold mb-4">Purchase Details</h3>
+            <div className="space-y-4">
+              {purchaseDetails.map(({ label, value }) => (
+                <div key={label} className="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span className="text-gray-600">{label}</span>
+                  <span className="font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -755,60 +835,6 @@ const AssetDetail = () => {
       );
   };
 
-  // Always render with effectiveAsset, show warning if no data
-  if (!memoizedAsset) {
-    logger.error("No asset data available, neither from backend nor mock", {
-      assetId,
-    });
-    return (
-      <div className="p-6 text-red-600">
-        Error: Asset not found for ID {assetId}. Please check the URL or contact
-        support.
-        <div className="flex justify-end mt-4">
-          <Link
-            to="/asset-inventory"
-            className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50"
-          >
-            <i className="pi pi-arrow-left mr-2"></i>Return to Asset Inventory
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const assetData = {
-    assetId: memoizedAsset._id || assetId,
-    asset_id: memoizedAsset.asset_id || assetId,
-    categoryId: memoizedAsset.category_id || "N/A",
-    categoryName:
-      (
-        effectiveCategories.find(
-          (cat) => (cat.id || cat._id) === memoizedAsset.category_id
-        ) || {}
-      ).name || "Unknown",
-    assetName: memoizedAsset.name || "N/A",
-    serialNumber: memoizedAsset.serial_number || "N/A",
-    model: memoizedAsset.model || "N/A",
-    status: memoizedAsset.status || "available",
-    isOperational: memoizedAsset.is_operational ? "Yes" : "No",
-    condition: memoizedAsset.condition || "N/A",
-    createdAt: formatDate(memoizedAsset.created_at),
-    lastUpdated: formatDate(memoizedAsset.updated_at),
-    assignedTo: memoizedAsset.assigned_to || "Unassigned",
-    department: memoizedAsset.department || "N/A",
-    location: memoizedAsset.location || "N/A",
-    vendor: memoizedAsset.vendor || "N/A",
-    purchaseCost: formatCurrency(memoizedAsset.purchase_cost),
-    purchaseDate: formatDate(memoizedAsset.purchase_date),
-    warrantyUntil: formatDate(memoizedAsset.warranty_until),
-    currentValue: formatCurrency(memoizedAsset.current_value),
-    notes: memoizedAsset.notes || "N/A",
-    insurancePolicy: memoizedAsset.insurance_policy || "N/A",
-    disposalDate: formatDate(memoizedAsset.disposal_date),
-    currentAssignmentDate: formatDate(memoizedAsset.current_assignment_date),
-    maintenanceDueDate: formatDate(memoizedAsset.maintenance_due_date),
-  };
-
   return (
     <div className="p-6 bg-background-offwhite min-h-screen mt-20 text-gray-900">
       <Breadcrumb assetData={assetData} categoryId={assetData.categoryId} />
@@ -821,6 +847,37 @@ const AssetDetail = () => {
           Edit Basic Details
         </button>
       </div>
+
+      {renderInfoCards()}
+
+      <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 mb-6">
+        <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+        <ErrorBoundary>
+          <div className="p-6">
+            {activeTab === TABS.SPECIFICATIONS && renderSpecificationsTab()}
+            {activeTab === TABS.ASSIGNMENT_HISTORY && (
+              <AssignmentHistoryTab
+                history={assignmentHistory}
+                loading={assignmentLoading}
+                error={assignmentError}
+                currentAssigneeName={currentAssigneeName}
+                currentAssigneeId={assetData.assignedTo}
+                onAssign={handleAssign}
+                onUnassign={handleUnassign}
+              />
+            )}
+            {activeTab === TABS.MAINTENANCE_HISTORY && (
+              <MaintenanceHistoryTab
+                history={maintenanceHistory}
+                loading={maintenanceLoading}
+                error={maintenanceError}
+                onLogMaintenance={handleLogMaintenance}
+              />
+            )}
+          </div>
+        </ErrorBoundary>
+      </div>
+
       {showBasicEditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
@@ -841,85 +898,6 @@ const AssetDetail = () => {
           </div>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <AssetInfoCard
-          title="Asset Status"
-          data={[
-            {
-              label: "Status",
-              value: <StatusIndicator status={assetData.status} />,
-            },
-            {
-              label: "Condition",
-              value: assetData.condition,
-              className: "text-green-600",
-            },
-            { label: "Operational", value: assetData.isOperational },
-            { label: "Last Updated", value: assetData.lastUpdated },
-          ]}
-        />
-        <AssetInfoCard
-          title="Asset Information"
-          data={[
-            { label: "Asset Name", value: assetData.assetName },
-            { label: "Asset ID", value: assetData.asset_id },
-            { label: "Serial Number", value: assetData.serialNumber },
-            { label: "Model", value: assetData.model },
-            { label: "Category", value: assetData.categoryName },
-            { label: "Created At", value: assetData.createdAt },
-          ]}
-        />
-        <AssetInfoCard
-          title="Assignment Details"
-          data={[
-            { label: "Assigned To", value: assetData.assignedTo },
-            { label: "Department", value: assetData.department },
-            { label: "Location", value: assetData.location },
-            {
-              label: "Assignment Date",
-              value: assetData.currentAssignmentDate,
-            },
-          ]}
-        />
-      </div>
-      <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 mb-6">
-        <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
-        <ErrorBoundary>
-          <div className="p-6">
-            {activeTab === TABS.SPECIFICATIONS && (
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <SpecificationsTab
-                  assetData={assetData}
-                  onEdit={toggleSpecsFinanceEditForm}
-                />
-              </div>
-            )}
-            {activeTab === TABS.ASSIGNMENT_HISTORY && (
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <AssignmentHistoryTab
-                  history={effectiveAssignmentHistory}
-                  loading={assignmentLoading}
-                  error={assignmentError}
-                  currentAssigneeName={assetData.assignedTo}
-                  currentAssigneeId={assetData.assignedTo}
-                  onAssign={handleAssign}
-                  onUnassign={handleUnassign}
-                />
-              </div>
-            )}
-            {activeTab === TABS.MAINTENANCE_HISTORY && (
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <MaintenanceHistoryTab
-                  history={effectiveMaintenanceHistory}
-                  loading={maintenanceLoading}
-                  error={maintenanceError}
-                  onLogMaintenance={handleLogMaintenance}
-                />
-              </div>
-            )}
-          </div>
-        </ErrorBoundary>
-      </div>
       {showSpecsFinanceEditForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">

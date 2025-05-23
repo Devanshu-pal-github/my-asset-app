@@ -18,6 +18,7 @@ if not mongodb_url:
     raise ValueError("MONGODB_URL not found in environment variables")
 
 # Initialize MongoDB client
+logger.info(f"Initializing MongoDB connection to {mongodb_url}")
 client = MongoClient(
     mongodb_url,
     serverSelectionTimeoutMS=30000,
@@ -27,8 +28,17 @@ client = MongoClient(
     tlsAllowInvalidCertificates=True
 )
 
+# Verify connection
+try:
+    client.admin.command('ping')
+    logger.info("Successfully connected to MongoDB")
+except Exception as e:
+    logger.error(f"Failed to connect to MongoDB: {str(e)}")
+    raise
+
 # Select the database
 db: Database = client["asset_management"]
+logger.info("Selected 'asset_management' database")
 
 # Helper function to safely create indexes
 def safe_create_index(collection, keys, **kwargs):
@@ -118,7 +128,15 @@ def get_db():
     
     Can be used in both sync and async contexts.
     """
-    return db
+    try:
+        # Verify connection is still alive
+        client.admin.command('ping')
+        return db
+    except Exception as e:
+        logger.error(f"Database connection error: {str(e)}")
+        # Attempt to reconnect
+        client.admin.command('ping')
+        return db
 
 def get_asset_categories_collection(db: Database = Depends(get_db)) -> Collection:
     """

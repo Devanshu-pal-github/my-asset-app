@@ -87,6 +87,7 @@ class AssignmentHistoryEntry(BaseModel):
     # Condition Information
     condition_details: Optional[ConditionUpdate] = Field(None, description="Condition before and after assignment")
     condition_at_assignment: Optional[str] = Field(None, description="Condition at time of assignment")
+    condition_at_return: Optional[str] = Field(None, description="Condition at time of return")
     
     # Attachments (signatures, photos, etc.)
     attachments: List[AssignmentAttachment] = Field(default_factory=list, description="Attached files")
@@ -97,7 +98,8 @@ class AssignmentHistoryEntry(BaseModel):
     return_signature: Optional[str] = Field(None, description="URL to return signature image")
     checkout_condition: Optional[str] = Field(None, description="Condition at checkout")
     checkin_condition: Optional[str] = Field(None, description="Condition at checkin")
-    is_active: Optional[bool] = Field(True, description="Whether the assignment is currently active")
+    is_active: bool = Field(True, description="Whether the assignment is currently active")
+    has_active_assignment: bool = Field(True, description="Whether this is an active assignment")
     
     # Fields from AssignmentHistoryTab in index.jsx
     assigned_at: Optional[str] = Field(None, description="Date when asset was assigned (alias)")
@@ -122,6 +124,16 @@ class AssignmentHistoryEntry(BaseModel):
     # Fields from EmployeeAssignment and EmployeeUnassignment
     current_assignee_id: Optional[str] = Field(None, description="ID of current assignee")
     current_assignee_name: Optional[str] = Field(None, description="Name of current assignee")
+    current_assignment_id: Optional[str] = Field(None, description="ID of current assignment")
+    current_assignment_date: Optional[str] = Field(None, description="Date of current assignment")
+    
+    # Additional tracking fields
+    last_assigned_date: Optional[str] = Field(None, description="Date of last assignment")
+    last_assigned_to: Optional[str] = Field(None, description="ID of last assignee")
+    last_assigned_to_name: Optional[str] = Field(None, description="Name of last assignee")
+    last_unassigned_date: Optional[str] = Field(None, description="Date of last unassignment")
+    assigned_department: Optional[str] = Field(None, description="Department asset is assigned to")
+    current_assignments_count: Optional[int] = Field(0, description="Number of current active assignments")
     
     # Timestamps
     created_at: datetime = Field(default_factory=get_current_datetime, description="Creation timestamp")

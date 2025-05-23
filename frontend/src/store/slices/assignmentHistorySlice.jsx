@@ -103,9 +103,8 @@ export const fetchAssignmentHistory = createAsyncThunk(
 
 export const createAssignment = createAsyncThunk(
   'assignmentHistory/createAssignment',
-  async (payload, { rejectWithValue, getState }) => {
+  async (payload, { rejectWithValue, getState, dispatch }) => {
     try {
-      // Log full payload for debugging
       logger.debug('Creating new assignment with payload:', payload);
       
       // Validate required fields
@@ -174,7 +173,21 @@ export const createAssignment = createAsyncThunk(
         bypass_policy: false,
         expected_return_date: payload.endDate || null,
         assigned_by: 'system',
-        assigned_by_name: 'System'
+        assigned_by_name: 'System',
+        is_active: true,
+        has_active_assignment: true,
+        current_assignee_id: employee.id || employee._id,
+        current_assignee_name: `${employee.first_name} ${employee.last_name}`,
+        current_assets: [{
+          id: asset.id || asset._id,
+          name: asset.name,
+          asset_tag: asset.asset_tag,
+          category_id: category?.id || category?._id,
+          category_name: category?.name,
+          assignment_id: null, // Will be updated with response
+          assignment_date: currentTime,
+          status: 'active'
+        }]
       };
       
       // Log API request details
@@ -195,6 +208,20 @@ export const createAssignment = createAsyncThunk(
       });
       
       const normalizedAssignment = normalizeAssignmentHistory(response.data);
+      
+      // Update the current_assets array in the employee's data
+      if (response.data.id) {
+        apiPayload.current_assets[0].assignment_id = response.data.id;
+        
+        // Dispatch action to update employee's current assets
+        dispatch({
+          type: 'employees/updateEmployeeCurrentAssets',
+          payload: {
+            employeeId: employee.id || employee._id,
+            currentAssets: apiPayload.current_assets
+          }
+        });
+      }
       
       // Log success
       logger.info('Assignment created successfully', {
@@ -225,11 +252,10 @@ export const createAssignment = createAsyncThunk(
 
 export const unassignAsset = createAsyncThunk(
   'assignmentHistory/unassignAsset',
-  async (payload, { rejectWithValue }) => {
+  async (payload, { rejectWithValue, dispatch }) => {
     try {
       // Log full payload for debugging
       logger.debug('Unassigning asset with payload:', payload);
-      console.log('Unassignment payload from component:', payload);
       
       // Make sure we have required fields
       if (!payload.assignmentId) {
@@ -241,7 +267,13 @@ export const unassignAsset = createAsyncThunk(
         assignment_id: payload.assignmentId,
         returned_date: payload.returnDate || new Date().toISOString(),
         return_notes: payload.returnNotes || 'Unassigned via asset management system',
-        return_condition: payload.returnCondition || 'Good'
+        return_condition: payload.returnCondition || 'Good',
+        is_active: false,
+        has_active_assignment: false,
+        current_assignee_id: null,
+        current_assignee_name: null,
+        current_assignment_id: null,
+        current_assets: [] // Clear current assets
       };
       
       // Log API request details
@@ -249,8 +281,6 @@ export const unassignAsset = createAsyncThunk(
         url: `${API_URL}/assignment-history/unassign`,
         payload: apiPayload 
       });
-      console.log('API request payload:', apiPayload);
-      console.log('Sending to URL:', `${API_URL}/assignment-history/unassign`);
       
       const response = await withRetry(() => 
         axiosInstance.post(`${API_URL}/assignment-history/unassign`, apiPayload)
@@ -259,10 +289,19 @@ export const unassignAsset = createAsyncThunk(
       // Log the complete API response
       logger.info('Unassignment API response received', { 
         status: response.status, 
-        responseData: response.data,
-        responseFields: Object.keys(response.data)
+        responseData: response.data
       });
-      console.log('Unassignment API response:', response.data);
+      
+      // If we have the employee ID in the response, update their current assets
+      if (response.data.employee_id) {
+        dispatch({
+          type: 'employees/updateEmployeeCurrentAssets',
+          payload: {
+            employeeId: response.data.employee_id,
+            currentAssets: [] // Clear current assets
+          }
+        });
+      }
       
       return {
         assignment_id: payload.assignmentId,
@@ -270,6 +309,10 @@ export const unassignAsset = createAsyncThunk(
         return_notes: apiPayload.return_notes,
         status: 'returned',
         is_active: false,
+        has_active_assignment: false,
+        current_assignee_id: null,
+        current_assignee_name: null,
+        current_assignment_id: null,
         ...response.data
       };
     } catch (error) {
@@ -281,7 +324,6 @@ export const unassignAsset = createAsyncThunk(
         responseData: error.response?.data,
         stack: error.stack
       });
-      console.error('Unassignment failed:', errorMessage);
       return rejectWithValue(errorMessage);
     }
   }
